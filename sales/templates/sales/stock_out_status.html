@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Out Status - Sale {{ sale.sale_number }}</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #f8f9fc;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+        }
+        
+        .card {
+            border-radius: 10px;
+            border: 1px solid #e3e6f0;
+        }
+        
+        .card-header {
+            background-color: #f8f9fc;
+            border-bottom: 1px solid #e3e6f0;
+        }
+        
+        .badge {
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+        
+        .badge-success {
+            background-color: #1cc88a;
+        }
+        
+        .badge-warning {
+            background-color: #f6c23e;
+        }
+        
+        .badge-danger {
+            background-color: #e74a3b;
+        }
+        
+        .badge-secondary {
+            background-color: #858796;
+        }
+        
+        .badge-draft {
+            background-color: #6c757d;
+        }
+        
+        .badge-approved {
+            background-color: #1cc88a;
+        }
+        
+        .badge-completed {
+            background-color: #4e73df;
+        }
+        
+        .badge-cancelled {
+            background-color: #e74a3b;
+        }
+        
+        .badge-pending {
+            background-color: #f6c23e;
+        }
+        
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+        
+        .timeline-step {
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .timeline-icon {
+            position: absolute;
+            left: -30px;
+            top: 0;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+        }
+        
+        .timeline-step.active .timeline-icon {
+            background-color: #4e73df;
+            color: white;
+        }
+        
+        .timeline-content {
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .timeline-step:last-child .timeline-content {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        
+        .page-header {
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e3e6f0;
+        }
+        
+        .btn-secondary {
+            background-color: #858796;
+            border-color: #858796;
+        }
+        
+        .btn-primary {
+            background-color: #4e73df;
+            border-color: #4e73df;
+        }
+        
+        .btn-info {
+            background-color: #36b9cc;
+            border-color: #36b9cc;
+        }
+        
+        table th {
+            font-weight: 600;
+            color: #5a5c69;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h3 text-gray-800">
+                    <i class="fas fa-box-open me-2"></i>Stock Out Status
+                </h1>
+                <div>
+                    <a href="{% url 'sales:sale_detail' sale.pk %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Sale
+                    </a>
+                </div>
+            </div>
+            <p class="text-muted mb-0">Sale: {{ sale.sale_number }} | Customer: {{ sale.customer.name }}</p>
+        </div>
+
+        <!-- Stock Out Details Card -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">Stock Out Details</h6>
+                {% if stock_out %}
+                    <span class="badge badge-{% if stock_out.status == 'approved' %}success{% elif stock_out.status == 'pending' %}warning{% elif stock_out.status == 'rejected' %}danger{% else %}secondary{% endif %}">
+                        {{ stock_out.get_status_display }}
+                    </span>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% if stock_out %}
+                    <!-- Stock Out Information -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6 class="font-weight-bold">Stock Out Information</h6>
+                            <table class="table table-sm">
+                                <tr>
+                                    <th>Stock Out ID:</th>
+                                    <td>{{ stock_out.id }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Request Date:</th>
+                                    <td>{{ stock_out.created_at|date:"M d, Y H:i" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Created By:</th>
+                                    <td>
+                                        {% if stock_out.created_by %}
+                                            {{ stock_out.created_by.get_full_name|default:stock_out.created_by.username }}
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Issued By:</th>
+                                    <td>{{ stock_out.issued_by|default:"N/A" }}</td>
+                                </tr>
+                                {% if stock_out.approved_by %}
+                                <tr>
+                                    <th>Approved By:</th>
+                                    <td>
+                                        {% if stock_out.approved_by %}
+                                            {{ stock_out.approved_by.get_full_name|default:stock_out.approved_by.username }}
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endif %}
+                                {% if stock_out.approved_at %}
+                                <tr>
+                                    <th>Approved Date:</th>
+                                    <td>{{ stock_out.approved_at|date:"M d, Y H:i" }}</td>
+                                </tr>
+                                {% endif %}
+                                <tr>
+                                    <th>Issued To:</th>
+                                    <td>{{ stock_out.issued_to|default:"N/A" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Purpose:</th>
+                                    <td>{{ stock_out.get_purpose_display|default:"N/A" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Reference:</th>
+                                    <td>{{ stock_out.reference|default:"N/A" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Sale Reference:</th>
+                                    <td>{{ stock_out.sale_reference|default:"N/A" }}</td>
+                                </tr>
+                                {% if stock_out.notes %}
+                                <tr>
+                                    <th>Notes:</th>
+                                    <td>{{ stock_out.notes }}</td>
+                                </tr>
+                                {% endif %}
+                            </table>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h6 class="font-weight-bold">Sale Information</h6>
+                            <table class="table table-sm">
+                                <tr>
+                                    <th>Sale Number:</th>
+                                    <td>
+                                        {{ sale.sale_number }}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Customer:</th>
+                                    <td>
+                                        {{ sale.customer.name }}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Sale Amount:</th>
+                                    <td>Tsh {{ sale.net_amount|floatformat:2 }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Sale Status:</th>
+                                    <td>
+                                        <span class="badge badge-{{ sale.status|lower }}">
+                                            {{ sale.get_status_display }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Stock Out Status:</th>
+                                    <td>{{ sale.get_stock_out_status }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Total Items in Sale:</th>
+                                    <td>{{ sale.items.count }} items</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Item Details -->
+                    <div class="mb-4">
+                        <h6 class="font-weight-bold">Item Being Stocked Out</h6>
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Item</th>
+                                        <th>Category</th>
+                                        <th>SKU</th>
+                                        <th>Quantity</th>
+                                        <th>Unit</th>
+                                        <th>Current Stock</th>
+                                        <th>Stock Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            {{ stock_out.item.name|default:"N/A" }}
+                                        </td>
+                                        <td>{{ stock_out.item.get_category_display|default:"N/A" }}</td>
+                                        <td>{{ stock_out.item.sku|default:"N/A" }}</td>
+                                        <td>{{ stock_out.quantity }}</td>
+                                        <td>{{ stock_out.item.unit_of_measure|default:"unit" }}</td>
+                                        <td>{{ stock_out.item.quantity|default:"0" }}</td>
+                                        <td>
+                                            {% if stock_out.item.quantity <= stock_out.item.minimum_stock %}
+                                                <span class="badge badge-danger">Critical</span>
+                                            {% elif stock_out.item.quantity <= stock_out.item.reorder_level %}
+                                                <span class="badge badge-warning">Low</span>
+                                            {% else %}
+                                                <span class="badge badge-success">Good</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- All Sale Items (for comparison) -->
+                    <div class="mb-4">
+                        <h6 class="font-weight-bold">All Items in Sale (For Reference)</h6>
+                        {% if sale.items.all %}
+                            <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Item</th>
+                                            <th>Quantity</th>
+                                            <th>Unit Price</th>
+                                            <th>Total</th>
+                                            <th>Stock Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for item in sale.items.all %}
+                                        <tr>
+                                            <td>{{ forloop.counter }}</td>
+                                            <td>{{ item.item.name }}</td>
+                                            <td>{{ item.quantity }}</td>
+                                            <td>Tsh {{ item.unit_price|floatformat:2 }}</td>
+                                            <td>Tsh {{ item.total_price|floatformat:2 }}</td>
+                                            <td>
+                                                {% if item.item.quantity <= item.item.minimum_stock %}
+                                                    <span class="badge badge-danger">Critical</span>
+                                                {% elif item.item.quantity <= item.item.reorder_level %}
+                                                    <span class="badge badge-warning">Low</span>
+                                                {% else %}
+                                                    <span class="badge badge-success">Good</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <p class="text-muted">No items in this sale.</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Status Timeline -->
+                    <div class="mb-4">
+                        <h6 class="font-weight-bold">Status Timeline</h6>
+                        <div class="timeline">
+                            <div class="timeline-step {% if stock_out.status == 'pending' %}active{% endif %}">
+                                <div class="timeline-icon">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div class="timeline-content">
+                                    <h6>Request Submitted</h6>
+                                    <p class="text-muted small">{{ stock_out.created_at|date:"M d, Y H:i" }}</p>
+                                    <p>
+                                        Stock out request created 
+                                        {% if stock_out.created_by %}
+                                            by {{ stock_out.created_by.get_full_name|default:stock_out.created_by.username }}
+                                        {% elif stock_out.issued_by %}
+                                            by {{ stock_out.issued_by }}
+                                        {% endif %}
+                                    </p>
+                                    <p class="small text-muted">Reference: {{ stock_out.reference|default:"N/A" }}</p>
+                                </div>
+                            </div>
+                            
+                            {% if stock_out.approved_at %}
+                            <div class="timeline-step {% if stock_out.status == 'approved' %}active{% endif %}">
+                                <div class="timeline-icon">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="timeline-content">
+                                    <h6>Approved</h6>
+                                    <p class="text-muted small">{{ stock_out.approved_at|date:"M d, Y H:i" }}</p>
+                                    <p>
+                                        Stock out approved 
+                                        {% if stock_out.approved_by %}
+                                            by {{ stock_out.approved_by.get_full_name|default:stock_out.approved_by.username }}
+                                        {% endif %}
+                                    </p>
+                                    {% if stock_out.purpose == 'SALE' %}
+                                    <p class="small text-success">
+                                        <i class="fas fa-check"></i> Stock has been deducted from inventory
+                                    </p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        No stock out request has been created for this sale yet.
+                    </div>
+                    
+                    <!-- Show if sale can request stock out -->
+                    {% if sale.can_request_stock_out %}
+                    <div class="mt-3">
+                        <a href="{% url 'sales:request_stock_out' sale.pk %}" class="btn btn-primary">
+                            <i class="fas fa-box-open"></i> Request Stock Out
+                        </a>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Sale must be approved before requesting stock out.
+                    </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Messages Display -->
+        {% if messages %}
+        <div class="mb-4">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Actions -->
+        {% if stock_out %}
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Actions</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <a href="{% url 'sales:check_stock_availability' sale.pk %}" class="btn btn-info mb-2">
+                            <i class="fas fa-search"></i> Check Stock Availability
+                        </a>
+                        <p class="small text-muted">Verify all items have sufficient stock</p>
+                    </div>
+                    
+                    {% if stock_out.status == 'pending' and user.groups.filter.name == 'Inventory' or user.is_superuser %}
+                    <div class="col-md-6">
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Inventory Team Action Required</strong><br>
+                            This stock out is pending approval.
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if stock_out.status == 'approved' and sale.status == 'APPROVED' %}
+                    <div class="col-md-6">
+                        <a href="{% url 'sales:sale_mark_completed' sale.pk %}" class="btn btn-success mb-2">
+                            <i class="fas fa-check-circle"></i> Mark Sale as Completed
+                        </a>
+                        <p class="small text-muted">Complete the sale after stock out approval</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Auto-dismiss alerts after 5 seconds
+        setTimeout(function() {
+            var alerts = document.querySelectorAll('.alert');
+            alerts.forEach(function(alert) {
+                var bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
+        }, 5000);
+    </script>
+</body>
+</html>

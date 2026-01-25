@@ -1,0 +1,406 @@
+/* list.css - Common styles for all list pages (items, stock in, stock out, adjustments) */
+
+/* Header Actions */
+.header-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+/* Filters */
+.filters { 
+    background: white; 
+    padding: 20px; 
+    border-radius: 8px; 
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05); 
+    margin-bottom: 30px; 
+}
+
+.filter-row { 
+    display: flex; 
+    gap: 15px; 
+    align-items: flex-end; 
+    flex-wrap: wrap; 
+}
+
+.filter-group { 
+    flex: 1; 
+    min-width: 180px; 
+}
+
+.filter-group label { 
+    display: block; 
+    margin-bottom: 5px; 
+    color: #2c3e50; 
+    font-weight: 500; 
+}
+
+.filter-group select, 
+.filter-group input { 
+    width: 100%; 
+    padding: 10px; 
+    border: 1px solid #ddd; 
+    border-radius: 4px; 
+    background: white;
+    font-size: 0.95em;
+}
+
+.filter-group button { 
+    padding: 10px 20px; 
+    background: #3498db; 
+    color: white; 
+    border: none; 
+    border-radius: 4px; 
+    cursor: pointer; 
+    font-weight: 500;
+}
+
+.filter-group button:hover { 
+    background: #2980b9; 
+}
+
+/* Table Container */
+.table-container {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    overflow: hidden;
+    margin-bottom: 30px;
+}
+
+/* Tables */
+table { 
+    width: 100%; 
+    border-collapse: collapse; 
+}
+
+th { 
+    background: #f8f9fa; 
+    color: #2c3e50; 
+    padding: 15px; 
+    text-align: left; 
+    font-weight: 600;
+    border-bottom: 2px solid #eee;
+}
+
+td { 
+    padding: 12px 15px; 
+    border-bottom: 1px solid #eee; 
+}
+
+tr:hover { 
+    background: #f8f9fa; 
+}
+
+/* Action links */
+.action-links { 
+    display: flex; 
+    gap: 10px; 
+    flex-wrap: wrap; 
+}
+
+.action-links a { 
+    color: #3498db; 
+    text-decoration: none; 
+    font-size: 0.9em;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background: #f8f9fa;
+}
+
+.action-links a:hover { 
+    background: #3498db; 
+    color: white; 
+    text-decoration: none;
+}
+
+/* Empty state */
+.empty-state { 
+    text-align: center; 
+    padding: 40px; 
+    color: #666; 
+}
+
+.empty-state a { 
+    color: #3498db; 
+}
+
+/* Decimal formatting */
+.decimal { 
+    font-family: monospace; 
+    font-weight: 500;
+}
+
+/* Item name styling */
+.item-name { 
+    font-weight: 600; 
+    color: #2c3e50;
+    display: block;
+    margin-bottom: 3px;
+}
+
+.item-details { 
+    font-size: 0.85em; 
+    color: #666;
+}
+
+/* Summary stats */
+.summary-stats {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.summary-stat {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    flex: 1;
+    min-width: 150px;
+    text-align: center;
+}
+
+.summary-stat-value {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #2c3e50;
+    margin-bottom: 5px;
+}
+
+.summary-stat-label {
+    font-size: 0.9em;
+    color: #666;
+}
+
+/* Badges */
+.badge { 
+    padding: 4px 10px; 
+    border-radius: 4px; 
+    font-size: 0.85em; 
+    font-weight: 500; 
+    display: inline-block;
+}
+
+/* Source badges */
+.source-purchase { 
+    background: #d4edda; 
+    color: #155724; 
+}
+
+.source-return { 
+    background: #cce5ff; 
+    color: #004085; 
+}
+
+.source-production { 
+    background: #d1ecf1; 
+    color: #0c5460; 
+}
+
+.source-adjustment { 
+    background: #f8f9fa; 
+    color: #6c757d; 
+}
+
+.source-other { 
+    background: #f8d7da; 
+    color: #721c24; 
+}
+
+/* Status badges */
+.status-pending { 
+    background: #fff3cd; 
+    color: #856404; 
+}
+
+.status-approved { 
+    background: #d4edda; 
+    color: #155724; 
+}
+
+.status-rejected { 
+    background: #f8d7da; 
+    color: #721c24; 
+}
+
+/* Purpose badges */
+.purpose-sale { 
+    background: #d4edda; 
+    color: #155724; 
+}
+
+.purpose-production { 
+    background: #cce5ff; 
+    color: #004085; 
+}
+
+.purpose-damage { 
+    background: #f8d7da; 
+    color: #721c24; 
+}
+
+.purpose-sample { 
+    background: #d1ecf1; 
+    color: #0c5460; 
+}
+
+.purpose-internal-use { 
+    background: #f8f9fa; 
+    color: #6c757d; 
+}
+
+.purpose-other { 
+    background: #fff3cd; 
+    color: #856404; 
+}
+
+/* Pagination */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-top: 30px;
+    flex-wrap: wrap;
+}
+
+.page-info {
+    color: #666;
+    font-size: 0.9em;
+    margin: 0 15px;
+}
+
+/* Mobile table adjustments */
+@media (max-width: 768px) {
+    .table-container {
+        overflow-x: auto;
+    }
+    
+    .header-actions {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .filter-row {
+        flex-direction: column;
+    }
+    
+    .filter-group {
+        width: 100%;
+    }
+    
+    .summary-stats {
+        flex-direction: column;
+    }
+    
+    .summary-stat {
+        width: 100%;
+    }
+}
+
+/* Responsive table column hiding */
+@media (max-width: 1024px) {
+    table th:nth-child(5),
+    table td:nth-child(5),
+    table th:nth-child(7),
+    table td:nth-child(7) {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    table th:nth-child(6),
+    table td:nth-child(6),
+    table th:nth-child(8),
+    table td:nth-child(8) {
+        display: none;
+    }
+}
+
+/* Back link */
+.back-link { 
+    display: inline-block; 
+    margin-top: 20px; 
+    color: #3498db; 
+    text-decoration: none; 
+    font-weight: 500;
+}
+
+.back-link:hover { 
+    text-decoration: underline; 
+}
+
+/* Alert messages for list pages */
+.alert { 
+    padding: 15px; 
+    border-radius: 8px; 
+    margin-bottom: 20px;
+    border-left: 4px solid #f39c12;
+}
+
+.alert-success { 
+    background: #d4edda; 
+    color: #155724; 
+    border-left-color: #28a745;
+}
+
+.alert-danger { 
+    background: #f8d7da; 
+    color: #721c24; 
+    border-left-color: #dc3545;
+}
+
+.alert-warning { 
+    background: #fff3cd; 
+    color: #856404; 
+    border-left-color: #ffc107;
+}
+
+/* Add to list.css for consistency */
+
+.table-responsive {
+    overflow-x: auto;
+    margin-bottom: 20px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 30px;
+}
+
+/* Default table headers (can be overridden by specific CSS) */
+th {
+    background: #f8f9fa;
+    color: #2c3e50;
+    padding: 15px;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 2px solid #e9ecef;
+}
+
+td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #eee;
+    vertical-align: top;
+}
+
+tr:hover {
+    background: #f8f9fa;
+}
+
+/* Note text for empty states */
+.note-text {
+    font-size: 0.9em;
+    margin-top: 10px;
+    color: #888;
+}

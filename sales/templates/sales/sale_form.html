@@ -1,0 +1,280 @@
+{% extends 'sales/base.html' %}
+{% load static %}
+
+{% block title %}{{ title|default:"New Sale" }} - CornelSimba ERP{% endblock %}
+{% block page_title %}{{ title|default:"Create New Sale" }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/sale_form.css' %}">
+{% endblock %}
+
+{% block content %}
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+    
+
+    <div class="sale-form-container">
+        <!-- Form Header -->
+        <div class="form-header">
+            <nav aria-label="breadcrumb" class="form-breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'sales:sale_list' %}" class="text-decoration-none">Sales</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ title|default:"New Sale" }}</li>
+                </ol>
+            </nav>
+            
+            <div class="d-flex justify-content-between align-items-start align-items-md-center flex-wrap gap-3">
+                <div>
+                    <h1 class="form-title">{{ title|default:"Create New Sale" }}</h1>
+                    <p class="form-subtitle">Fill in sale details and add items</p>
+                </div>
+                <a href="{% url 'sales:sale_list' %}" class="btn-custom btn-outline-custom">
+                    <i class="bi bi-arrow-left"></i>
+                    Back to Sales
+                </a>
+            </div>
+        </div>
+
+        <!-- Main Form Card -->
+        <div class="card-custom form-card-custom">
+            <div class="card-body-custom p-4">
+                <form method="post" id="saleForm" novalidate>
+                    {% csrf_token %}
+                    
+                    {% if sale_form.errors or item_formset.errors %}
+                    <div class="alert-custom alert-danger">
+                        <h6 class="alert-heading">Please fix the following errors:</h6>
+                        <ul class="mb-0">
+                            {% for field in sale_form %}
+                                {% for error in field.errors %}
+                                <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                                {% endfor %}
+                            {% endfor %}
+                            {% for form in item_formset %}
+                                {% for field in form %}
+                                    {% for error in field.errors %}
+                                    <li><strong>Item {{ forloop.parentloop.counter }} - {{ field.label }}:</strong> {{ error }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Sale Information Section -->
+                    <section class="form-section">
+                        <h3 class="form-section-title">Sale Information</h3>
+                        <div class="form-grid">
+                            <!-- Customer Field -->
+                            <div class="filter-group">
+                                <label for="id_customer" class="form-label-custom required-field">Customer</label>
+                                {{ sale_form.customer }}
+                                {% if sale_form.customer.errors %}
+                                <div class="invalid-feedback-custom">
+                                    {{ sale_form.customer.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Sale Type Field -->
+                            <div class="filter-group">
+                                <label for="id_sale_type" class="form-label-custom">Sale Type</label>
+                                {{ sale_form.sale_type }}
+                            </div>
+                            
+                            <!-- Discount Field -->
+                            <div class="filter-group">
+                                <label for="id_discount_amount" class="form-label-custom">Discount</label>
+                                <div class="currency-input">
+                                    <span class="currency-prefix">Tsh</span>
+                                    {{ sale_form.discount_amount }}
+                                </div>
+                                <small class="text-muted">Amount in Tanzanian Shillings</small>
+                                {% if sale_form.discount_amount.errors %}
+                                <div class="invalid-feedback-custom">
+                                    {{ sale_form.discount_amount.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </section>
+                    
+                    <!-- Sale Items Section -->
+                    <section class="form-section">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h3 class="form-section-title mb-0">Sale Items</h3>
+                            <button type="button" id="add-item" class="add-item-btn">
+                                <i class="bi bi-plus-lg"></i>
+                                Add Item
+                            </button>
+                        </div>
+                        
+                        {{ item_formset.management_form }}
+                        <div id="item-forms">
+                            {% for form in item_formset %}
+                            <div class="item-form-card" data-index="{{ forloop.counter0 }}">
+                                <div class="item-form-header">
+                                    <h5 class="item-form-title">Item {{ forloop.counter }}</h5>
+                                    {% if form.instance.pk or forloop.counter0 > 0 %}
+                                    <button type="button" class="remove-item-btn">
+                                        <i class="bi bi-trash"></i>
+                                        Remove
+                                    </button>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="item-form-grid">
+                                    <!-- Item Field -->
+                                    <div class="filter-group">
+                                        <label class="form-label-custom required-field">Item</label>
+                                        {{ form.item }}
+                                        {% if form.item.errors %}
+                                        <div class="invalid-feedback-custom">
+                                            {{ form.item.errors }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <!-- Quantity Field -->
+                                    <div class="filter-group">
+                                        <label class="form-label-custom required-field">Quantity</label>
+                                        {{ form.quantity }}
+                                        {% if form.quantity.errors %}
+                                        <div class="invalid-feedback-custom">
+                                            {{ form.quantity.errors }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <!-- Unit Price Field -->
+                                    <div class="filter-group">
+                                        <label class="form-label-custom required-field">Unit Price</label>
+                                        <div class="currency-input">
+                                            <span class="currency-prefix">Tsh</span>
+                                            {{ form.unit_price }}
+                                        </div>
+                                        <small class="text-muted">Per unit</small>
+                                        {% if form.unit_price.errors %}
+                                        <div class="invalid-feedback-custom">
+                                            {{ form.unit_price.errors }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <!-- Tax Rate Field -->
+                                    <div class="filter-group">
+                                        <label class="form-label-custom">Tax Rate (%)</label>
+                                        {{ form.tax_rate }}
+                                    </div>
+                                </div>
+                                
+                                <!-- Item Total Display -->
+                                <div class="item-total-display">
+                                    <span class="item-total currency-display" data-index="{{ forloop.counter0 }}">
+                                        Tsh 0
+                                    </span>
+                                </div>
+                                
+                                {% for hidden in form.hidden_fields %}
+                                    {{ hidden }}
+                                {% endfor %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                    
+                    <!-- Delivery Information Section -->
+                    <section class="form-section">
+                        <h3 class="form-section-title">Delivery Information</h3>
+                        <div class="form-grid">
+                            <div class="filter-group">
+                                <label for="id_delivery_address" class="form-label-custom">Delivery Address</label>
+                                {{ sale_form.delivery_address }}
+                            </div>
+                            
+                            <div class="filter-group">
+                                <label for="id_delivery_date" class="form-label-custom">Delivery Date</label>
+                                {{ sale_form.delivery_date }}
+                            </div>
+                        </div>
+                    </section>
+                    
+                    <!-- Additional Information Section -->
+                    <section class="form-section">
+                        <h3 class="form-section-title">Additional Information</h3>
+                        <div class="form-grid">
+                            <div class="filter-group">
+                                <label for="id_notes" class="form-label-custom">Notes</label>
+                                {{ sale_form.notes }}
+                            </div>
+                            
+                            <div class="filter-group">
+                                <label for="id_terms_conditions" class="form-label-custom">Terms & Conditions</label>
+                                {{ sale_form.terms_conditions }}
+                            </div>
+                        </div>
+                    </section>
+                    
+                    <!-- Sale Summary -->
+                    <div class="summary-card">
+                        <h4 class="summary-card-title">Sale Summary</h4>
+                        <div class="summary-row">
+                            <span>Subtotal:</span>
+                            <span class="summary-amount currency-display" id="subtotal">0</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Tax:</span>
+                            <span class="summary-amount currency-display" id="tax">0</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Discount:</span>
+                            <span class="summary-amount currency-display" id="discount">0</span>
+                        </div>
+                        <div class="summary-row summary-total">
+                            <span>Total Amount:</span>
+                            <span class="summary-amount currency-display" id="total">0</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Form Actions -->
+                    <div class="form-actions">
+                        <div class="d-flex justify-content-between flex-wrap gap-3">
+                            <a href="{% url 'sales:sale_list' %}" class="btn-custom btn-outline-custom">
+                                <i class="bi bi-x-lg"></i>
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn-custom btn-success-custom" id="submitBtn">
+                                <i class="bi bi-check-lg"></i>
+                                Save Sale
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block extra_js %}
+<script>
+    // This JavaScript code would be moved to an external JS file
+    // Keeping it here temporarily for demonstration
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize form controls with custom classes
+        const formControls = document.querySelectorAll('#saleForm input, #saleForm select, #saleForm textarea');
+        formControls.forEach(control => {
+            if (!control.classList.contains('form-control-custom')) {
+                control.classList.add('form-control-custom');
+            }
+        });
+        
+        // Initialize sale form functionality
+        if (typeof SaleForm !== 'undefined') {
+            new SaleForm('saleForm', 'item-forms', 'add-item');
+        }
+    });
+</script>
+{% endblock %}

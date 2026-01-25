@@ -1,0 +1,330 @@
+{% extends 'inventory/base.html' %}
+{% load static %}
+
+{% block title %}Stock Out Records - Inventory{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'inventory/css/list.css' %}">
+<style>
+    /* Stock out list specific styles */
+    .container { 
+        max-width: 1400px; 
+        margin: 0 auto; 
+    }
+    
+    h1 { 
+        color: #2c3e50; 
+        margin-bottom: 20px; 
+        padding-bottom: 10px; 
+        border-bottom: 3px solid #e74c3c; 
+    }
+    
+    /* Button colors for stock out */
+    .btn { 
+        background: #e74c3c; 
+    }
+    
+    .btn:hover { 
+        background: #c0392b; 
+    }
+    
+    .filter-group button {
+        background: #e74c3c;
+    }
+    
+    .filter-group button:hover {
+        background: #c0392b;
+    }
+    
+    /* Highlight pending rows */
+    .pending-row {
+        background-color: #fff8e1;
+        border-left: 3px solid #ffc107;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="header-actions">
+    <h1>📤 Stock Out Records</h1>
+    <div>
+        <a href="{% url 'inventory:stock_out_create' %}" class="btn">➕ New Stock Out</a>
+        <a href="{% url 'inventory:dashboard' %}" class="btn btn-secondary">← Dashboard</a>
+    </div>
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+
+<!-- Summary Stats -->
+<div class="summary-stats">
+    <div class="summary-stat">
+        <div class="summary-stat-value">{{ stock_outs.paginator.count|default:stock_outs|length }}</div>
+        <div class="summary-stat-label">Total Records</div>
+    </div>
+    <div class="summary-stat">
+        <div class="summary-stat-value">
+            {% with sales_count=0 %}
+            {% for stock_out in stock_outs %}
+                {% if stock_out.purpose == 'SALE' %}
+                    {% with sales_count=sales_count|add:1 %}{% endwith %}
+                {% endif %}
+            {% endfor %}
+            {{ sales_count }}
+            {% endwith %}
+        </div>
+        <div class="summary-stat-label">Sales</div>
+    </div>
+    <div class="summary-stat">
+        <div class="summary-stat-value">
+            {% with pending_count=0 %}
+            {% for stock_out in stock_outs %}
+                {% if stock_out.status == 'pending' %}
+                    {% with pending_count=pending_count|add:1 %}{% endwith %}
+                {% endif %}
+            {% endfor %}
+            {{ pending_count }}
+            {% endwith %}
+        </div>
+        <div class="summary-stat-label">Pending</div>
+    </div>
+    <div class="summary-stat">
+        <div class="summary-stat-value">
+            {% with total_qty=0 %}
+            {% for stock_out in stock_outs %}
+                {% with total_qty=total_qty|add:stock_out.quantity %}{% endwith %}
+            {% endfor %}
+            {{ total_qty|floatformat:3 }}
+            {% endwith %}
+        </div>
+        <div class="summary-stat-label">Total Quantity</div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="filters">
+    <form method="GET" class="filter-row">
+        <div class="filter-group">
+            <label for="purpose">Purpose</label>
+            <select name="purpose" id="purpose">
+                <option value="">All Purposes</option>
+                {% for value, label in purpose_choices %}
+                <option value="{{ value }}" {% if request.GET.purpose == value %}selected{% endif %}>
+                    {{ label }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="filter-group">
+            <label for="status">Status</label>
+            <select name="status" id="status">
+                <option value="">All Status</option>
+                <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Pending</option>
+                <option value="approved" {% if request.GET.status == 'approved' %}selected{% endif %}>Approved</option>
+                <option value="rejected" {% if request.GET.status == 'rejected' %}selected{% endif %}>Rejected</option>
+            </select>
+        </div>
+        
+        <div class="filter-group">
+            <label for="date_from">From Date</label>
+            <input type="date" name="date_from" id="date_from" value="{{ request.GET.date_from }}">
+        </div>
+        
+        <div class="filter-group">
+            <label for="date_to">To Date</label>
+            <input type="date" name="date_to" id="date_to" value="{{ request.GET.date_to }}">
+        </div>
+        
+        <div class="filter-group">
+            <button type="submit">Apply Filters</button>
+            {% if request.GET.purpose or request.GET.status or request.GET.date_from or request.GET.date_to %}
+            <a href="{% url 'inventory:stock_out_list' %}" style="margin-left: 10px; color: #666; font-size: 0.9em;">Clear filters</a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<!-- Table -->
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Item</th>
+                <th>Quantity</th>
+                <th>Issued To</th>
+                <th>Purpose</th>
+                <th>Status</th>
+                <th>Reference</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for stock_out in stock_outs %}
+            <tr class="{% if stock_out.status == 'pending' %}pending-row{% endif %}">
+                <td>
+                    <div class="item-name">{{ stock_out.date|date:"M d, Y" }}</div>
+                    <div class="item-details">{{ stock_out.date|date:"H:i" }}</div>
+                </td>
+                <td>
+                    <a href="{% url 'inventory:item_detail' stock_out.item.pk %}" style="color: #2c3e50; text-decoration: none;">
+                        <div class="item-name">{{ stock_out.item.name }}</div>
+                    </a>
+                    <div class="item-details">{{ stock_out.item.unit_of_measure }}</div>
+                </td>
+                <td>
+                    <span class="decimal">{{ stock_out.quantity|floatformat:3 }}</span>
+                </td>
+                <td>{{ stock_out.issued_to|default:"-" }}</td>
+                <td>
+                    <span class="badge purpose-{{ stock_out.purpose|lower|slugify }}">
+                        {{ stock_out.get_purpose_display }}
+                    </span>
+                </td>
+                <td>
+                    {% if stock_out.status == 'pending' %}
+                    <span class="badge status-pending">Pending</span>
+                    {% elif stock_out.status == 'approved' %}
+                    <span class="badge status-approved">Approved</span>
+                    {% else %}
+                    <span class="badge status-rejected">Rejected</span>
+                    {% endif %}
+                </td>
+                <td>{{ stock_out.reference|default:"-" }}</td>
+                <td>
+                    <div class="action-links">
+                        <a href="{% url 'inventory:stock_out_detail' stock_out.pk %}" title="View Details">👁️</a>
+                        {% if stock_out.status == 'pending' %}
+                            <a href="{% url 'inventory:approve_stockout' stock_out.pk %}" 
+                               title="Approve" 
+                               onclick="return confirm('Approve this stock out?')">✅</a>
+                            <a href="{% url 'inventory:reject_stockout' stock_out.pk %}" 
+                               title="Reject" 
+                               onclick="return confirm('Reject this stock out?')">❌</a>
+                        {% endif %}
+                        {% if stock_out.linked_sale %}
+                            <a href="{% url 'sales:sale_detail' stock_out.linked_sale.pk %}" 
+                               title="View Sale" 
+                               target="_blank">💰</a>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8" class="empty-state">
+                    <p>No stock out records found.</p>
+                    {% if request.GET.purpose or request.GET.status or request.GET.date_from or request.GET.date_to %}
+                    <a href="{% url 'inventory:stock_out_list' %}">Clear filters</a> or 
+                    {% endif %}
+                    <a href="{% url 'inventory:stock_out_create' %}">Record your first stock out</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Pagination -->
+{% if stock_outs.has_other_pages %}
+<div class="pagination">
+    {% if stock_outs.has_previous %}
+    <a href="?page=1{% if request.GET.purpose %}&purpose={{ request.GET.purpose }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}" 
+       class="btn btn-secondary">
+        « First
+    </a>
+    <a href="?page={{ stock_outs.previous_page_number }}{% if request.GET.purpose %}&purpose={{ request.GET.purpose }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}" 
+       class="btn btn-secondary">
+        ← Previous
+    </a>
+    {% endif %}
+    
+    <span class="page-info">
+        Page {{ stock_outs.number }} of {{ stock_outs.paginator.num_pages }}
+    </span>
+    
+    {% if stock_outs.has_next %}
+    <a href="?page={{ stock_outs.next_page_number }}{% if request.GET.purpose %}&purpose={{ request.GET.purpose }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}" 
+       class="btn btn-secondary">
+        Next →
+    </a>
+    <a href="?page={{ stock_outs.paginator.num_pages }}{% if request.GET.purpose %}&purpose={{ request.GET.purpose }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}" 
+       class="btn btn-secondary">
+        Last »
+    </a>
+    {% endif %}
+</div>
+
+<div style="text-align: center; margin-top: 10px; color: #666; font-size: 0.9em;">
+    Showing {{ stock_outs.start_index }} to {{ stock_outs.end_index }} of {{ stock_outs.paginator.count }} records
+</div>
+{% endif %}
+
+<a href="{% url 'inventory:dashboard' %}" class="back-link">← Back to Inventory Dashboard</a>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-submit filter form when selections change
+    document.getElementById('purpose').addEventListener('change', function() {
+        this.form.submit();
+    });
+    
+    document.getElementById('status').addEventListener('change', function() {
+        this.form.submit();
+    });
+    
+    // Set max date for date_to to today
+    document.addEventListener('DOMContentLoaded', function() {
+        const today = new Date().toISOString().split('T')[0];
+        const dateFrom = document.getElementById('date_from');
+        const dateTo = document.getElementById('date_to');
+        
+        if (dateFrom && !dateFrom.value) {
+            dateFrom.max = today;
+        }
+        
+        if (dateTo) {
+            dateTo.max = today;
+            if (dateFrom && dateFrom.value) {
+                dateTo.min = dateFrom.value;
+            }
+        }
+        
+        if (dateFrom) {
+            dateFrom.addEventListener('change', function() {
+                if (dateTo) {
+                    dateTo.min = this.value;
+                }
+            });
+        }
+        
+        // Quick approve/reject confirmation
+        const approveLinks = document.querySelectorAll('a[title="Approve"]');
+        const rejectLinks = document.querySelectorAll('a[title="Reject"]');
+        
+        approveLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                if (!confirm('Are you sure you want to approve this stock out?')) {
+                    e.preventDefault();
+                }
+            });
+        });
+        
+        rejectLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                if (!confirm('Are you sure you want to reject this stock out?')) {
+                    e.preventDefault();
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

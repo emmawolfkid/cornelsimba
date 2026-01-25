@@ -1,0 +1,167 @@
+{% extends 'inventory/base.html' %}
+
+{% block title %}Stock Adjustments{% endblock %}
+
+{% block extra_css %}
+{% load static %} 
+<link rel="stylesheet" href="{% static 'inventory/css/adjustments.css' %}">
+<link rel="stylesheet" href="{% static 'inventory/css/forms.css' %}">
+<style>
+    /* Additional inline styles if needed */
+    .btn-warning { background: #f39c12; }
+    .btn-warning:hover { background: #e67e22; }
+    
+    .btn-info { background: #17a2b8; }
+    .btn-info:hover { background: #138496; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h1>📋 Stock Adjustments</h1>
+    <div class="actions">
+        <a href="{% url 'inventory:adjustment_create' %}" class="btn btn-warning">
+            🔄 Request Adjustment
+        </a>
+        <a href="{% url 'inventory:dashboard' %}" class="btn btn-secondary">
+            ← Dashboard
+        </a>
+    </div>
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+
+<!-- Filters -->
+<div class="filter-form">
+    <form method="get">
+        <div class="row">
+            <div class="col">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select">
+                    <option value="">All Status</option>
+                    {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if request.GET.status == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col">
+                <label class="form-label">Adjustment Type</label>
+                <select name="type" class="form-select">
+                    <option value="">All Types</option>
+                    {% for value, label in type_choices %}
+                        <option value="{{ value }}" {% if request.GET.type == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col">
+                <label class="form-label">&nbsp;</label>
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" class="btn btn-primary">Filter</button>
+                    <a href="{% url 'inventory:adjustment_list' %}" class="btn btn-secondary">Clear</a>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Adjustments Table -->
+<div class="table-responsive">
+    <table class="adjustment-table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Item</th>
+                <th>Quantity</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Requested By</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for adj in adjustments %}
+            <tr>
+                <td>{{ adj.created_at|date:"Y-m-d H:i" }}</td>
+                <td>{{ adj.item.name }}</td>
+                <td>
+                    <span class="badge {% if adj.adjustment_quantity > 0 %}bg-success{% else %}bg-danger{% endif %}">
+                        {% if adj.adjustment_quantity > 0 %}+{% endif %}{{ adj.adjustment_quantity|floatformat:3 }}
+                    </span>
+                </td>
+                <td>{{ adj.get_adjustment_type_display }}</td>
+                <td>
+                    {% if adj.status == 'pending' %}
+                        <span class="badge bg-warning">Pending</span>
+                    {% elif adj.status == 'approved' %}
+                        <span class="badge bg-success">Approved</span>
+                    {% else %}
+                        <span class="badge bg-danger">Rejected</span>
+                    {% endif %}
+                </td>
+                <td>{{ adj.requested_by.get_full_name|default:adj.requested_by.username }}</td>
+                <td>
+                    <div class="actions">
+                        <a href="{% url 'inventory:adjustment_detail' adj.pk %}" class="btn btn-sm btn-info">
+                            👁️ View
+                        </a>
+                        {% if adj.status == 'pending' %}
+                            <a href="{% url 'inventory:adjustment_approve' adj.pk %}" class="btn btn-sm btn-warning">
+                                ✓ Review
+                            </a>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" class="text-center" style="text-align: center; padding: 20px; color: #666;">
+                    No adjustments found
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Pagination -->
+{% if adjustments.has_other_pages %}
+<div class="pagination">
+    {% if adjustments.has_previous %}
+        <a href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">« First</a>
+        <a href="?page={{ adjustments.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">‹ Prev</a>
+    {% endif %}
+    
+    <span class="current">
+        Page {{ adjustments.number }} of {{ adjustments.paginator.num_pages }}
+    </span>
+    
+    {% if adjustments.has_next %}
+        <a href="?page={{ adjustments.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Next ›</a>
+        <a href="?page={{ adjustments.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Last »</a>
+    {% endif %}
+</div>
+{% endif %}
+
+<a href="{% url 'inventory:dashboard' %}" class="back-link">← Back to Inventory Dashboard</a>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-submit filter on select change
+    document.querySelectorAll('.form-select').forEach(select => {
+        select.addEventListener('change', function() {
+            this.closest('form').submit();
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,69 @@
+<nav class="top-navbar">
+    <div class="navbar-left">
+        <button class="sidebar-toggle-mobile" id="sidebarToggleMobile">
+            <i class="fas fa-bars"></i>
+        </button>
+        
+        <div class="breadcrumb">
+            {% block breadcrumb %}
+            <a href="{% url 'finance:dashboard' %}">
+                <i class="fas fa-home"></i>
+            </a>
+            {% endblock %}
+        </div>
+    </div>
+    
+    <div class="navbar-center">
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" placeholder="Search..." id="globalSearch">
+        </div>
+    </div>
+    
+    <div class="navbar-right">
+       <div class="notifications">
+    <button class="notification-btn" id="notificationBtn">
+        <i class="fas fa-bell"></i>
+        {% if total_pending_count > 0 %}
+        <span class="notification-badge">
+            {{ total_pending_count }}
+        </span>
+        {% endif %}
+    </button>
+</div>
+        <div class="user-menu">
+            <div class="user-dropdown">
+                <button class="user-btn" id="userBtn">
+                    <span class="user-name">{{ request.user.get_full_name|default:request.user.username }}</span>
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+                <div class="user-dropdown-content" id="userDropdown">
+                    <div class="user-dropdown-header">
+                        <div class="user-avatar-small">
+                            <i class="fas fa-user-circle"></i>
+                        </div>
+                        <div>
+                            <strong>{{ request.user.get_full_name|default:request.user.username }}</strong>
+                            <small>Finance Department</small>
+                        </div>
+                    </div>
+                    <div class="user-dropdown-body">
+                        <a href="#">
+                            <i class="fas fa-user"></i> Profile
+                        </a>
+                        <a href="#">
+                            <i class="fas fa-cog"></i> Settings
+                        </a>
+                        <a href="#">
+                            <i class="fas fa-question-circle"></i> Help
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="{% url 'admin:logout' %}" class="logout-btn">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>

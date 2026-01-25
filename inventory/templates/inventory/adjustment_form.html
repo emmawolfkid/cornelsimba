@@ -1,0 +1,331 @@
+{% extends 'inventory/base.html' %}
+
+{% block title %}Request Stock Adjustment{% endblock %}
+
+{% block extra_css %}
+{% load static %} 
+<link rel="stylesheet" href="{% static 'inventory/css/forms.css' %}">
+<link rel="stylesheet" href="{% static 'inventory/css/adjustment.css' %}">
+<link rel="stylesheet" href="{% static 'inventory/css/components.css' %}">
+<style>
+    /* Additional form-specific inline styles */
+    .container { 
+        max-width: 800px; 
+        margin: 0 auto; 
+    }
+    
+    h1 { 
+        color: #2c3e50; 
+        margin-bottom: 30px; 
+        padding-bottom: 10px; 
+        border-bottom: 3px solid #f39c12; 
+    }
+    
+    /* Form control specific styles */
+    .form-control:focus, .form-select:focus, textarea.form-control:focus { 
+        outline: none; 
+        border-color: #f39c12; 
+        box-shadow: 0 0 0 3px rgba(243, 156, 18, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1>🔄 Request Stock Adjustment</h1>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+
+<div class="card">
+    <div class="card-header">
+        <h2 style="margin: 0; color: white;">Correction Request Form</h2>
+    </div>
+    <div class="card-body">
+        <form method="post" id="adjustmentForm">
+            {% csrf_token %}
+            
+            <!-- Item Selection -->
+            <div class="mb-3">
+                <label class="form-label required">Item</label>
+                {{ form.item }}
+                {% if form.item.errors %}
+                    <div class="error-message">{{ form.item.errors }}</div>
+                {% endif %}
+                
+                <!-- Item info will be displayed here -->
+                <div id="itemInfo" class="item-info" style="display: none;">
+                    <p><strong>Current Stock:</strong> <span id="currentStock" class="stock-value">0</span> <span id="stockUnit">units</span></p>
+                    <p><strong>Unit of Measure:</strong> <span id="itemUnit" class="stock-value">-</span></p>
+                    <p><strong>Status:</strong> <span id="itemStatus">-</span></p>
+                </div>
+            </div>
+            
+            <!-- Adjustment Quantity -->
+            <div class="mb-3">
+                <label class="form-label required">Adjustment Quantity</label>
+                <div class="input-group">
+                    {{ form.adjustment_quantity }}
+                    <span class="input-group-text" id="quantityUnit">units</span>
+                </div>
+                <div class="form-text">
+                    Use <strong>negative (-)</strong> to reduce stock, <strong>positive (+)</strong> to add stock
+                </div>
+                {% if form.adjustment_quantity.errors %}
+                    <div class="error-message">{{ form.adjustment_quantity.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <!-- Adjustment Type -->
+            <div class="mb-3">
+                <label class="form-label required">Adjustment Type</label>
+                {{ form.adjustment_type }}
+                {% if form.adjustment_type.errors %}
+                    <div class="error-message">{{ form.adjustment_type.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <!-- Reason -->
+            <div class="mb-3">
+                <label class="form-label required">Reason</label>
+                {{ form.reason }}
+                <div class="form-text">
+                    <strong>Be specific:</strong> What was the error? When was it discovered? Who verified the actual quantity?
+                </div>
+                {% if form.reason.errors %}
+                    <div class="error-message">{{ form.reason.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <!-- Reference Stock In -->
+            <div class="mb-3">
+                <label class="form-label">Reference Stock In (Optional)</label>
+                {{ form.reference_stock_in }}
+                <div class="form-text">
+                    If this adjustment is correcting a specific Stock In entry
+                </div>
+            </div>
+            
+            <!-- Example Section -->
+            <div class="example-section">
+                <h4>📝 Examples:</h4>
+                <ul style="margin: 10px 0; padding-left: 20px;">
+                    <li><strong>Over-recorded:</strong> Entered 1000kg but actual was 500kg → Enter <strong>-500kg</strong></li>
+                    <li><strong>Under-recorded:</strong> Entered 200kg but actual was 300kg → Enter <strong>+100kg</strong></li>
+                    <li><strong>Damaged stock:</strong> 50kg found damaged → Enter <strong>-50kg</strong> with reason "Damaged stock found during inspection"</li>
+                    <li><strong>Stock found:</strong> Found 20kg not recorded → Enter <strong>+20kg</strong> with reason "Unrecorded stock found during audit"</li>
+                </ul>
+            </div>
+            
+            <!-- Important Notice -->
+            <div class="alert alert-info">
+                <strong>⚠️ Important Notice:</strong> 
+                <ul style="margin: 10px 0; padding-left: 20px;">
+                    <li>This adjustment requires <strong>manager approval</strong> before affecting stock levels</li>
+                    <li>Always provide detailed reasons for audit trail</li>
+                    <li>Never edit or delete original stock records</li>
+                    <li>Adjustments create a permanent audit trail</li>
+                </ul>
+            </div>
+            
+            <!-- Result Preview -->
+            <div class="alert alert-warning" id="resultPreview" style="display: none;">
+                <strong>📊 Result Preview:</strong>
+                <p style="margin: 10px 0 0 0;">
+                    Current: <span id="previewCurrent">0</span> 
+                    → Adjustment: <span id="previewAdjustment">0</span> 
+                    → New Total: <span id="previewNew">0</span>
+                </p>
+            </div>
+            
+            <div class="form-footer">
+                <a href="{% url 'inventory:adjustment_list' %}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-warning" id="submitBtn">
+                    <span id="submitText">Submit Request</span>
+                    <span id="loadingText" style="display: none;">Submitting...</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<a href="{% url 'inventory:dashboard' %}" class="back-link">← Back to Inventory Dashboard</a>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Form elements
+    const itemSelect = document.getElementById('id_item');
+    const adjustmentQuantity = document.getElementById('id_adjustment_quantity');
+    const quantityUnit = document.getElementById('quantityUnit');
+    const itemInfo = document.getElementById('itemInfo');
+    const resultPreview = document.getElementById('resultPreview');
+    const form = document.getElementById('adjustmentForm');
+    
+    // Set step for decimal input
+    if (adjustmentQuantity) {
+        adjustmentQuantity.step = '0.001';
+    }
+    
+    // Fetch item details when item is selected
+    if (itemSelect) {
+        itemSelect.addEventListener('change', function() {
+            const itemId = this.value;
+            if (itemId) {
+                fetch(`/inventory/api/item/${itemId}/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            const currentStock = parseFloat(data.quantity);
+                            document.getElementById('currentStock').textContent = currentStock.toFixed(3);
+                            document.getElementById('stockUnit').textContent = data.unit_of_measure;
+                            document.getElementById('itemUnit').textContent = data.unit_of_measure;
+                            quantityUnit.textContent = data.unit_of_measure;
+                            
+                            // Determine status
+                            let status = 'Good';
+                            let statusColor = '#28a745';
+                            
+                            if (currentStock <= data.minimum_stock) {
+                                status = 'Critical';
+                                statusColor = '#dc3545';
+                            } else if (currentStock <= data.reorder_level) {
+                                status = 'Low';
+                                statusColor = '#ffc107';
+                            }
+                            
+                            document.getElementById('itemStatus').textContent = status;
+                            document.getElementById('itemStatus').style.color = statusColor;
+                            itemInfo.style.display = 'block';
+                            
+                            // Update preview
+                            updateResultPreview();
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching item details:', error);
+                    });
+            } else {
+                itemInfo.style.display = 'none';
+                resultPreview.style.display = 'none';
+            }
+        });
+    }
+    
+    // Update result preview when quantity changes
+    if (adjustmentQuantity) {
+        adjustmentQuantity.addEventListener('input', function() {
+            updateResultPreview();
+        });
+    }
+    
+    function updateResultPreview() {
+        const currentStock = parseFloat(document.getElementById('currentStock')?.textContent || 0);
+        const adjustmentQty = parseFloat(adjustmentQuantity.value) || 0;
+        const newTotal = currentStock + adjustmentQty;
+        const unit = document.getElementById('stockUnit')?.textContent || 'units';
+        
+        if (!isNaN(currentStock) && adjustmentQuantity.value.trim() !== '') {
+            document.getElementById('previewCurrent').textContent = currentStock.toFixed(3) + ' ' + unit;
+            document.getElementById('previewAdjustment').textContent = 
+                (adjustmentQty >= 0 ? '+' : '') + adjustmentQty.toFixed(3) + ' ' + unit;
+            document.getElementById('previewNew').textContent = newTotal.toFixed(3) + ' ' + unit;
+            
+            // Color code the new total
+            const newTotalElement = document.getElementById('previewNew');
+            if (newTotal < 0) {
+                newTotalElement.style.color = '#dc3545';
+                newTotalElement.innerHTML = newTotal.toFixed(3) + ' ' + unit + ' <small style="color: #dc3545;">(⚠️ Negative Stock)</small>';
+            } else {
+                newTotalElement.style.color = '#28a745';
+                newTotalElement.textContent = newTotal.toFixed(3) + ' ' + unit;
+            }
+            
+            resultPreview.style.display = 'block';
+        } else {
+            resultPreview.style.display = 'none';
+        }
+    }
+    
+    // Form validation
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            // Validate adjustment quantity
+            if (adjustmentQuantity) {
+                const adjQty = parseFloat(adjustmentQuantity.value);
+                if (isNaN(adjQty) || adjQty === 0) {
+                    e.preventDefault();
+                    alert('Adjustment quantity cannot be zero. Use negative to reduce or positive to add stock.');
+                    adjustmentQuantity.focus();
+                    return false;
+                }
+                
+                // Warn if adjustment would result in negative stock
+                const currentStock = parseFloat(document.getElementById('currentStock')?.textContent || 0);
+                if (currentStock + adjQty < 0) {
+                    if (!confirm('⚠️ Warning: This adjustment will result in negative stock. Are you sure you want to proceed?')) {
+                        e.preventDefault();
+                        return false;
+                    }
+                }
+            }
+            
+            // Validate reason length
+            const reasonField = document.getElementById('id_reason');
+            if (reasonField && reasonField.value.trim().length < 10) {
+                e.preventDefault();
+                alert('Please provide a more detailed reason (at least 10 characters).');
+                reasonField.focus();
+                return false;
+            }
+            
+            // Show loading state
+            const submitBtn = document.getElementById('submitBtn');
+            const submitText = document.getElementById('submitText');
+            const loadingText = document.getElementById('loadingText');
+            
+            if (submitBtn) {
+                submitText.style.display = 'none';
+                loadingText.style.display = 'inline';
+                submitBtn.disabled = true;
+            }
+            
+            return true;
+        });
+    }
+    
+    // Real-time validation
+    if (adjustmentQuantity) {
+        adjustmentQuantity.addEventListener('input', function() {
+            const value = parseFloat(this.value);
+            if (isNaN(value)) {
+                this.classList.add('error');
+            } else {
+                this.classList.remove('error');
+            }
+        });
+    }
+    
+    // Auto-validate on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add error styling to fields with errors
+        const formFields = form?.querySelectorAll('input, select, textarea');
+        if (formFields) {
+            formFields.forEach(field => {
+                if (field.parentElement.querySelector('.error-message')) {
+                    field.classList.add('error');
+                }
+            });
+        }
+        
+        // Focus on first field if no errors
+        if (itemSelect && !itemSelect.parentElement.querySelector('.error-message')) {
+            itemSelect.focus();
+        }
+    });
+</script>
+{% endblock %}

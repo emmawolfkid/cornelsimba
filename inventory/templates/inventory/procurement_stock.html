@@ -1,0 +1,130 @@
+{% extends 'inventory/base.html' %}
+{% load static %}
+
+{% block title %}Procurement Stock - Inventory{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'inventory/css/procurement.css' %}">
+<link rel="stylesheet" href="{% static 'inventory/css/list.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-title-section">
+        <h1 class="procurement-header">🛒 Stock from Procurement</h1>
+        <p class="info-text">Stock received from Purchase Orders (Procurement module)</p>
+    </div>
+    <div class="page-actions">
+        <a href="{% url 'inventory:dashboard' %}" class="btn btn-secondary">
+            ← Dashboard
+        </a>
+    </div>
+</div>
+
+<div class="stats">
+    <div class="stat-card">
+        <h3>Total Procurement Stock</h3>
+        <p>{{ procurement_stock.count }}</p>
+    </div>
+    <div class="stat-card">
+        <h3>Total Suppliers</h3>
+        <p>{{ supplier_summary|length }}</p>
+    </div>
+</div>
+
+<div class="supplier-summary">
+    <h2 class="procurement-section">Supplier Summary</h2>
+    <div class="supplier-grid">
+        {% for supplier, data in supplier_summary.items %}
+        <div class="supplier-card">
+            <h4>{{ supplier }}</h4>
+            <p><strong>Transactions:</strong> {{ data.count }}</p>
+            <p><strong>Total Quantity:</strong> {{ data.total_quantity|floatformat:3 }}</p>
+            <p><strong>Total Value:</strong> ${{ data.total_value|default:0|floatformat:2 }}</p>
+            <p><strong>Items:</strong> 
+                {% if data.items %}
+                    {% for item in data.items|slice:":3" %}
+                        {{ item }}{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                    {% if data.items|length > 3 %}
+                        and {{ data.items|length|add:"-3" }} more...
+                    {% endif %}
+                {% else %}
+                    No items
+                {% endif %}
+            </p>
+        </div>
+        {% empty %}
+        <div class="procurement-empty" style="grid-column: 1 / -1;">
+            <p>No procurement stock data yet.</p>
+            <p class="note-text">Stock will appear here when Purchase Orders are delivered.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<h2 class="procurement-section">All Procurement Stock Records</h2>
+<div class="table-responsive">
+    <table class="procurement-table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Item</th>
+                <th>Quantity</th>
+                <th>Unit Price</th>
+                <th>Total</th>
+                <th>Supplier</th>
+                <th>Reference</th>
+                <th>Purchase Order</th>
+                <th>Received By</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for stock_in in procurement_stock %}
+            <tr>
+                <td>{{ stock_in.date|date:"M d, Y H:i" }}</td>
+                <td>
+                    <a href="{% url 'inventory:item_detail' stock_in.item.pk %}" class="item-link">
+                        {{ stock_in.item.name }}
+                    </a>
+                </td>
+                <td>{{ stock_in.quantity }} {{ stock_in.item.unit_of_measure }}</td>
+                <td class="price">${{ stock_in.unit_price|floatformat:2 }}</td>
+                <td class="price">${{ stock_in.total_price|floatformat:2 }}</td>
+                <td>{{ stock_in.supplier|default:"-" }}</td>
+                <td>{{ stock_in.reference|default:"-" }}</td>
+                <td>
+                    {% if stock_in.purchase_order %}
+                    <a href="{% url 'procurement:purchase_order_detail' stock_in.purchase_order.pk %}" class="procurement-link">
+                        {{ stock_in.purchase_order.po_number }}
+                    </a>
+                    {% else %}
+                    -
+                    {% endif %}
+                </td>
+                <td>{{ stock_in.received_by|default:"-" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="9" class="procurement-empty">
+                    <p>No procurement stock records found.</p>
+                    <p class="note-text">Stock will appear here when Purchase Orders are marked as "Delivered" in Procurement module.</p>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="action-buttons">
+    <a href="{% url 'inventory:dashboard' %}" class="btn btn-secondary">
+        ← Back to Inventory Dashboard
+    </a>
+    <a href="{% url 'procurement:dashboard' %}" class="btn btn-purple">
+        Go to Procurement →
+    </a>
+    <a href="/" class="btn">
+        ← Main Dashboard
+    </a>
+</div>
+{% endblock %}

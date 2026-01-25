@@ -1,0 +1,315 @@
+{% extends 'finance/base.html' %}
+{% load static %}
+
+{% block title %}{% if editing %}Edit{% else %}Add New{% endif %} Expense - Finance{% endblock %}
+
+{% block page_title %}💸 {% if editing %}Edit{% else %}Add New{% endif %} Expense{% endblock %}
+
+{% block breadcrumb %}
+<a href="{% url 'finance:dashboard' %}">Dashboard</a> / 
+<a href="{% url 'finance:expense_list' %}">Expenses</a> / 
+{% if editing %}Edit{% else %}Add New{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'finance/css/expense_form.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="expense-form-container">
+    <!-- Notifications are handled by base.html -->
+    
+    <div class="expense-form-card">
+        <form method="POST" id="expense-form" data-validate="true">
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+            <div class="errorlist">
+                {{ form.non_field_errors }}
+            </div>
+            {% endif %}
+            
+            <!-- Combined Category/Type Field -->
+            <div class="expense-form-row">
+                <div class="expense-form-group">
+                    <label for="id_expense_type" class="expense-form-label required">Expense Type</label>
+                    <select name="expense_type" id="id_expense_type" class="form-control" required>
+                        <option value="">Select Expense Type</option>
+                        {% for type_code, type_name in expense_types %}
+                        <option value="{{ type_code }}" 
+                                {% if form.expense_type.value == type_code %}selected{% endif %}>
+                            {{ type_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <div class="help-text">Select the type of expense</div>
+                    {% if form.expense_type.errors %}
+                    <div class="errorlist">{{ form.expense_type.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="expense-form-group">
+                    <label for="id_amount" class="expense-form-label required">Amount (Tsh)</label>
+                    <div class="amount-wrapper">
+                        <span class="currency-prefix">Tsh</span>
+                        <input type="text" 
+                               name="amount" 
+                               id="id_amount" 
+                               class="form-control currency-input"
+                               value="{{ form.amount.value|default:'' }}"
+                               required
+                               placeholder="Enter amount">
+                    </div>
+                    <div class="help-text">Enter amount in Tanzanian Shillings (without commas)</div>
+                    <div class="amount-display"></div>
+                    {% if form.amount.errors %}
+                    <div class="errorlist">{{ form.amount.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Date and Department -->
+            <div class="expense-form-row">
+                <div class="expense-form-group">
+                    <label for="id_date" class="expense-form-label required">Date</label>
+                    <input type="date" 
+                           name="date" 
+                           id="id_date" 
+                           class="form-control"
+                           value="{{ form.date.value|default:''|date:'Y-m-d' }}"
+                           required>
+                    {% if form.date.errors %}
+                    <div class="errorlist">{{ form.date.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="expense-form-group">
+                    <label for="id_department" class="expense-form-label required">Department</label>
+                    <select name="department" id="id_department" class="form-control" required>
+                        <option value="">Select Department</option>
+                        <option value="HR" {% if form.department.value == "HR" %}selected{% endif %}>Human Resources (HR)</option>
+                        <option value="Sales" {% if form.department.value == "Sales" %}selected{% endif %}>Sales</option>
+                        <option value="Marketing" {% if form.department.value == "Marketing" %}selected{% endif %}>Marketing</option>
+                        <option value="Finance" {% if form.department.value == "Finance" %}selected{% endif %}>Finance</option>
+                        <option value="Procurement" {% if form.department.value == "Procurement" %}selected{% endif %}>Procurement</option>
+                        <option value="Inventory" {% if form.department.value == "Inventory" %}selected{% endif %}>Inventory</option>
+                        <option value="IT" {% if form.department.value == "IT" %}selected{% endif %}>Information Technology (IT)</option>
+                        <option value="Operations" {% if form.department.value == "Operations" %}selected{% endif %}>Operations</option>
+                        <option value="Maintenance" {% if form.department.value == "Maintenance" %}selected{% endif %}>Maintenance</option>
+                        <option value="Other" {% if form.department.value == "Other" %}selected{% endif %}>Other</option>
+                    </select>
+                    <div class="help-text">Which department incurred this expense?</div>
+                    {% if form.department.errors %}
+                    <div class="errorlist">{{ form.department.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Payment Method and Currency -->
+            <div class="expense-form-row">
+                <div class="expense-form-group">
+                    <label for="id_payment_method" class="expense-form-label required">Payment Method</label>
+                    <select name="payment_method" id="id_payment_method" class="form-control" required>
+                        <option value="">Select Payment Method</option>
+                        <option value="Cash" {% if form.payment_method.value == "Cash" %}selected{% endif %}>Cash</option>
+                        <option value="Bank" {% if form.payment_method.value == "Bank" %}selected{% endif %}>Bank Transfer</option>
+                        <option value="Cheque" {% if form.payment_method.value == "Cheque" %}selected{% endif %}>Cheque</option>
+                        <option value="Card" {% if form.payment_method.value == "Card" %}selected{% endif %}>Credit/Debit Card</option>
+                        <option value="Mobile" {% if form.payment_method.value == "Mobile" %}selected{% endif %}>Mobile Money</option>
+                    </select>
+                </div>
+                
+                <div class="expense-form-group">
+                    <label for="id_currency" class="expense-form-label">Currency</label>
+                    <select name="currency" id="id_currency" class="form-control">
+                        <option value="Tsh" selected>Tanzanian Shillings (Tsh)</option>
+                        <option value="USD" {% if form.currency.value == "USD" %}selected{% endif %}>US Dollars (USD)</option>
+                        <option value="EUR" {% if form.currency.value == "EUR" %}selected{% endif %}>Euros (EUR)</option>
+                    </select>
+                    <div class="help-text">Transaction currency</div>
+                </div>
+            </div>
+            
+            <!-- Manager Approval Section -->
+            <div id="manager-approval-section" class="approval-notice" style="display: none;">
+                <h4><i class="fas fa-exclamation-triangle"></i> Manager Approval Required</h4>
+                <p>This expense exceeds Tsh 5,000,000 and requires manager approval before processing.</p>
+                <div class="checkbox-group">
+                    <input type="checkbox" name="require_manager_approval" id="id_require_manager_approval">
+                    <label for="id_require_manager_approval">Require manager approval</label>
+                </div>
+            </div>
+            
+            <!-- Description -->
+            <div class="expense-form-group">
+                <label for="id_description" class="expense-form-label">Description</label>
+                <textarea name="description" 
+                          id="id_description" 
+                          class="form-control" 
+                          rows="4" 
+                          placeholder="Provide details about this expense...">{{ form.description.value|default:'' }}</textarea>
+                <div class="help-text">Provide details about this expense (what, why, where, who authorized)</div>
+                {% if form.description.errors %}
+                <div class="errorlist">{{ form.description.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <!-- Form Actions -->
+            <div class="expense-form-actions">
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-save"></i> 
+                    {% if editing %}Update Expense{% else %}Save Expense{% endif %}
+                </button>
+                <a href="{% url 'finance:expense_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+    
+    <a href="{% url 'finance:dashboard' %}" class="back-link">
+        <i class="fas fa-arrow-left"></i> Back to Dashboard
+    </a>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Expense Form Specific JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('expense-form');
+    const amountField = document.getElementById('id_amount');
+    const dateField = document.getElementById('id_date');
+    const expenseTypeField = document.getElementById('id_expense_type');
+    const departmentField = document.getElementById('id_department');
+    const managerApprovalSection = document.getElementById('manager-approval-section');
+    const managerCheckbox = document.getElementById('id_require_manager_approval');
+    const amountDisplay = document.querySelector('.amount-display');
+    
+    // Set today's date as default if empty
+    if (dateField && !dateField.value) {
+        const today = new Date().toISOString().split('T')[0];
+        dateField.value = today;
+    }
+    
+    // Auto-focus on expense type field
+    if (expenseTypeField) {
+        expenseTypeField.focus();
+    }
+    
+    // Auto-select Finance department for finance users
+    if (departmentField && !departmentField.value) {
+        departmentField.value = 'Finance';
+    }
+    
+    // Amount formatting and validation
+    if (amountField && amountDisplay) {
+        amountField.addEventListener('input', function() {
+            let value = this.value.replace(/[^\d.]/g, '');
+            
+            if (value) {
+                // Update display
+                const num = parseFloat(value);
+                const formatted = num.toLocaleString('en-US', {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
+                });
+                amountDisplay.textContent = `Amount: Tsh ${formatted}`;
+                
+                // Check for manager approval threshold
+                if (num > 5000000) {
+                    managerApprovalSection.style.display = 'block';
+                } else {
+                    managerApprovalSection.style.display = 'none';
+                    if (managerCheckbox) managerCheckbox.checked = false;
+                }
+            } else {
+                amountDisplay.textContent = '';
+                managerApprovalSection.style.display = 'none';
+                if (managerCheckbox) managerCheckbox.checked = false;
+            }
+        });
+        
+        // Format initial value if exists
+        if (amountField.value) {
+            amountField.dispatchEvent(new Event('input'));
+        }
+    }
+    
+    // Form submission validation
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            // Clean amount field by removing commas and extra spaces
+            if (amountField && amountField.value) {
+                amountField.value = amountField.value.replace(/[^\d.]/g, '');
+            }
+            
+            // Validate amount is a positive number
+            if (amountField) {
+                const amount = parseFloat(amountField.value);
+                if (isNaN(amount) || amount <= 0) {
+                    e.preventDefault();
+                    showNotification('Please enter a valid amount greater than 0.', 'error');
+                    amountField.classList.add('error-input');
+                    amountField.focus();
+                    return false;
+                }
+            }
+            
+            // If manager approval required, ensure checkbox is checked
+            if (amountField && managerApprovalSection && managerCheckbox) {
+                const amount = parseFloat(amountField.value.replace(/[^\d.]/g, ''));
+                
+                if (amount > 5000000 && managerApprovalSection.style.display === 'block') {
+                    if (!managerCheckbox.checked) {
+                        e.preventDefault();
+                        showNotification('This expense requires Tsh 5,000,000+ requires manager approval. Please check the approval box.', 'warning');
+                        managerCheckbox.classList.add('error-input');
+                        managerCheckbox.focus();
+                        return false;
+                    }
+                }
+            }
+            
+            return true;
+        });
+    }
+    
+    // Add error styling to fields with errors on page load
+    document.querySelectorAll('.errorlist').forEach(errorField => {
+        const fieldId = errorField.id ? errorField.id.replace('-errors', '') : null;
+        if (fieldId) {
+            const inputField = document.getElementById(fieldId);
+            if (inputField) {
+                inputField.classList.add('error-input');
+                
+                // Scroll to first error
+                if (!window.location.hash && inputField === document.querySelector('.error-input')) {
+                    setTimeout(() => {
+                        inputField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        inputField.focus();
+                    }, 100);
+                }
+            }
+        }
+    });
+    
+    // Remove error styling when user starts typing
+    document.querySelectorAll('input, select, textarea').forEach(field => {
+        field.addEventListener('input', function() {
+            this.classList.remove('error-input');
+            
+            // Remove error message if exists
+            const errorMsg = this.nextElementSibling;
+            if (errorMsg && errorMsg.classList.contains('error-message')) {
+                errorMsg.remove();
+            }
+        });
+        
+        field.addEventListener('change', function() {
+            this.classList.remove('error-input');
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,479 @@
+{% extends 'finance/base.html' %}
+{% load static %}
+
+{% block title %}{% if editing %}Edit{% else %}Add{% endif %} Payroll - Finance{% endblock %}
+
+{% block page_title %}💰 {% if editing %}Edit{% else %}Add New{% endif %} Payroll{% endblock %}
+
+{% block breadcrumb %}
+<a href="{% url 'finance:dashboard' %}">Dashboard</a> / 
+<a href="{% url 'finance:payroll_list' %}">Payroll</a> / 
+{% if editing %}Edit{% else %}Add{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'finance/css/payroll_form.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="payroll-form-card">
+    <form method="POST" id="payroll-form">
+        {% csrf_token %}
+        
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+            {{ form.non_field_errors }}
+        </div>
+        {% endif %}
+        
+        <!-- Employee Selection -->
+        <div class="payroll-form-row">
+            <div class="payroll-form-group">
+                <label for="employee" class="payroll-form-label required">Employee</label>
+                {{ form.employee }}
+                <div class="payroll-help-text">Select employee for payroll</div>
+                {% if form.employee.errors %}
+                <div class="error">{{ form.employee.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="payroll-form-group">
+                <label for="month" class="payroll-form-label required">Month</label>
+                {{ form.month }}
+            </div>
+            
+            <div class="payroll-form-group">
+                <label for="year" class="payroll-form-label required">Year</label>
+                {{ form.year }}
+                {% if form.year.errors %}
+                <div class="error">{{ form.year.errors }}</div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Employee Info Display -->
+        <div id="payroll-employee-info" class="payroll-employee-info">
+            <div class="payroll-employee-details">
+                <div class="payroll-employee-detail">
+                    <div class="payroll-employee-label">Department</div>
+                    <div class="payroll-employee-value" id="emp-department">-</div>
+                </div>
+                <div class="payroll-employee-detail">
+                    <div class="payroll-employee-label">Position</div>
+                    <div class="payroll-employee-value" id="emp-position">-</div>
+                </div>
+                <div class="payroll-employee-detail">
+                    <div class="payroll-employee-label">Last Payroll</div>
+                    <div class="payroll-employee-value" id="emp-last-payroll">-</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Salary Components -->
+        <h3 class="payroll-section-header">
+            <i class="fas fa-chart-bar"></i> Salary Components
+        </h3>
+        
+        <div class="payroll-form-row">
+            <div class="payroll-form-group">
+                <label for="basic_salary" class="payroll-form-label required">Basic Salary (Tsh)</label>
+                <div class="payroll-amount-wrapper">
+                    <span class="payroll-currency-prefix">Tsh</span>
+                    <input type="text" 
+                           name="basic_salary" 
+                           id="basic_salary" 
+                           class="form-control payroll-currency-input"
+                           value="{{ form.basic_salary.value|default:'' }}"
+                           required
+                           placeholder="Enter basic salary">
+                </div>
+                <div class="payroll-help-text">Employee's base salary in Tanzanian Shillings</div>
+                <div class="payroll-amount-display" id="basic_salary_display"></div>
+                {% if form.basic_salary.errors %}
+                <div class="error">{{ form.basic_salary.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="payroll-form-group">
+                <label for="allowances" class="payroll-form-label">Allowances (Tsh)</label>
+                <div class="payroll-amount-wrapper">
+                    <span class="payroll-currency-prefix">Tsh</span>
+                    <input type="text" 
+                           name="allowances" 
+                           id="allowances" 
+                           class="form-control payroll-currency-input"
+                           value="{{ form.allowances.value|default:'' }}"
+                           placeholder="Enter allowances">
+                </div>
+                <div class="payroll-help-text">Additional allowances (housing, transport, etc.)</div>
+                <div class="payroll-amount-display" id="allowances_display"></div>
+                {% if form.allowances.errors %}
+                <div class="error">{{ form.allowances.errors }}</div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Deductions -->
+        <h3 class="payroll-section-header">
+            <i class="fas fa-percentage"></i> Deductions
+        </h3>
+        
+        <div class="payroll-form-row">
+            <div class="payroll-form-group">
+                <label for="deductions" class="payroll-form-label">Other Deductions (Tsh)</label>
+                <div class="payroll-amount-wrapper">
+                    <span class="payroll-currency-prefix">Tsh</span>
+                    <input type="text" 
+                           name="deductions" 
+                           id="deductions" 
+                           class="form-control payroll-currency-input"
+                           value="{{ form.deductions.value|default:'' }}"
+                           placeholder="Enter deductions">
+                </div>
+                <div class="payroll-help-text">Miscellaneous deductions</div>
+                <div class="payroll-amount-display" id="deductions_display"></div>
+                {% if form.deductions.errors %}
+                <div class="error">{{ form.deductions.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="payroll-form-group">
+                <label for="tax_amount" class="payroll-form-label">Tax Amount (Tsh)</label>
+                <div class="payroll-amount-wrapper">
+                    <span class="payroll-currency-prefix">Tsh</span>
+                    <input type="text" 
+                           name="tax_amount" 
+                           id="tax_amount" 
+                           class="form-control payroll-currency-input"
+                           value="{{ form.tax_amount.value|default:'' }}"
+                           placeholder="Enter tax amount">
+                </div>
+                <div class="payroll-help-text">Income tax deduction</div>
+                <div class="payroll-amount-display" id="tax_amount_display"></div>
+                {% if form.tax_amount.errors %}
+                <div class="error">{{ form.tax_amount.errors }}</div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="payroll-form-row">
+            <div class="payroll-form-group">
+                <label for="pension_amount" class="payroll-form-label">Pension (Tsh)</label>
+                <div class="payroll-amount-wrapper">
+                    <span class="payroll-currency-prefix">Tsh</span>
+                    <input type="text" 
+                           name="pension_amount" 
+                           id="pension_amount" 
+                           class="form-control payroll-currency-input"
+                           value="{{ form.pension_amount.value|default:'' }}"
+                           placeholder="Enter pension amount">
+                </div>
+                <div class="payroll-help-text">Pension fund contribution</div>
+                <div class="payroll-amount-display" id="pension_amount_display"></div>
+                {% if form.pension_amount.errors %}
+                <div class="error">{{ form.pension_amount.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="payroll-form-group">
+                <label for="other_deductions" class="payroll-form-label">Other Deductions (Tsh)</label>
+                <div class="payroll-amount-wrapper">
+                    <span class="payroll-currency-prefix">Tsh</span>
+                    <input type="text" 
+                           name="other_deductions" 
+                           id="other_deductions" 
+                           class="form-control payroll-currency-input"
+                           value="{{ form.other_deductions.value|default:'' }}"
+                           placeholder="Enter other deductions">
+                </div>
+                <div class="payroll-help-text">Any other statutory deductions</div>
+                <div class="payroll-amount-display" id="other_deductions_display"></div>
+                {% if form.other_deductions.errors %}
+                <div class="error">{{ form.other_deductions.errors }}</div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Confirmation Check -->
+        <div class="payroll-confirmation-check">
+            {{ form.confirm_salary }}
+            <label for="id_confirm_salary">I confirm the salary amounts are correct</label>
+        </div>
+        
+        <!-- Salary Summary -->
+        <div class="payroll-salary-summary-card">
+            <h4 class="payroll-section-header">💰 Salary Summary</h4>
+            <div class="payroll-salary-row">
+                <span class="payroll-salary-label">Basic Salary:</span>
+                <span class="payroll-salary-value" id="basic-display">Tsh 0</span>
+            </div>
+            <div class="payroll-salary-row">
+                <span class="payroll-salary-label">Allowances:</span>
+                <span class="payroll-salary-value" id="allowances-display">Tsh 0</span>
+            </div>
+            <div class="payroll-salary-row">
+                <span class="payroll-salary-label payroll-gross-value">Gross Salary:</span>
+                <span class="payroll-salary-value payroll-gross-value" id="gross-salary">Tsh 0</span>
+            </div>
+            
+            <div class="payroll-salary-row">
+                <span class="payroll-salary-label">Tax:</span>
+                <span class="payroll-salary-value" id="tax-display">Tsh 0</span>
+            </div>
+            <div class="payroll-salary-row">
+                <span class="payroll-salary-label">Pension:</span>
+                <span class="payroll-salary-value" id="pension-display">Tsh 0</span>
+            </div>
+            <div class="payroll-salary-row">
+                <span class="payroll-salary-label">Other Deductions:</span>
+                <span class="payroll-salary-value" id="other-deductions-display">Tsh 0</span>
+            </div>
+            <div class="payroll-salary-row">
+                <span class="payroll-salary-label payroll-deductions-value">Total Deductions:</span>
+                <span class="payroll-salary-value payroll-deductions-value" id="total-deductions">Tsh 0</span>
+            </div>
+            
+            <div class="payroll-salary-row total">
+                <span class="payroll-salary-label">Net Salary:</span>
+                <span class="payroll-salary-value payroll-net-value" id="net-salary">Tsh 0</span>
+            </div>
+        </div>
+        
+        <!-- Form Actions -->
+        <div class="payroll-form-actions">
+            <button type="submit" class="btn btn-success">
+                {% if editing %}
+                <i class="fas fa-save"></i> Update Payroll
+                {% else %}
+                <i class="fas fa-save"></i> Save Payroll
+                {% endif %}
+            </button>
+            <a href="{% url 'finance:payroll_list' %}" class="btn btn-secondary">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+        </div>
+    </form>
+</div>
+
+<a href="{% url 'finance:payroll_list' %}" class="payroll-back-link">
+    <i class="fas fa-arrow-left"></i> Back to Payroll List
+</a>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Set default month and year
+    const monthField = document.getElementById('id_month');
+    const yearField = document.getElementById('id_year');
+    
+    if (monthField && !monthField.value) {
+        const months = ['January', 'February', 'March', 'April', 'May', 'June', 
+                       'July', 'August', 'September', 'October', 'November', 'December'];
+        const currentMonth = new Date().getMonth();
+        monthField.value = months[currentMonth];
+    }
+    
+    if (yearField && !yearField.value) {
+        yearField.value = new Date().getFullYear();
+    }
+    
+    // Helper function to format number with commas
+    function formatNumberWithCommas(value) {
+        if (!value) return '';
+        const numericValue = value.toString().replace(/[^\d.]/g, '');
+        if (!numericValue) return '';
+        
+        const parts = numericValue.split('.');
+        let wholePart = parts[0];
+        const decimalPart = parts.length > 1 ? '.' + parts[1] : '';
+        
+        if (!wholePart) wholePart = '0';
+        wholePart = wholePart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        
+        return wholePart + decimalPart;
+    }
+    
+    // Setup amount fields with commas
+    const amountFields = [
+        {id: 'basic_salary', display: 'basic_salary_display'},
+        {id: 'allowances', display: 'allowances_display'},
+        {id: 'deductions', display: 'deductions_display'},
+        {id: 'tax_amount', display: 'tax_amount_display'},
+        {id: 'pension_amount', display: 'pension_amount_display'},
+        {id: 'other_deductions', display: 'other_deductions_display'}
+    ];
+    
+    // Initialize all amount fields
+    amountFields.forEach(field => {
+        const inputField = document.getElementById(field.id);
+        
+        if (inputField) {
+            // Format initial value if exists
+            if (inputField.value) {
+                inputField.value = formatNumberWithCommas(inputField.value);
+            }
+            
+            // Format with commas as user types
+            inputField.addEventListener('input', function() {
+                const cursorPosition = this.selectionStart;
+                const originalValue = this.value;
+                
+                const formattedValue = formatNumberWithCommas(originalValue);
+                this.value = formattedValue;
+                
+                const commaCountBefore = (originalValue.substring(0, cursorPosition).match(/,/g) || []).length;
+                const commaCountAfter = (formattedValue.substring(0, cursorPosition).match(/,/g) || []).length;
+                const newPosition = cursorPosition + (commaCountAfter - commaCountBefore);
+                this.setSelectionRange(newPosition, newPosition);
+                
+                const displayField = document.getElementById(field.display);
+                if (displayField) {
+                    const numericValue = formattedValue.replace(/[^\d.]/g, '');
+                    if (numericValue && !isNaN(parseFloat(numericValue))) {
+                        const num = parseFloat(numericValue);
+                        displayField.textContent = `Amount: Tsh ${num.toLocaleString('en-US')}`;
+                        displayField.style.color = '#666';
+                    } else {
+                        displayField.textContent = '';
+                    }
+                }
+                
+                calculateSalary();
+            });
+            
+            inputField.addEventListener('blur', function() {
+                const formattedValue = formatNumberWithCommas(this.value);
+                this.value = formattedValue;
+            });
+        }
+    });
+    
+    // Calculate salary summary
+    function calculateSalary() {
+        function getNumericValue(fieldId) {
+            const field = document.getElementById(fieldId);
+            if (!field || !field.value) return 0;
+            const value = field.value.replace(/[^\d.]/g, '');
+            const numValue = parseFloat(value);
+            return isNaN(numValue) ? 0 : numValue;
+        }
+        
+        const basic = getNumericValue('basic_salary');
+        const allowances = getNumericValue('allowances');
+        const deductions = getNumericValue('deductions');
+        const tax = getNumericValue('tax_amount');
+        const pension = getNumericValue('pension_amount');
+        const other = getNumericValue('other_deductions');
+        
+        const gross = basic + allowances;
+        const totalDeductions = deductions + tax + pension + other;
+        const net = gross - totalDeductions;
+        
+        document.getElementById('basic-display').textContent = 'Tsh ' + basic.toLocaleString();
+        document.getElementById('allowances-display').textContent = 'Tsh ' + allowances.toLocaleString();
+        document.getElementById('gross-salary').textContent = 'Tsh ' + gross.toLocaleString();
+        document.getElementById('tax-display').textContent = 'Tsh ' + tax.toLocaleString();
+        document.getElementById('pension-display').textContent = 'Tsh ' + pension.toLocaleString();
+        document.getElementById('other-deductions-display').textContent = 'Tsh ' + other.toLocaleString();
+        document.getElementById('total-deductions').textContent = 'Tsh ' + totalDeductions.toLocaleString();
+        document.getElementById('net-salary').textContent = 'Tsh ' + net.toLocaleString();
+    }
+    
+    // Employee selection handler
+    const employeeSelect = document.getElementById('id_employee');
+    const employeeInfo = document.getElementById('payroll-employee-info');
+    
+    if (employeeSelect) {
+        employeeSelect.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            if (selectedOption && selectedOption.dataset.department) {
+                employeeInfo.classList.add('active');
+                document.getElementById('emp-department').textContent = selectedOption.dataset.department;
+                document.getElementById('emp-position').textContent = selectedOption.dataset.position || '-';
+                document.getElementById('emp-last-payroll').textContent = selectedOption.dataset.lastPayroll || 'No previous payroll';
+            } else {
+                employeeInfo.classList.remove('active');
+            }
+        });
+        
+        if (employeeSelect.value) {
+            employeeSelect.dispatchEvent(new Event('change'));
+        }
+    }
+    
+    // Form submission - Remove commas before submit
+    const form = document.getElementById('payroll-form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            amountFields.forEach(field => {
+                const inputField = document.getElementById(field.id);
+                if (inputField && inputField.value) {
+                    const numericValue = inputField.value.replace(/[^\d.]/g, '');
+                    inputField.value = numericValue;
+                    
+                    const amount = parseFloat(numericValue);
+                    if (numericValue && isNaN(amount)) {
+                        e.preventDefault();
+                        alert(`Please enter a valid number for ${field.id.replace('_', ' ')}.`);
+                        inputField.focus();
+                        inputField.value = formatNumberWithCommas(numericValue);
+                        return false;
+                    }
+                }
+            });
+            
+            const confirmCheckbox = document.getElementById('id_confirm_salary');
+            if (confirmCheckbox && !confirmCheckbox.checked) {
+                e.preventDefault();
+                alert('Please confirm that the salary amounts are correct.');
+                confirmCheckbox.focus();
+                return false;
+            }
+            
+            const employee = document.getElementById('id_employee').value;
+            const basicSalaryField = document.getElementById('basic_salary');
+            const basicSalary = basicSalaryField ? basicSalaryField.value.replace(/[^\d.]/g, '') : '';
+            
+            if (!employee) {
+                e.preventDefault();
+                alert('Please select an employee.');
+                document.getElementById('id_employee').focus();
+                return false;
+            }
+            
+            if (!basicSalary || parseFloat(basicSalary) <= 0) {
+                e.preventDefault();
+                alert('Please enter a valid basic salary.');
+                if (basicSalaryField) {
+                    basicSalaryField.focus();
+                    basicSalaryField.value = formatNumberWithCommas(basicSalaryField.value);
+                }
+                return false;
+            }
+            
+            return true;
+        });
+    }
+    
+    // Initial calculation on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(calculateSalary, 100);
+        
+        if (employeeSelect) {
+            employeeSelect.focus();
+        }
+        
+        // Add error styling to fields with errors
+        const errorFields = document.querySelectorAll('.errorlist');
+        errorFields.forEach(errorField => {
+            const fieldId = errorField.id ? errorField.id.replace('-errors', '') : null;
+            if (fieldId) {
+                const inputField = document.getElementById(fieldId);
+                if (inputField) {
+                    inputField.classList.add('payroll-error-input');
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

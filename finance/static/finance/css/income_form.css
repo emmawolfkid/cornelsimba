@@ -1,0 +1,271 @@
+/* ===== INCOME FORM STYLES ===== */
+
+/* Form Container */
+.income-form-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 15px;
+}
+
+.income-form-title {
+    color: var(--secondary-color);
+    margin-bottom: 25px;
+    padding-bottom: 10px;
+    border-bottom: 3px solid var(--success-color);
+    font-size: 1.8rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.income-form-title i {
+    color: var(--success-color);
+}
+
+/* Form Card */
+.income-form-card {
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: var(--shadow-md);
+    margin-bottom: 25px;
+}
+
+/* Form Groups */
+.income-form-group {
+    margin-bottom: 25px;
+}
+
+.income-form-label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 600;
+    color: var(--secondary-color);
+    font-size: 0.95rem;
+}
+
+.income-form-label.required::after {
+    content: " *";
+    color: var(--danger-color);
+}
+
+/* Form Row */
+.income-form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+/* Amount Field */
+.income-amount-wrapper {
+    position: relative;
+}
+
+.income-currency-prefix {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #666;
+    font-weight: 500;
+    pointer-events: none;
+}
+
+.income-currency-input {
+    padding-left: 60px !important;
+}
+
+/* Reference Notice */
+.reference-notice {
+    background: #d1ecf1;
+    border-left: 4px solid var(--primary-color);
+    padding: 15px;
+    margin: 20px 0;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    animation: slideIn 0.3s ease;
+}
+
+.reference-notice h4 {
+    margin: 0 0 8px 0;
+    color: #0c5460;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Sale Link Section */
+.sale-link-section {
+    background: #e8f7f0;
+    padding: 20px;
+    border-radius: 8px;
+    margin: 20px 0;
+    border-left: 4px solid var(--success-color);
+}
+
+.sale-link-section h4 {
+    margin: 0 0 10px 0;
+    color: var(--secondary-color);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.sale-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.sale-detail {
+    font-size: 0.9rem;
+}
+
+.sale-label {
+    color: #666;
+    font-size: 0.85rem;
+}
+
+.sale-value {
+    font-weight: 500;
+    color: var(--secondary-color);
+}
+
+.sale-value.tsh-amount {
+    color: var(--success-color);
+    font-weight: bold;
+}
+
+/* Form Actions */
+.income-form-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 35px;
+    padding-top: 25px;
+    border-top: 1px solid var(--border-color);
+    flex-wrap: wrap;
+}
+
+/* Back Link */
+.income-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 20px;
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    padding: 10px 0;
+    transition: color 0.2s;
+}
+
+.income-back-link:hover {
+    text-decoration: underline;
+    color: var(--secondary-color);
+}
+
+/* Amount Display */
+.income-amount-display {
+    margin-top: 8px;
+    font-size: 0.9rem;
+    color: var(--success-color);
+    font-weight: 500;
+}
+
+/* Animations */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .income-form-container {
+        padding: 12px;
+    }
+    
+    .income-form-title {
+        font-size: 1.5rem;
+    }
+    
+    .income-form-card {
+        padding: 20px;
+        margin: 0 -12px;
+        width: calc(100% + 24px);
+        border-radius: 0;
+        box-shadow: none;
+        border: 1px solid var(--border-color);
+    }
+    
+    .income-form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .income-form-actions {
+        flex-direction: column;
+    }
+    
+    .income-form-actions .btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    input, select, textarea {
+        padding: 10px;
+    }
+    
+    .income-currency-prefix {
+        left: 10px;
+    }
+    
+    .income-currency-input {
+        padding-left: 50px !important;
+    }
+    
+    .sale-details {
+        grid-template-columns: 1fr;
+    }
+    
+    .reference-notice {
+        padding: 12px;
+        font-size: 0.9rem;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .income-form-card {
+        background: #2c3e50;
+        color: #ecf0f1;
+    }
+    
+    .income-form-label {
+        color: #ecf0f1;
+    }
+    
+    .sale-link-section {
+        background: #34495e;
+        color: #ecf0f1;
+    }
+    
+    .sale-label {
+        color: #bdc3c7;
+    }
+    
+    .sale-value {
+        color: #ecf0f1;
+    }
+    
+    .reference-notice {
+        background: #34495e;
+        color: #ecf0f1;
+    }
+}

@@ -1,0 +1,251 @@
+/* ============================================
+   AUDIT SYSTEM - PRINT STYLES
+   ============================================ */
+
+@media print {
+    /* Hide unnecessary elements */
+    .sidebar,
+    .header,
+    .mobile-menu-toggle,
+    .filter-section,
+    .export-section,
+    .pagination-section,
+    .notification-container,
+    .btn:not(.print-btn),
+    .filter-chip,
+    .search-btn,
+    .view-btn,
+    .action-buttons,
+    .log-card-footer,
+    .related-actions,
+    .detail-footer,
+    .no-print {
+        display: none !important;
+    }
+    
+    /* Reset layout */
+    body {
+        background: white !important;
+        color: black !important;
+        font-size: 12pt !important;
+        line-height: 1.4 !important;
+    }
+    
+    .main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+    
+    .container {
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    
+    /* Page breaks */
+    .page-break {
+        page-break-before: always;
+    }
+    
+    .keep-together {
+        page-break-inside: avoid;
+    }
+    
+    /* Typography */
+    h1, h2, h3, h4, h5, h6 {
+        color: black !important;
+        page-break-after: avoid;
+    }
+    
+    a {
+        color: black !important;
+        text-decoration: underline !important;
+    }
+    
+    /* Tables */
+    .table-container {
+        overflow: visible !important;
+        box-shadow: none !important;
+        border: 1px solid #ddd !important;
+    }
+    
+    .audit-table,
+    .detail-table {
+        min-width: 100% !important;
+        font-size: 10pt !important;
+        border-collapse: collapse !important;
+    }
+    
+    .audit-table th,
+    .audit-table td,
+    .detail-table th,
+    .detail-table td {
+        padding: 8px 10px !important;
+        border: 1px solid #ddd !important;
+        color: black !important;
+    }
+    
+    .audit-table th,
+    .detail-table th {
+        background: #f0f0f0 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        font-weight: bold !important;
+    }
+    
+    /* Badges for print */
+    .badge {
+        border: 1px solid black !important;
+        background: none !important;
+        color: black !important;
+        padding: 2px 6px !important;
+        font-size: 9pt !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    
+    /* Cards and boxes */
+    .card,
+    .stat-card,
+    .log-card {
+        box-shadow: none !important;
+        border: 1px solid #ddd !important;
+        page-break-inside: avoid;
+        margin-bottom: 15px !important;
+    }
+    
+    /* Show URLs */
+    a[href]:after {
+        content: " (" attr(href) ")";
+        font-size: 9pt;
+        font-weight: normal;
+        color: #666;
+    }
+    
+    a[href^="#"]:after,
+    a[href^="javascript:"]:after {
+        content: "";
+    }
+    
+    /* Page margins */
+    @page {
+        margin: 20mm;
+        size: A4;
+        
+        @top-left {
+            content: "Cornel Simba Audit System";
+            font-size: 10pt;
+            color: #666;
+        }
+        
+        @top-right {
+            content: "Page " counter(page) " of " counter(pages);
+            font-size: 10pt;
+            color: #666;
+        }
+        
+        @bottom-center {
+            content: "Confidential Document - Generated on " string(generated-date);
+            font-size: 9pt;
+            color: #666;
+            border-top: 1px solid #ddd;
+            padding-top: 5mm;
+        }
+    }
+    
+    /* Page numbers */
+    body {
+        counter-reset: page;
+    }
+    
+    /* Watermark for sensitive documents */
+    .watermark {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(-45deg);
+        font-size: 80pt;
+        color: rgba(0,0,0,0.1);
+        z-index: -1;
+        white-space: nowrap;
+        font-weight: bold;
+        content: "CONFIDENTIAL";
+    }
+    
+    /* QR Code for digital reference */
+    .qr-code {
+        text-align: center;
+        margin: 20px 0;
+        border: 1px dashed #ddd;
+        padding: 15px;
+        page-break-inside: avoid;
+    }
+    
+    /* Hide images that don't print well */
+    img {
+        max-width: 100% !important;
+        height: auto !important;
+    }
+    
+    /* Optimize background colors for print */
+    .bg-primary,
+    .bg-success,
+    .bg-warning,
+    .bg-danger,
+    .bg-info {
+        background-color: #f0f0f0 !important;
+        color: black !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    
+    /* Footer information */
+    .print-footer {
+        margin-top: 30px;
+        padding-top: 15px;
+        border-top: 2px solid #000;
+        font-size: 9pt;
+        color: #666;
+        text-align: center;
+    }
+    
+    /* Header for each page */
+    .print-header {
+        display: block !important;
+        text-align: center;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #000;
+    }
+    
+    .print-header h1 {
+        font-size: 18pt !important;
+        margin-bottom: 5px;
+    }
+    
+    .print-header .subtitle {
+        font-size: 12pt !important;
+        color: #666 !important;
+    }
+}
+
+/* PDF specific styles */
+@media print and (color) {
+    .badge {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+}
+
+/* Save ink/toner */
+@media print and (monochrome) {
+    * {
+        color: black !important;
+        background: white !important;
+    }
+    
+    .badge {
+        border: 1px solid black !important;
+        background: white !important;
+    }
+}

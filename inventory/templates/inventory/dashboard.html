@@ -1,0 +1,299 @@
+{% extends 'inventory/base.html' %}
+
+{% block title %}Inventory Dashboard{% endblock %}
+
+{% block extra_css %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'inventory/css/dashboard.css' %}">
+<style>
+    /* Message alerts for dashboard */
+    .alert-success { 
+        background: #d4edda; 
+        color: #155724; 
+        padding: 15px; 
+        border-radius: 8px; 
+        margin-bottom: 20px; 
+        border-left: 4px solid #28a745;
+    }
+    
+    .alert-danger { 
+        background: #f8d7da; 
+        color: #721c24; 
+        padding: 15px; 
+        border-radius: 8px; 
+        margin-bottom: 20px; 
+        border-left: 4px solid #dc3545;
+    }
+    
+    .alert-warning { 
+        background: #fff3cd; 
+        color: #856404; 
+        padding: 15px; 
+        border-radius: 8px; 
+        margin-bottom: 20px; 
+        border-left: 4px solid #ffc107;
+    }
+    
+    .alert-info { 
+        background: #d1ecf1; 
+        color: #0c5460; 
+        padding: 15px; 
+        border-radius: 8px; 
+        margin-bottom: 20px; 
+        border-left: 4px solid #17a2b8;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1>📦 Inventory Dashboard</h1>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert-{{ message.tags }}">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+
+<!-- Stats Grid - 3 columns -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <h3>Total Items</h3>
+        <p>{{ total_items }}</p>
+    </div>
+    <div class="stat-card">
+        <h3>Total Stock Quantity</h3>
+        <p>{{ total_quantity|floatformat:3 }}</p>
+        <div class="currency-note">Total of all items</div>
+    </div>
+    <div class="stat-card">
+        <h3>Critical Items</h3>
+        <p>{{ critical_stock_count }}</p>
+        <div class="currency-note">Below minimum stock</div>
+    </div>
+</div>
+
+<!-- Stats Grid - Row 2 -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <h3>Low Stock Items</h3>
+        <p>{{ low_stock_count }}</p>
+        <div class="currency-note">Below reorder level</div>
+    </div>
+    <div class="stat-card">
+        <h3>Pending Adjustments</h3>
+        <p>{{ pending_adjustments|default:0 }}</p>
+    </div>
+    <div class="stat-card">
+        <h3>Pending Stock Outs</h3>
+        <p>{{ pending_stockouts_count|default:0 }}</p>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="quick-actions-section">
+    <h2>Quick Actions</h2>
+    <div class="quick-actions-grid">
+        <a href="{% url 'inventory:item_create' %}" class="quick-action-btn">
+            <div class="icon">➕</div>
+            New Item
+        </a>
+        <a href="{% url 'inventory:stock_in_create' %}" class="quick-action-btn">
+            <div class="icon">📥</div>
+            Stock In
+        </a>
+        <a href="{% url 'inventory:stock_out_create' %}" class="quick-action-btn">
+            <div class="icon">📤</div>
+            Stock Out
+        </a>
+        <a href="{% url 'inventory:adjustment_create' %}" class="quick-action-btn">
+            <div class="icon">🔄</div>
+            Request Adjustment
+        </a>
+    </div>
+</div>
+
+<!-- Main Dashboard Grid -->
+<div class="dashboard-grid">
+    <!-- Left Column -->
+    <div class="left-column">
+        <!-- Stock Alerts -->
+        <div class="alert-box {% if critical_stock_items %}critical{% else %}success{% endif %}">
+            <div class="alert-box-header">
+                <h2 style="margin: 0;">
+                    ⚠️ Stock Alerts
+                    {% if critical_stock_items or low_stock_items %}
+                    <span class="badge {% if critical_stock_items %}bg-danger{% else %}bg-warning{% endif %}">
+                        {{ critical_stock_items|length|add:low_stock_items|length }}
+                    </span>
+                    {% endif %}
+                </h2>
+            </div>
+            
+            <div class="alert-box-content">
+                {% if critical_stock_items or low_stock_items %}
+                    <ul>
+                        {% for item in critical_stock_items %}
+                        <li class="notification-item">
+                            <div class="notification-info">
+                                <div class="notification-title">{{ item.name }}</div>
+                                <div class="notification-details">
+                                    Current: {{ item.quantity|floatformat:3 }} {{ item.unit_of_measure }} | 
+                                    Min Required: {{ item.minimum_stock|floatformat:3 }}
+                                </div>
+                            </div>
+                            <div class="notification-actions">
+                                <span class="badge bg-danger">CRITICAL</span>
+                            </div>
+                        </li>
+                        {% endfor %}
+                        
+                        {% for item in low_stock_items %}
+                        {% if item not in critical_stock_items %}
+                        <li class="notification-item">
+                            <div class="notification-info">
+                                <div class="notification-title">{{ item.name }}</div>
+                                <div class="notification-details">
+                                    Current: {{ item.quantity|floatformat:3 }} {{ item.unit_of_measure }} | 
+                                    Reorder Level: {{ item.reorder_level|floatformat:3 }}
+                                </div>
+                            </div>
+                            <div class="notification-actions">
+                                <span class="badge bg-warning">Low Stock</span>
+                            </div>
+                        </li>
+                        {% endif %}
+                        {% endfor %}
+                    </ul>
+                    
+                    <a href="{% url 'inventory:item_list' %}" class="view-all-link">
+                        View All Items →
+                    </a>
+                {% else %}
+                    <p class="empty-state">✅ All items are at good stock levels.</p>
+                    <div style="text-align: center; margin-top: 15px;">
+                        <a href="{% url 'inventory:item_list' %}" class="btn btn-success">
+                            View All Items
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Right Column -->
+    <div class="right-column">
+        <!-- Pending Actions -->
+        <div class="alert-box warning">
+            <div class="alert-box-header">
+                <h2 style="margin: 0;">
+                    📋 Pending Actions
+                    {% if pending_sales_stockouts > 0 or pending_adjustments > 0 %}
+                    <span class="badge bg-warning">
+                        {{ pending_sales_stockouts|add:pending_adjustments }}
+                    </span>
+                    {% endif %}
+                </h2>
+            </div>
+            
+            <div class="alert-box-content">
+                {% if pending_adjustments > 0 %}
+                <div class="notification-item">
+                    <div class="notification-info">
+                        <div class="notification-title">Stock Adjustments</div>
+                        <div class="notification-details">
+                            {{ pending_adjustments }} adjustments awaiting approval
+                        </div>
+                    </div>
+                    <div class="notification-actions">
+                        <a href="{% url 'inventory:adjustment_list' %}?status=pending" class="btn btn-warning btn-sm">
+                            Review
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if pending_sales_stockouts > 0 %}
+                <div class="notification-item">
+                    <div class="notification-info">
+                        <div class="notification-title">Sales Stock Outs</div>
+                        <div class="notification-details">
+                            {{ pending_sales_stockouts }} sales waiting for stock out approval
+                        </div>
+                    </div>
+                    <div class="notification-actions">
+                        <a href="{% url 'inventory:pending_sales_stockouts' %}" class="btn btn-warning btn-sm">
+                            Review
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if pending_sales_stockouts == 0 and pending_adjustments == 0 %}
+                <p class="empty-state">✅ No pending actions. Everything is up to date!</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Recent Activity -->
+        <div class="alert-box info">
+            <div class="alert-box-header">
+                <h2 style="margin: 0;">📊 Recent Activity</h2>
+            </div>
+            
+            <div class="alert-box-content">
+                {% if recent_stock_ins or recent_stock_outs %}
+                    {% if recent_stock_ins %}
+                    <div class="recent-activity-item">
+                        <div class="activity-icon">📥</div>
+                        <div class="activity-info">
+                            <div class="notification-title">Recent Stock In</div>
+                            <div class="notification-details">
+                                {{ recent_stock_ins.0.item.name }} - {{ recent_stock_ins.0.quantity|floatformat:3 }} {{ recent_stock_ins.0.item.unit_of_measure }}
+                            </div>
+                        </div>
+                        <div class="notification-actions">
+                            <a href="{% url 'inventory:stock_in_list' %}" class="btn btn-info btn-sm">
+                                View All
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if recent_stock_outs %}
+                    <div class="recent-activity-item">
+                        <div class="activity-icon">📤</div>
+                        <div class="activity-info">
+                            <div class="notification-title">Recent Stock Out</div>
+                            <div class="notification-details">
+                                {{ recent_stock_outs.0.item.name }} - {{ recent_stock_outs.0.quantity|floatformat:3 }} {{ recent_stock_outs.0.item.unit_of_measure }}
+                            </div>
+                        </div>
+                        <div class="notification-actions">
+                            <a href="{% url 'inventory:stock_out_list' %}" class="btn btn-info btn-sm">
+                                View All
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Monthly Summary -->
+                    <div class="metric-grid">
+                        <div class="metric-card">
+                            <div class="metric-value">{{ stock_ins_month.total_quantity|default:0|floatformat:3 }}</div>
+                            <div class="metric-label">This Month Stock In</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value">{{ stock_outs_month.total_quantity|default:0|floatformat:3 }}</div>
+                            <div class="metric-label">This Month Stock Out</div>
+                        </div>
+                    </div>
+                {% else %}
+                    <p class="empty-state">No recent activities</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

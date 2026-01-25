@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cornel Simba - Main Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Inter', 'Segoe UI', sans-serif;
+    }
+
+    :root {
+        --primary: #ff8a00;
+        --secondary: #1e3a8a;
+        --success: #10b981;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --purple: #8b5cf6;
+        --teal: #14b8a6;
+        --dark: #1e293b;
+    }
+
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+    }
+
+    .container {
+        max-width: 1600px;
+        margin: 0 auto;
+    }
+
+    /* Top Header */
+    .top-header {
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        border-radius: 25px;
+        padding: 35px 45px;
+        margin-bottom: 30px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .top-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 6px;
+        background: linear-gradient(90deg, var(--primary), var(--secondary), var(--purple));
+    }
+
+    .brand-section {
+        display: flex;
+        align-items: center;
+        gap: 25px;
+    }
+
+    .logo-container {
+        width: 180px;
+        height: auto;
+        background: white;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        position: relative;
+        overflow: hidden;
+        border: 2px solid #f0f0f0;
+    }
+
+    .logo-container img {
+        width: 100%;
+    height: auto;
+    max-height: 90px; /* Limit height if needed */
+    object-fit: contain; /* Keep the full logo visible */
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1)); /* Add subtle shadow */
+};
+    
+   
+
+    .logo-text {
+        font-size: 2.8em;
+        color: white;
+        font-weight: 800;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+
+    .brand-info h1 {
+        color: var(--dark);
+        font-size: 2.3em;
+        font-weight: 800;
+        margin-bottom: 5px;
+    }
+
+    .brand-info p {
+        color: #64748b;
+        font-size: 1.1em;
+        font-weight: 500;
+    }
+
+    .user-section {
+        text-align: right;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .user-details {
+        text-align: right;
+    }
+
+    .welcome-text {
+        color: var(--dark);
+        font-size: 1.3em;
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+
+    .user-role {
+        color: var(--primary);
+        font-size: 0.95em;
+        font-weight: 600;
+        padding: 5px 15px;
+        background: rgba(255, 138, 0, 0.1);
+        border-radius: 20px;
+        display: inline-block;
+    }
+
+    .live-time {
+        color: #64748b;
+        font-size: 0.9em;
+        margin-top: 8px;
+    }
+
+    .user-avatar-big {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--secondary), var(--purple));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 2em;
+        font-weight: 700;
+        box-shadow: 0 8px 25px rgba(30, 58, 138, 0.4);
+    }
+
+    /* Logout button styling */
+    .logout-section {
+        margin-left: 10px;
+    }
+
+    .logout-btn {
+        background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.9em;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 10px rgba(231, 76, 60, 0.2);
+    }
+
+    .logout-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(231, 76, 60, 0.3);
+    }
+
+    /* Quick Stats */
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 25px;
+        margin-bottom: 40px;
+    }
+
+    .stat-box {
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-box::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 5px;
+        background: linear-gradient(90deg, var(--primary), var(--secondary));
+    }
+
+    .stat-box:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+    }
+
+    .stat-box.blue::before {
+        background: linear-gradient(90deg, var(--secondary), var(--purple));
+    }
+
+    .stat-box.green::before {
+        background: linear-gradient(90deg, var(--success), var(--teal));
+    }
+
+    .stat-box.yellow::before {
+        background: linear-gradient(90deg, var(--warning), var(--primary));
+    }
+
+    .stat-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .stat-info .stat-number {
+        font-size: 2.8em;
+        font-weight: 800;
+        color: var(--dark);
+        line-height: 1;
+        margin-bottom: 8px;
+    }
+
+    .stat-info .stat-label {
+        color: #64748b;
+        font-size: 0.95em;
+        font-weight: 600;
+    }
+
+    .stat-icon-circle {
+        width: 70px;
+        height: 70px;
+        border-radius: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2em;
+        background: linear-gradient(135deg, rgba(255, 138, 0, 0.1), rgba(255, 138, 0, 0.05));
+        color: var(--primary);
+    }
+
+    .stat-box.blue .stat-icon-circle {
+        background: linear-gradient(135deg, rgba(30, 58, 138, 0.1), rgba(139, 92, 246, 0.05));
+        color: var(--secondary);
+    }
+
+    .stat-box.green .stat-icon-circle {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(20, 184, 166, 0.05));
+        color: var(--success);
+    }
+
+    .stat-box.yellow .stat-icon-circle {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(255, 138, 0, 0.05));
+        color: var(--warning);
+    }
+
+    /* View Controls */
+    .controls-bar {
+        background: white;
+        border-radius: 20px;
+        padding: 20px 30px;
+        margin-bottom: 30px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .view-buttons {
+        display: flex;
+        gap: 10px;
+    }
+
+    .view-btn {
+        padding: 12px 24px;
+        border: 2px solid #e5e7eb;
+        background: white;
+        color: var(--dark);
+        border-radius: 12px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .view-btn:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+    }
+
+    .view-btn.active {
+        background: linear-gradient(135deg, var(--primary), #ff6b35);
+        color: white;
+        border-color: var(--primary);
+        box-shadow: 0 5px 20px rgba(255, 138, 0, 0.3);
+    }
+
+    .items-control {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .items-control select {
+        padding: 10px 20px;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        font-weight: 600;
+        color: var(--dark);
+        cursor: pointer;
+        background: white;
+        transition: all 0.3s ease;
+    }
+
+    .items-control select:hover {
+        border-color: var(--primary);
+    }
+
+    /* Module Grid */
+    .modules-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 30px;
+        margin-bottom: 40px;
+    }
+
+    .module-box {
+        background: white;
+        border-radius: 25px;
+        padding: 40px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .module-box::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 6px;
+        background: linear-gradient(90deg, var(--primary), #ff6b35);
+        transform: scaleX(0);
+        transition: transform 0.4s ease;
+    }
+
+    .module-box:hover::before {
+        transform: scaleX(1);
+    }
+
+    .module-box:hover {
+        transform: translateY(-15px) scale(1.02);
+        box-shadow: 0 25px 60px rgba(0,0,0,0.2);
+    }
+
+    .module-icon-large {
+        width: 85px;
+        height: 85px;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5em;
+        color: white;
+        margin-bottom: 25px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        transition: all 0.3s ease;
+    }
+
+    .module-box:hover .module-icon-large {
+        transform: rotateY(360deg);
+    }
+
+    .module-icon-large.hr {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    }
+
+    .module-icon-large.finance {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    }
+
+    .module-icon-large.inventory {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    }
+
+    .module-icon-large.procurement {
+        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    }
+
+    .module-icon-large.sales {
+        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+    }
+
+    .module-icon-large.audit {
+        background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    }
+
+    .module-name {
+        color: var(--dark);
+        font-size: 1.6em;
+        font-weight: 800;
+        margin-bottom: 15px;
+    }
+
+    .module-desc {
+        color: #64748b;
+        font-size: 1em;
+        line-height: 1.7;
+        margin-bottom: 25px;
+        min-height: 50px;
+    }
+
+    .module-button {
+        display: block;
+        text-decoration: none;
+        text-align: center;
+        padding: 15px 30px;
+        background: linear-gradient(135deg, var(--dark) 0%, #334155 100%);
+        color: white;
+        border-radius: 15px;
+        font-weight: 700;
+        font-size: 1.05em;
+        transition: all 0.3s ease;
+        box-shadow: 0 5px 20px rgba(30, 41, 59, 0.3);
+    }
+
+    .module-button:hover {
+        transform: scale(1.05);
+        box-shadow: 0 10px 35px rgba(30, 41, 59, 0.5);
+    }
+
+    /* Leave Management Section */
+    .leave-section {
+        background: white;
+        border-radius: 25px;
+        padding: 40px;
+        margin-bottom: 40px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        border-top: 6px solid var(--success);
+    }
+
+    .section-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 35px;
+        padding-bottom: 20px;
+        border-bottom: 3px solid #f1f5f9;
+    }
+
+    .section-head h2 {
+        color: var(--dark);
+        font-size: 1.8em;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .section-head h2 i {
+        color: var(--success);
+    }
+
+    .view-link {
+        color: var(--primary);
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 1.05em;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .view-link:hover {
+        gap: 12px;
+    }
+
+    /* Footer */
+    .footer {
+        background: white;
+        border-radius: 25px;
+        padding: 30px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    }
+
+    .footer p {
+        color: #64748b;
+        font-size: 1em;
+        font-weight: 500;
+        margin-bottom: 10px;
+    }
+
+    .footer .security-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 20px;
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(20, 184, 166, 0.05));
+        border-radius: 50px;
+        color: var(--success);
+        font-weight: 600;
+        margin-top: 10px;
+    }
+
+    /* Notifications */
+    .notification-area {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        width: 380px;
+        max-width: 90vw;
+    }
+
+    .notification-item {
+        background: white;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        border-left: 5px solid var(--primary);
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        animation: slideInRight 0.4s ease;
+    }
+
+    @keyframes slideInRight {
+        from {
+            transform: translateX(400px);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    .notification-item.success {
+        border-color: var(--success);
+    }
+
+    .notification-item.warning {
+        border-color: var(--warning);
+    }
+
+    .notification-item.info {
+        border-color: var(--secondary);
+    }
+
+    .notification-icon {
+        width: 45px;
+        height: 45px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3em;
+        background: rgba(255, 138, 0, 0.1);
+        color: var(--primary);
+    }
+
+    .notification-item.success .notification-icon {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .top-header {
+            flex-direction: column;
+            gap: 25px;
+            text-align: center;
+        }
+
+        .brand-section {
+            flex-direction: column;
+        }
+
+        .user-section {
+            flex-direction: column;
+        }
+
+        .user-details {
+            text-align: center;
+        }
+
+        .stats-row {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .modules-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .controls-bar {
+            flex-direction: column;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .stats-row {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Animation */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(40px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .module-box {
+        animation: fadeInUp 0.6s ease forwards;
+    }
+
+    .module-box:nth-child(1) { animation-delay: 0.1s; }
+    .module-box:nth-child(2) { animation-delay: 0.2s; }
+    .module-box:nth-child(3) { animation-delay: 0.3s; }
+    .module-box:nth-child(4) { animation-delay: 0.4s; }
+    .module-box:nth-child(5) { animation-delay: 0.5s; }
+    .module-box:nth-child(6) { animation-delay: 0.6s; }
+</style>
+</head>
+<body>
+    <div class="container">
+        <!-- Notification Area -->
+        <div class="notification-area" id="notificationCenter"></div>
+
+               <!-- Top Header -->
+        <div class="top-header">
+            <div class="brand-section">
+                <div class="logo-container">
+                    <!-- Replace 'logo.png' with your actual image filename -->
+                    <img src="{% static 'images/cornelsimba-logo.jpeg' %}" alt="Cornel Simba Logo" style="width: 100%; height: 100%; object-fit: contain; border-radius: 20px;">
+                </div>
+                <div class="brand-info">
+                    <h1>Cornel Simba</h1>
+                    <p>Mining Enterprise System</p>
+                </div>
+            </div>
+
+            <div class="user-section">
+                <div class="user-details">
+                    <div class="welcome-text">
+                        Welcome, {{ request.user.get_full_name|default:request.user.username }}
+                    </div>
+                    {% if request.user.groups.all %}
+                    <div class="user-role">{{ request.user.groups.first }}</div>
+                    {% endif %}
+                    <div class="live-time" id="liveTime"></div>
+                </div>
+                <div class="user-avatar-big">
+                    <i class="fas fa-user"></i>
+                </div>
+                <!-- Add Logout Button Here -->
+                <div class="logout-section">
+                    <!-- Hidden logout form for POST request -->
+                    <form id="logoutForm" action="{% url 'logout' %}" method="post" style="display: none;">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="/">
+                    </form>
+                    
+                    <!-- Logout Button -->
+                    <button class="logout-btn" onclick="logoutUser()">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="stats-row">
+            <div class="stat-box">
+                <div class="stat-content">
+                    <div class="stat-info">
+                        <div class="stat-number">{{ modules|length }}</div>
+                        <div class="stat-label">Active Modules</div>
+                    </div>
+                    <div class="stat-icon-circle">
+                        <i class="fas fa-th-large"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-box blue">
+                <div class="stat-content">
+                    <div class="stat-info">
+                        <div class="stat-number">{{ request.user.last_login|date:"d" }}</div>
+                        <div class="stat-label">Last Login (Day)</div>
+                    </div>
+                    <div class="stat-icon-circle">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-box green">
+                <div class="stat-content">
+                    <div class="stat-info">
+                        <div class="stat-number">{{ user_groups|default:0 }}</div>
+                        <div class="stat-label">User Groups</div>
+                    </div>
+                    <div class="stat-icon-circle">
+                        <i class="fas fa-users"></i>
+                    </div>
+                </div>
+            </div>
+
+            {% if audit_data and audit_data.today_logs > 0 %}
+            <div class="stat-box yellow">
+                <div class="stat-content">
+                    <div class="stat-info">
+                        <div class="stat-number">{{ audit_data.today_logs }}</div>
+                        <div class="stat-label">Today's Activities</div>
+                    </div>
+                    <div class="stat-icon-circle">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="stat-box yellow">
+                <div class="stat-content">
+                    <div class="stat-info">
+                        <div class="stat-number">24/7</div>
+                        <div class="stat-label">System Status</div>
+                    </div>
+                    <div class="stat-icon-circle">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Modules Grid -->
+        <div class="modules-grid" id="moduleGrid">
+            <!-- HR Module -->
+            {% if 'HR' in modules %}
+            <div class="module-box" data-module="HR">
+                <div class="module-icon-large hr">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="module-name">Human Resources</div>
+                <div class="module-desc">Manage employees, payroll, attendance, and HR operations.</div>
+                <a href="/hr/" class="module-button">Go to HR Module</a>
+            </div>
+            {% endif %}
+
+            <!-- Finance Module -->
+            {% if 'Finance' in modules %}
+            <div class="module-box" data-module="Finance">
+                <div class="module-icon-large finance">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <div class="module-name">Finance</div>
+                <div class="module-desc">Track income, expenses, payroll, and financial reports.</div>
+                <a href="/finance/" class="module-button">Go to Finance Module</a>
+            </div>
+            {% endif %}
+
+            <!-- Inventory Module -->
+            {% if 'Inventory' in modules %}
+            <div class="module-box" data-module="Inventory">
+                <div class="module-icon-large inventory">
+                    <i class="fas fa-boxes"></i>
+                </div>
+                <div class="module-name">Inventory</div>
+                <div class="module-desc">Manage stock, track items, and monitor inventory levels.</div>
+                <a href="/inventory/" class="module-button">Go to Inventory Module</a>
+            </div>
+            {% endif %}
+
+            <!-- Procurement Module -->
+            {% if 'Procurement' in modules %}
+            <div class="module-box" data-module="Procurement">
+                <div class="module-icon-large procurement">
+                    <i class="fas fa-shopping-cart"></i>
+                </div>
+                <div class="module-name">Procurement</div>
+                <div class="module-desc">Handle purchase orders, suppliers, and procurement process.</div>
+                <a href="/procurement/" class="module-button">Go to Procurement Module</a>
+            </div>
+            {% endif %}
+
+            <!-- Sales Module -->
+            {% if 'Sales' in modules %}
+            <div class="module-box" data-module="Sales">
+                <div class="module-icon-large sales">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="module-name">Sales</div>
+                <div class="module-desc">Manage customers, sales, and revenue tracking.</div>
+                <a href="/sales/" class="module-button">Go to Sales Module</a>
+            </div>
+            {% endif %}
+
+            <!-- Audit Module -->
+            {% if 'Audit' in modules %}
+            <div class="module-box" data-module="Audit">
+                <div class="module-icon-large audit">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <div class="module-name">Audit Logs</div>
+                <div class="module-desc">View system activities, track changes, and monitor user actions.</div>
+                <a href="/audit/" class="module-button">View Audit Logs</a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Leave Management Section -->
+        {% if user_has_employee %}
+        <div class="leave-section">
+            <div class="section-head">
+                <h2>
+                    <i class="fas fa-calendar-alt"></i>
+                    Leave Management
+                </h2>
+                <a href="/hr/leave/" class="view-link">
+                    Leave Dashboard <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+
+            <div class="modules-grid">
+                <!-- Request Leave -->
+                <div class="module-box">
+                    <div class="module-icon-large" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                        <i class="fas fa-plus-circle"></i>
+                    </div>
+                    <div class="module-name">Request Leave</div>
+                    <div class="module-desc">Submit a new leave request for vacation, sickness, emergency, or other reasons.</div>
+                    <a href="/hr/leave/request/" class="module-button">Submit Request</a>
+                </div>
+
+                <!-- Leave History -->
+                <div class="module-box">
+                    <div class="module-icon-large" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <div class="module-name">My Leave History</div>
+                    <div class="module-desc">View all your previous leave requests, check status, and track approvals.</div>
+                    <a href="/hr/leave/my-requests/" class="module-button">View History</a>
+                </div>
+
+                <!-- Leave Balance -->
+                <div class="module-box">
+                    <div class="module-icon-large" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                        <i class="fas fa-chart-pie"></i>
+                    </div>
+                    <div class="module-name">Leave Balance</div>
+                    <div class="module-desc">
+                        <div style="padding: 15px; background: #f8fafc; border-radius: 12px; margin-top: 10px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span>Annual Leave:</span>
+                                <strong style="color: var(--success);">{{ annual_balance }} days</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>Sick Leave:</span>
+                                <strong style="color: var(--secondary);">{{ sick_balance }} days</strong>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="/hr/leave/" class="module-button" style="margin-top: 15px;">View Details</a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Footer -->
+        <div class="footer">
+            <p><i class="fas fa-lock"></i> Cornel Simba Business Management System v1.0 | All rights reserved © 2025</p>
+            <div class="security-badge">
+                <i class="fas fa-shield-alt"></i>
+                <span>Audit System: {% if audit_data %}Active{% else %}Inactive{% endif %}</span>
+            </div>
+            <div class="security-badge" style="background: linear-gradient(135deg, rgba(30, 58, 138, 0.1), rgba(139, 92, 246, 0.05)); color: var(--secondary); margin-left: 10px;">
+                <i class="fas fa-user-shield"></i>
+                <span>Secure Access Control Enabled</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function updateLiveTime() {
+            const now = new Date();
+            const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+            const day = days[now.getDay()];
+            const time = now.toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            const el = document.getElementById('liveTime');
+            if (el) {
+                el.textContent = `${day} · ${time}`;
+            }
+        }
+
+        updateLiveTime();
+        setInterval(updateLiveTime, 1000);
+
+        function changeView(view) {
+            document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.closest('.view-btn').classList.add('active');
+        }
+
+        function changeItemsPerPage(value) {
+            console.log('Showing', value, 'modules');
+        }
+
+        // Logout function with confirmation
+function logoutUser() {
+    // Show custom confirmation dialog
+    const confirmDialog = document.createElement('div');
+    confirmDialog.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    `;
+    
+    confirmDialog.innerHTML = `
+        <div style="
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        ">
+            <div style="
+                width: 60px;
+                height: 60px;
+                background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0 auto 20px;
+                color: white;
+                font-size: 1.5em;
+            ">
+                <i class="fas fa-sign-out-alt"></i>
+            </div>
+            
+            <h3 style="color: #2c3e50; margin-bottom: 10px;">Confirm Logout</h3>
+            <p style="color: #7f8c8d; margin-bottom: 25px;">
+                Are you sure you want to logout from your account?
+            </p>
+            
+            <div style="display: flex; gap: 15px; justify-content: center;">
+                <button onclick="confirmLogout()" style="
+                    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+                    color: white;
+                    border: none;
+                    padding: 10px 25px;
+                    border-radius: 8px;
+                    font-weight: 500;
+                    cursor: pointer;
+                    transition: all 0.3s;
+                    flex: 1;
+                    max-width: 120px;
+                ">
+                    Yes, Logout
+                </button>
+                <button onclick="cancelLogout(this)" style="
+                    background: #f8f9fa;
+                    color: #2c3e50;
+                    border: 1px solid #ddd;
+                    padding: 10px 25px;
+                    border-radius: 8px;
+                    font-weight: 500;
+                    cursor: pointer;
+                    transition: all 0.3s;
+                    flex: 1;
+                    max-width: 120px;
+                ">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(confirmDialog);
+}
+
+function confirmLogout() {
+    // Submit the hidden logout form
+    document.getElementById('logoutForm').submit();
+}
+
+function cancelLogout(button) {
+    // Remove the confirmation dialog
+    const dialog = button.closest('div[style*="position: fixed"]');
+    if (dialog) {
+        document.body.removeChild(dialog);
+    }
+}
+
+// Add keyboard support
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const dialog = document.querySelector('div[style*="position: fixed"]');
+        if (dialog) {
+            document.body.removeChild(dialog);
+        }
+    }
+});
+
+// Simple logout with browser confirmation
+function logoutUser() {
+    if (confirm('Are you sure you want to logout?')) {
+        document.getElementById('logoutForm').submit();
+    }
+}
+    </script>
+</body>
+</html>

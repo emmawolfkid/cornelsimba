@@ -1,0 +1,836 @@
+{% extends 'audit/base.html' %}
+{% load static %}
+
+{% block title %}Audit Logs - Cornel Simba{% endblock %}
+{% block header_title %}Audit Logs{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="/static/css/audit_logs.css">
+{% endblock %}
+
+{% block content %}
+<div class="audit-container">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="page-title">
+            <div class="page-icon">
+                <i class="fas fa-history"></i>
+            </div>
+            <div class="page-title-text">
+                <h1>Audit Logs</h1>
+                <p>System Activity Tracker • Enterprise Security</p>
+            </div>
+        </div>
+        
+        <div class="header-actions">
+            <a href="/" class="header-btn secondary">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+            </a>
+            <button class="header-btn" onclick="document.getElementById('downloadInfoModal').style.display = 'flex'" style="background: #9b59b6; color: white;">
+                <i class="fas fa-download"></i>
+                <span>Download</span>
+            </button>
+            <a href="/accounts/logout/" class="header-btn danger">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="quick-stats">
+        <div class="stat-card" onclick="window.location='?time_period=today'">
+            <div class="stat-icon total">
+                <i class="fas fa-database"></i>
+            </div>
+            <div class="stat-content">
+                <h3>{{ total_count|default:"0" }}</h3>
+                <p>Total Logs</p>
+            </div>
+        </div>
+        
+        <div class="stat-card" onclick="window.location='?time_period=today'">
+            <div class="stat-icon today">
+                <i class="fas fa-calendar-day"></i>
+            </div>
+            <div class="stat-content">
+                <h3>{{ today_logs|default:"0" }}</h3>
+                <p>Today's Activities</p>
+            </div>
+        </div>
+        
+        <div class="stat-card" onclick="window.location='?group_by=user'">
+            <div class="stat-icon users">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-content">
+                <h3>{{ unique_users|default:"0" }}</h3>
+                <p>Active Users</p>
+            </div>
+        </div>
+        
+        <div class="stat-card" onclick="window.location='?group_by=module'">
+            <div class="stat-icon modules">
+                <i class="fas fa-cubes"></i>
+            </div>
+            <div class="stat-content">
+                <h3>{{ modules_count|default:"0" }}</h3>
+                <p>Active Modules</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <section class="filter-section">
+        <div class="filter-header">
+            <h2>
+                <i class="fas fa-filter"></i>
+                Filter Audit Logs
+            </h2>
+            <button class="filter-toggle" id="filterToggle">
+                <i class="fas fa-sliders-h"></i>
+                Toggle Filters
+            </button>
+        </div>
+        
+        <!-- Quick Filter Chips -->
+        <div class="quick-filters-chips">
+            <button class="filter-chip {% if filter_values.time_period == 'today' %}active{% endif %}" 
+                    onclick="setTimePeriod('today')">
+                <i class="fas fa-calendar-day"></i>
+                Today
+            </button>
+            <button class="filter-chip {% if filter_values.time_period == 'week' %}active{% endif %}" 
+                    onclick="setTimePeriod('week')">
+                <i class="fas fa-calendar-week"></i>
+                7 Days
+            </button>
+            <button class="filter-chip {% if filter_values.time_period == 'month' %}active{% endif %}" 
+                    onclick="setTimePeriod('month')">
+                <i class="fas fa-calendar-alt"></i>
+                30 Days
+            </button>
+        </div>
+        
+        <!-- Filter Form -->
+        <form method="get" id="auditFilterForm" class="filter-form">
+            <input type="hidden" name="time_period" id="timePeriod" value="{{ filter_values.time_period }}">
+            
+            <div class="form-group">
+                <label for="userFilter">
+                    <i class="fas fa-user"></i>
+                    Username
+                </label>
+                <input type="text" id="userFilter" name="user" class="form-control" 
+                       placeholder="Search by username..." value="{{ filter_values.user }}">
+            </div>
+            
+            <div class="form-group">
+                <label for="moduleFilter">
+                    <i class="fas fa-cube"></i>
+                    Module
+                </label>
+                <select id="moduleFilter" name="module" class="form-control">
+                    <option value="">All Modules</option>
+                    {% for code, name in module_choices %}
+                    <option value="{{ code }}" {% if filter_values.module == code %}selected{% endif %}>
+                        {{ name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="actionFilter">
+                    <i class="fas fa-bolt"></i>
+                    Action Type
+                </label>
+                <select id="actionFilter" name="action" class="form-control">
+                    <option value="">All Actions</option>
+                    {% for code, name in action_choices %}
+                    <option value="{{ code }}" {% if filter_values.action == code %}selected{% endif %}>
+                        {{ name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>
+                    <i class="fas fa-calendar"></i>
+                    Date Range
+                </label>
+                <div class="date-range">
+                    <input type="date" name="date_from" class="form-control" 
+                           value="{{ filter_values.date_from }}" placeholder="From">
+                    <input type="date" name="date_to" class="form-control" 
+                           value="{{ filter_values.date_to }}" placeholder="To">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="searchFilter">
+                    <i class="fas fa-search"></i>
+                    Search Text
+                </label>
+                <input type="text" id="searchFilter" name="q" class="form-control" 
+                       placeholder="Search in descriptions..." value="{{ filter_values.q }}">
+            </div>
+            
+            <div class="filter-actions">
+                <button type="submit" class="header-btn primary">
+                    <i class="fas fa-search"></i>
+                    <span>Apply Filters</span>
+                </button>
+                <button type="button" class="header-btn secondary" onclick="clearAllFilters()">
+                    <i class="fas fa-times"></i>
+                    <span>Clear All</span>
+                </button>
+            </div>
+        </form>
+    </section>
+
+    <!-- Export Section -->
+    <section class="export-section">
+        <div class="export-header">
+            <h2>
+                <i class="fas fa-file-export"></i>
+                Export & Download Options
+            </h2>
+            <div class="export-options">
+                <button class="export-btn pdf" onclick="downloadCurrentView()">
+                    <i class="fas fa-file-pdf"></i>
+                    <span>Download PDF</span>
+                </button>
+                <button class="export-btn csv" onclick="downloadCSV()">
+                    <i class="fas fa-file-csv"></i>
+                    <span>Download CSV</span>
+                </button>
+                <button class="export-btn excel" onclick="downloadExcel()">
+                    <i class="fas fa-file-excel"></i>
+                    <span>Download Excel</span>
+                </button>
+                <button class="export-btn print" onclick="printReport()">
+                    <i class="fas fa-print"></i>
+                    <span>Print Report</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Export Information -->
+        <div class="export-info" style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 15px; font-size: 0.9rem; color: #7f8c8d;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+                <i class="fas fa-info-circle"></i>
+                <strong>Download Options:</strong>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; font-size: 0.85rem;">
+                <div>
+                    <i class="fas fa-file-pdf" style="color: #e74c3c;"></i>
+                    <strong>PDF:</strong> For printing and sharing
+                </div>
+                <div>
+                    <i class="fas fa-file-csv" style="color: #3498db;"></i>
+                    <strong>CSV:</strong> For data analysis
+                </div>
+                <div>
+                    <i class="fas fa-file-excel" style="color: #27ae60;"></i>
+                    <strong>Excel:</strong> For spreadsheet editing
+                </div>
+                <div>
+                    <i class="fas fa-print" style="color: #f39c12;"></i>
+                    <strong>Print:</strong> For physical copies
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Audit Logs -->
+    <section class="logs-container">
+        <div class="logs-header">
+            <h3>
+                <i class="fas fa-history"></i>
+                Activity Logs
+            </h3>
+            <div class="logs-meta">
+                <span>
+                    <i class="fas fa-database"></i>
+                    {{ logs.paginator.count }} records
+                </span>
+                <span>
+                    <i class="fas fa-file-alt"></i>
+                    Page {{ logs.number }} of {{ logs.paginator.num_pages }}
+                </span>
+            </div>
+        </div>
+        
+        <!-- Mobile View (Cards) -->
+        <div class="mobile-logs-view">
+            {% for log in logs %}
+            <div class="log-card">
+                <div class="log-card-header">
+                    <div class="log-date">
+                        <span class="date">{{ log.timestamp|date:"M d, Y" }}</span>
+                        <span class="time">{{ log.timestamp|time:"H:i:s" }}</span>
+                    </div>
+                    <span class="log-badge badge-{{ log.action|lower }}">
+                        {{ log.get_action_display }}
+                    </span>
+                </div>
+                
+                <div class="log-card-body">
+                    <div class="log-user">
+                        <i class="fas fa-user"></i>
+                        {{ log.user.username|default:"System" }}
+                    </div>
+                    
+                    <div class="log-module">
+                        <i class="fas fa-cube"></i>
+                        {{ log.get_module_display }}
+                    </div>
+                    
+                    <p class="log-description">
+                        {{ log.description|truncatechars:100 }}
+                    </p>
+                    
+                    {% if log.object_type %}
+                    <div class="log-object">
+                        <i class="fas fa-tag"></i>
+                        {{ log.object_type }}
+                        {% if log.object_id %}#{{ log.object_id }}{% endif %}
+                    </div>
+                    {% endif %}
+                    
+                    {% if log.ip_address %}
+                    <div class="log-ip">
+                        <i class="fas fa-network-wired"></i>
+                        {{ log.ip_address }}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="log-card-footer">
+                    <a href="{% url 'audit:audit_log_detail' log.id %}" class="view-btn">
+                        <i class="fas fa-eye"></i>
+                        View Details
+                    </a>
+                </div>
+            </div>
+            {% empty %}
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    <i class="fas fa-inbox"></i>
+                </div>
+                <h4>No audit logs found</h4>
+                <p>Try adjusting your filters or search criteria</p>
+                <button class="header-btn secondary" onclick="clearAllFilters()">
+                    <i class="fas fa-times"></i>
+                    Clear Filters
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Desktop View (Table) -->
+        <div class="table-container">
+            <table class="audit-table">
+                <thead>
+                    <tr>
+                        <th>Date & Time</th>
+                        <th>User</th>
+                        <th>Action</th>
+                        <th>Module</th>
+                        <th>Description</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr>
+                        <td>
+                            <div class="datetime-cell">
+                                <div class="date">{{ log.timestamp|date:"M d, Y" }}</div>
+                                <div class="time">{{ log.timestamp|time:"H:i:s" }}</div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="user-cell">
+                                <div class="username">{{ log.user.username|default:"System" }}</div>
+                                {% if log.ip_address %}
+                                <div class="ip">{{ log.ip_address }}</div>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            <span class="log-badge badge-{{ log.action|lower }}">
+                                {{ log.get_action_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="module-tag">{{ log.get_module_display }}</span>
+                        </td>
+                        <td>
+                            <div class="description-cell">
+                                <p>{{ log.description|truncatechars:80 }}</p>
+                                {% if log.object_type %}
+                                <div class="object-info">
+                                    <i class="fas fa-tag"></i>
+                                    {{ log.object_type }}
+                                    {% if log.object_id %}#{{ log.object_id }}{% endif %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            <a href="{% url 'audit:audit_log_detail' log.id %}" class="view-btn">
+                                <i class="fas fa-eye"></i>
+                                View
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">
+                                    <i class="fas fa-inbox"></i>
+                                </div>
+                                <h4>No audit logs found</h4>
+                                <p>Try adjusting your filters or search criteria</p>
+                                <button class="header-btn secondary" onclick="clearAllFilters()">
+                                    <i class="fas fa-times"></i>
+                                    Clear Filters
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Pagination -->
+    {% if logs.has_other_pages %}
+    <section class="pagination-section">
+        <div class="pagination-container">
+            <div class="pagination-info">
+                Showing {{ logs.start_index }} to {{ logs.end_index }} of {{ logs.paginator.count }} entries
+            </div>
+            
+            <nav class="pagination">
+                {% if logs.has_previous %}
+                <a href="?page=1{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                   class="pagination-link" title="First Page">
+                    <i class="fas fa-angle-double-left"></i>
+                    <span>First</span>
+                </a>
+                <a href="?page={{ logs.previous_page_number }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                   class="pagination-link" title="Previous">
+                    <i class="fas fa-angle-left"></i>
+                    <span>Previous</span>
+                </a>
+                {% else %}
+                <span class="pagination-link disabled">
+                    <i class="fas fa-angle-double-left"></i>
+                    <span>First</span>
+                </span>
+                <span class="pagination-link disabled">
+                    <i class="fas fa-angle-left"></i>
+                    <span>Previous</span>
+                </span>
+                {% endif %}
+                
+                <div class="page-numbers">
+                    {% for num in logs.paginator.page_range %}
+                        {% if logs.number == num %}
+                        <span class="page-number active">{{ num }}</span>
+                        {% elif num > logs.number|add:'-3' and num < logs.number|add:'3' %}
+                        <a href="?page={{ num }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                           class="page-number">{{ num }}</a>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                
+                {% if logs.has_next %}
+                <a href="?page={{ logs.next_page_number }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                   class="pagination-link" title="Next">
+                    <span>Next</span>
+                    <i class="fas fa-angle-right"></i>
+                </a>
+                <a href="?page={{ logs.paginator.num_pages }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                   class="pagination-link" title="Last Page">
+                    <span>Last</span>
+                    <i class="fas fa-angle-double-right"></i>
+                </a>
+                {% else %}
+                <span class="pagination-link disabled">
+                    <span>Next</span>
+                    <i class="fas fa-angle-right"></i>
+                </span>
+                <span class="pagination-link disabled">
+                    <span>Last</span>
+                    <i class="fas fa-angle-double-right"></i>
+                </span>
+                {% endif %}
+            </nav>
+            
+            <div class="page-size-selector">
+                <select onchange="changePageSize(this.value)">
+                    <option value="10" {% if request.GET.page_size == '10' %}selected{% endif %}>10 per page</option>
+                    <option value="25" {% if request.GET.page_size == '25' or not request.GET.page_size %}selected{% endif %}>25 per page</option>
+                    <option value="50" {% if request.GET.page_size == '50' %}selected{% endif %}>50 per page</option>
+                    <option value="100" {% if request.GET.page_size == '100' %}selected{% endif %}>100 per page</option>
+                </select>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+    <h3 id="loadingMessage">Processing...</h3>
+    <p>Please wait</p>
+</div>
+
+<!-- Download Info Modal -->
+<div id="downloadInfoModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center;">
+    <div style="background: white; border-radius: 12px; padding: 30px; max-width: 500px; width: 90%;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 style="color: #2c3e50; display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-download"></i>
+                Download Options
+            </h3>
+            <button onclick="document.getElementById('downloadInfoModal').style.display = 'none'" style="background: none; border: none; font-size: 1.5rem; color: #7f8c8d; cursor: pointer;">
+                &times;
+            </button>
+        </div>
+        
+        <div style="margin-bottom: 25px;">
+            <p style="color: #7f8c8d; margin-bottom: 15px;">Choose your preferred download format:</p>
+            
+            <div style="display: grid; grid-template-columns: 1fr; gap: 15px;">
+                <button onclick="downloadCurrentView()" style="display: flex; align-items: center; gap: 15px; padding: 15px; background: #f8f9fa; border: 1px solid #ddd; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
+                    <div style="background: #e74c3c; color: white; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                        <i class="fas fa-file-pdf"></i>
+                    </div>
+                    <div style="text-align: left;">
+                        <div style="font-weight: 600; color: #2c3e50;">PDF Document</div>
+                        <div style="font-size: 0.9rem; color: #7f8c8d;">Best for printing and sharing</div>
+                    </div>
+                </button>
+                
+                <button onclick="downloadCSV()" style="display: flex; align-items: center; gap: 15px; padding: 15px; background: #f8f9fa; border: 1px solid #ddd; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
+                    <div style="background: #3498db; color: white; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                        <i class="fas fa-file-csv"></i>
+                    </div>
+                    <div style="text-align: left;">
+                        <div style="font-weight: 600; color: #2c3e50;">CSV File</div>
+                        <div style="font-size: 0.9rem; color: #7f8c8d;">Best for data analysis</div>
+                    </div>
+                </button>
+                
+                <button onclick="downloadExcel()" style="display: flex; align-items: center; gap: 15px; padding: 15px; background: #f8f9fa; border: 1px solid #ddd; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
+                    <div style="background: #27ae60; color: white; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                        <i class="fas fa-file-excel"></i>
+                    </div>
+                    <div style="text-align: left;">
+                        <div style="font-weight: 600; color: #2c3e50;">Excel Spreadsheet</div>
+                        <div style="font-size: 0.9rem; color: #7f8c8d;">Best for spreadsheet editing</div>
+                    </div>
+                </button>
+            </div>
+        </div>
+        
+        <div style="border-top: 1px solid #eaeaea; padding-top: 15px;">
+            <button onclick="downloadAllLogs()" style="width: 100%; padding: 12px; background: #9b59b6; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                <i class="fas fa-download"></i>
+                Download ALL Logs (Ignore Filters)
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
+{% block extra_js %}
+<script>
+    // Filter toggle for mobile
+    document.getElementById('filterToggle').addEventListener('click', function() {
+        document.getElementById('auditFilterForm').classList.toggle('show');
+    });
+    
+    // Time period filter
+    function setTimePeriod(period) {
+        document.getElementById('timePeriod').value = period;
+        
+        // Update active chip
+        document.querySelectorAll('.filter-chip').forEach(chip => {
+            chip.classList.remove('active');
+            if (chip.textContent.includes(period.charAt(0).toUpperCase() + period.slice(1))) {
+                chip.classList.add('active');
+            }
+        });
+        
+        // Submit form
+        document.getElementById('auditFilterForm').submit();
+    }
+    
+    // Clear all filters
+    function clearAllFilters() {
+        if (confirm('Clear all filters and search criteria?')) {
+            window.location.href = "{% url 'audit:audit_logs' %}";
+        }
+    }
+    
+    // ========== DOWNLOAD FUNCTIONS ==========
+    
+    // Download current view as PDF
+    function downloadCurrentView() {
+        showLoading('Preparing PDF download...');
+        setTimeout(() => {
+            const params = new URLSearchParams(window.location.search);
+            params.set('download', 'pdf');
+            params.set('filtered', 'true');
+            // Force download instead of opening in new tab
+            const link = document.createElement('a');
+            link.href = '?' + params.toString();
+            link.download = `audit-logs-${new Date().toISOString().split('T')[0]}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            hideLoading();
+            
+            // Show success notification
+            showNotification('success', 'PDF Download Started', 'Your PDF file is being downloaded.');
+        }, 1000);
+    }
+    
+    // Download as CSV
+    function downloadCSV() {
+        showLoading('Preparing CSV download...');
+        setTimeout(() => {
+            const params = new URLSearchParams(window.location.search);
+            params.set('download', 'csv');
+            params.set('filtered', 'true');
+            const link = document.createElement('a');
+            link.href = '?' + params.toString();
+            link.download = `audit-logs-${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            hideLoading();
+            
+            showNotification('success', 'CSV Download Started', 'Your CSV file is being downloaded.');
+        }, 1000);
+    }
+    
+    // Download as Excel
+    function downloadExcel() {
+        showLoading('Preparing Excel download...');
+        setTimeout(() => {
+            const params = new URLSearchParams(window.location.search);
+            params.set('download', 'excel');
+            params.set('filtered', 'true');
+            const link = document.createElement('a');
+            link.href = '?' + params.toString();
+            link.download = `audit-logs-${new Date().toISOString().split('T')[0]}.xlsx`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            hideLoading();
+            
+            showNotification('success', 'Excel Download Started', 'Your Excel file is being downloaded.');
+        }, 1000);
+    }
+    
+    // Print report
+    function printReport() {
+        showNotification('info', 'Print Preview', 'Opening print dialog...');
+        setTimeout(() => {
+            window.print();
+        }, 500);
+    }
+    
+    // Download all logs (regardless of filters)
+    function downloadAllLogs() {
+        if (confirm('Download ALL audit logs (ignoring current filters)? This may take a while for large datasets.')) {
+            showLoading('Preparing full download...');
+            setTimeout(() => {
+                const params = new URLSearchParams();
+                params.set('download', 'pdf');
+                params.set('filtered', 'false');
+                const link = document.createElement('a');
+                link.href = '?' + params.toString();
+                link.download = `all-audit-logs-${new Date().toISOString().split('T')[0]}.pdf`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                hideLoading();
+                
+                showNotification('success', 'Full Download Started', 'All audit logs are being downloaded.');
+            }, 1500);
+        }
+    }
+    
+    // Page size change
+    function changePageSize(size) {
+        showLoading('Changing page size...');
+        const url = new URL(window.location);
+        url.searchParams.set('page_size', size);
+        url.searchParams.set('page', '1');
+        window.location.href = url.toString();
+    }
+    
+    // ========== UTILITY FUNCTIONS ==========
+    
+    // Loading functions
+    function showLoading(message) {
+        const overlay = document.getElementById('loadingOverlay');
+        const messageEl = document.getElementById('loadingMessage');
+        
+        if (messageEl && message) {
+            messageEl.textContent = message;
+        }
+        
+        if (overlay) {
+            overlay.style.display = 'flex';
+        }
+    }
+    
+    function hideLoading() {
+        const overlay = document.getElementById('loadingOverlay');
+        if (overlay) {
+            overlay.style.display = 'none';
+        }
+    }
+    
+    // Notification system
+    function showNotification(type, title, message) {
+        // Create notification container if it doesn't exist
+        let container = document.getElementById('notificationContainer');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'notificationContainer';
+            container.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; max-width: 400px; width: 90%;';
+            document.body.appendChild(container);
+        }
+        
+        // Create notification
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.style.cssText = 'background: white; border-radius: 8px; padding: 15px; margin-bottom: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; align-items: flex-start; gap: 12px; border-left: 4px solid #3498db; animation: slideInRight 0.3s ease;';
+        
+        // Set border color based on type
+        if (type === 'success') notification.style.borderLeftColor = '#27ae60';
+        if (type === 'error') notification.style.borderLeftColor = '#e74c3c';
+        if (type === 'warning') notification.style.borderLeftColor = '#f39c12';
+        if (type === 'info') notification.style.borderLeftColor = '#3498db';
+        
+        // Set icon based on type
+        let icon = 'fa-info-circle';
+        if (type === 'success') icon = 'fa-check-circle';
+        if (type === 'error') icon = 'fa-exclamation-circle';
+        if (type === 'warning') icon = 'fa-exclamation-triangle';
+        
+        notification.innerHTML = `
+            <div style="font-size: 1.2rem; color: inherit;">
+                <i class="fas ${icon}"></i>
+            </div>
+            <div style="flex: 1;">
+                <div style="font-weight: 600; margin-bottom: 4px;">${title}</div>
+                <div style="font-size: 0.9rem; color: #666;">${message}</div>
+            </div>
+            <button onclick="this.parentElement.remove()" style="background: none; border: none; color: #999; cursor: pointer; font-size: 1rem; padding: 4px;">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        
+        container.appendChild(notification);
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.remove();
+                    }
+                }, 300);
+            }
+        }, 5000);
+    }
+    
+    // Handle responsive table/card view
+    function checkViewport() {
+        const mobileView = document.querySelector('.mobile-logs-view');
+        const tableView = document.querySelector('.table-container');
+        
+        if (window.innerWidth <= 768) {
+            // Mobile view
+            if (mobileView) mobileView.style.display = 'flex';
+            if (tableView) tableView.style.display = 'none';
+        } else {
+            // Desktop view
+            if (mobileView) mobileView.style.display = 'none';
+            if (tableView) tableView.style.display = 'block';
+        }
+    }
+    
+    // Add CSS animation for notifications
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // Initial check
+    checkViewport();
+    
+    // Check on resize
+    window.addEventListener('resize', checkViewport);
+    
+    // Auto-hide loading after 10 seconds (safety)
+    setTimeout(hideLoading, 10000);
+    
+    // Form submission loading
+    document.getElementById('auditFilterForm').addEventListener('submit', function() {
+        showLoading('Applying filters...');
+    });
+    
+    // Add download all button to page header (optional)
+    function addDownloadAllButton() {
+        const headerActions = document.querySelector('.header-actions');
+        if (headerActions) {
+            const downloadAllBtn = document.createElement('button');
+            downloadAllBtn.className = 'header-btn';
+            downloadAllBtn.style.background = '#9b59b6';
+            downloadAllBtn.innerHTML = '<i class="fas fa-download"></i><span>Download All</span>';
+            downloadAllBtn.onclick = downloadAllLogs;
+            headerActions.appendChild(downloadAllBtn);
+        }
+    }
+    
+    // Add the button after page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        addDownloadAllButton();
+    });
+</script>
+{% endblock %}
+{% endblock %}

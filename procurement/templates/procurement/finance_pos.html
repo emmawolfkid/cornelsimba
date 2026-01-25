@@ -1,0 +1,547 @@
+{% extends 'procurement/base.html' %}
+
+{% block title %}Finance - Purchase Orders{% endblock %}
+{% block page_title %}Finance - Purchase Orders{% endblock %}
+
+{% block content %}
+<div class="card">
+    <!-- Finance Header -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+        <div>
+            <h2 class="card-title">
+                <i class="fas fa-money-check-alt"></i>
+                Finance - Purchase Orders Ready for Payment
+            </h2>
+            <p style="color: var(--gray); margin-top: 5px;">
+                <i class="fas fa-info-circle"></i> Delivered POs awaiting finance processing
+            </p>
+        </div>
+        <a href="{% url 'procurement:dashboard' %}" class="action-btn info">
+            <i class="fas fa-arrow-left"></i> Back to Procurement
+        </a>
+    </div>
+
+    <!-- Summary Stats -->
+    <div class="stats-grid">
+        <div class="stat-card success">
+            <div class="stat-header">
+                <div class="stat-content">
+                    <h3>Total PO Value</h3>
+                    <p>${{ total_value|floatformat:2 }}</p>
+                </div>
+                <div class="stat-icon">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-content">
+                    <h3>Number of POs</h3>
+                    <p>{{ purchase_orders.paginator.count }}</p>
+                </div>
+                <div class="stat-icon">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="stat-card info">
+            <div class="stat-header">
+                <div class="stat-content">
+                    <h3>Departments</h3>
+                    <p>{{ by_department|length }}</p>
+                </div>
+                <div class="stat-icon">
+                    <i class="fas fa-building"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="stat-card warning">
+            <div class="stat-header">
+                <div class="stat-content">
+                    <h3>Avg. PO Value</h3>
+                    <p>
+                        {% if purchase_orders.paginator.count > 0 %}
+                        ${{ total_value|floatformat:2 }}
+                        {% else %}
+                        $0.00
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="stat-icon">
+                    <i class="fas fa-calculator"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Department Breakdown -->
+    <div class="card" style="margin-bottom: 30px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+            <h2 class="card-title">
+                <i class="fas fa-chart-pie"></i>
+                Cost by Department
+            </h2>
+            <span class="status-badge" style="background: var(--primary); color: white;">
+                {{ by_department|length }} department{{ by_department|length|pluralize }}
+            </span>
+        </div>
+        
+        <div class="dept-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px;">
+            {% for dept, data in by_department.items %}
+            <div class="dept-card" style="background: var(--light); padding: 20px; border-radius: 10px; transition: all 0.3s ease; border-left: 4px solid var(--primary);">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <h3 style="color: var(--dark); font-size: 1.1em; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-building"></i> {{ dept|default:"Unknown" }}
+                        </h3>
+                        <p style="font-size: 1.8em; font-weight: 800; color: var(--success); margin: 0;">
+                            ${{ data.total|floatformat:2 }}
+                        </p>
+                    </div>
+                    <span class="status-badge" style="background: var(--info); color: white;">
+                        {{ data.count }} PO{{ data.count|pluralize }}
+                    </span>
+                </div>
+                <div style="margin-top: 15px;">
+                    <div style="font-size: 0.85em; color: var(--gray);">
+                        Avg. PO: ${{ data.total|div:data.count|floatformat:2 }}
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+                <i class="fas fa-chart-pie" style="font-size: 3em; color: var(--gray); opacity: 0.5;"></i>
+                <p style="color: var(--gray); margin-top: 15px;">No department data available</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Purchase Orders Table -->
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+            <h2 class="card-title">
+                <i class="fas fa-list-check"></i>
+                Purchase Orders Ready for Payment
+            </h2>
+            <div class="action-links">
+                <button id="exportFinanceBtn" class="action-btn success">
+                    <i class="fas fa-file-export"></i> Export Report
+                </button>
+                <button id="filterBtn" class="action-btn info">
+                    <i class="fas fa-filter"></i> Filter
+                </button>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>PO Number</th>
+                        <th>Supplier</th>
+                        <th>Department</th>
+                        <th>Requested By</th>
+                        <th>Approved By</th>
+                        <th>Total Amount</th>
+                        <th>Order Date</th>
+                        <th>Finance Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for po in purchase_orders %}
+                    <tr>
+                        <td>
+                            <strong>{{ po.po_number|default:"-" }}</strong>
+                            {% if po.notes %}
+                            <div style="margin-top: 5px;">
+                                <i class="fas fa-sticky-note" style="color: var(--warning); font-size: 0.8em;"></i>
+                                <small style="color: var(--gray); font-size: 0.8em;">Has notes</small>
+                            </div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div style="width: 32px; height: 32px; background: linear-gradient(135deg, var(--info), var(--primary)); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.8em;">
+                                    {{ po.supplier.name|first|upper }}
+                                </div>
+                                <div>
+                                    <div style="font-weight: 600;">{{ po.supplier.name }}</div>
+                                    {% if po.supplier.contact_person %}
+                                    <small style="color: var(--gray); font-size: 0.8em;">{{ po.supplier.contact_person }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            {% if po.department %}
+                            <span class="status-badge" style="background: #e2e8f0; color: #475569;">
+                                {{ po.department }}
+                            </span>
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if po.requested_by %}
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-user" style="color: var(--gray);"></i>
+                                <span>{{ po.requested_by.full_name|default:po.requested_by.user.username }}</span>
+                            </div>
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if po.approved_by %}
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-user-check" style="color: var(--success);"></i>
+                                <span>{{ po.approved_by.full_name|default:po.approved_by.user.username }}</span>
+                            </div>
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                        <td>
+                            <strong style="color: var(--success); font-size: 1.1em;">${{ po.total_amount|floatformat:2 }}</strong>
+                            <div style="margin-top: 5px;">
+                                <small style="color: var(--gray); font-size: 0.8em;">
+                                    <i class="fas fa-check-circle"></i> Delivered
+                                </small>
+                            </div>
+                        </td>
+                        <td>
+                            <div>{{ po.order_date|date:"M d, Y" }}</div>
+                            <small style="color: var(--gray); font-size: 0.8em;">
+                                {{ po.order_date|timesince }} ago
+                            </small>
+                        </td>
+                        <td>
+                            {% if po.finance_ready %}
+                            <span class="status-badge status-approved" style="display: flex; align-items: center; gap: 5px;">
+                                <i class="fas fa-check-circle"></i> Ready
+                            </span>
+                            {% else %}
+                            <span class="status-badge status-warning" style="display: flex; align-items: center; gap: 5px;">
+                                <i class="fas fa-exclamation-circle"></i> Not Ready
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="action-links">
+                                <a href="{% url 'procurement:purchase_order_detail' po.pk %}" class="action-btn info">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                                {% if po.finance_ready %}
+                                <a href="{% url 'procurement:po_to_expense' po.pk %}" class="action-btn success" onclick="return confirm('Mark this PO as paid/expensed?');">
+                                    <i class="fas fa-check-double"></i> Mark Paid
+                                </a>
+                                {% else %}
+                                <button class="action-btn warning" disabled title="Mark PO as finance ready first">
+                                    <i class="fas fa-clock"></i> Pending
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9">
+                            <div class="empty-state">
+                                <i class="fas fa-inbox" style="font-size: 3em;"></i>
+                                <p>No delivered purchase orders ready for finance processing</p>
+                                <small style="color: var(--gray);">Delivered POs will appear here for finance processing</small>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if purchase_orders.has_other_pages %}
+        <div class="pagination">
+            {% if purchase_orders.has_previous %}
+                <a href="?page=1{% if request.GET.department %}&department={{ request.GET.department }}{% endif %}{% if request.GET.finance_status %}&finance_status={{ request.GET.finance_status }}{% endif %}">&laquo; First</a>
+                <a href="?page={{ purchase_orders.previous_page_number }}{% if request.GET.department %}&department={{ request.GET.department }}{% endif %}{% if request.GET.finance_status %}&finance_status={{ request.GET.finance_status }}{% endif %}">Previous</a>
+            {% endif %}
+            
+            <span class="current">
+                Page {{ purchase_orders.number }} of {{ purchase_orders.paginator.num_pages }}
+            </span>
+            
+            {% if purchase_orders.has_next %}
+                <a href="?page={{ purchase_orders.next_page_number }}{% if request.GET.department %}&department={{ request.GET.department }}{% endif %}{% if request.GET.finance_status %}&finance_status={{ request.GET.finance_status }}{% endif %}">Next</a>
+                <a href="?page={{ purchase_orders.paginator.num_pages }}{% if request.GET.department %}&department={{ request.GET.department }}{% endif %}{% if request.GET.finance_status %}&finance_status={{ request.GET.finance_status }}{% endif %}">Last &raquo;</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Export functionality
+    document.getElementById('exportFinanceBtn').addEventListener('click', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const exportUrl = window.location.pathname + '?export=1&' + urlParams.toString();
+        
+        // Show loading message
+        NotificationSystem.show('Preparing export file...', 'info');
+        
+        // Create a temporary link for download
+        setTimeout(() => {
+            const link = document.createElement('a');
+            link.href = exportUrl;
+            link.target = '_blank';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            NotificationSystem.show('Export completed', 'success');
+        }, 1000);
+    });
+    
+    // Filter functionality
+    document.getElementById('filterBtn').addEventListener('click', function() {
+        const filterModal = document.createElement('div');
+        filterModal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        `;
+        
+        // Get current filter values from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentDept = urlParams.get('department') || '';
+        const currentFinanceStatus = urlParams.get('finance_status') || '';
+        const currentMinAmount = urlParams.get('min_amount') || '';
+        const currentMaxAmount = urlParams.get('max_amount') || '';
+        
+        filterModal.innerHTML = `
+            <div style="background: white; padding: 30px; border-radius: 15px; width: 90%; max-width: 500px;">
+                <h3 style="color: var(--dark); margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-filter"></i> Filter Finance POs
+                </h3>
+                <form id="filterForm" style="display: flex; flex-direction: column; gap: 15px;">
+                    <div class="form-group">
+                        <label>Department</label>
+                        <select name="department" class="form-control">
+                            <option value="">All Departments</option>
+                            {% for dept, data in by_department.items %}
+                            <option value="{{ dept }}" ${currentDept === '{{ dept }}' ? 'selected' : ''}>
+                                {{ dept|default:"Unknown" }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Finance Status</label>
+                        <select name="finance_status" class="form-control">
+                            <option value="">All Status</option>
+                            <option value="ready" ${currentFinanceStatus === 'ready' ? 'selected' : ''}>Ready</option>
+                            <option value="not_ready" ${currentFinanceStatus === 'not_ready' ? 'selected' : ''}>Not Ready</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Amount Range</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="number" name="min_amount" placeholder="Min" class="form-control" value="${currentMinAmount}">
+                            <input type="number" name="max_amount" placeholder="Max" class="form-control" value="${currentMaxAmount}">
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-top: 20px;">
+                        <button type="submit" class="btn btn-primary" style="flex: 1;">Apply Filters</button>
+                        <button type="button" id="closeFilter" class="btn btn-secondary" style="flex: 1;">Close</button>
+                        <button type="button" id="clearFilter" class="btn btn-danger" style="flex: 1;">Clear All</button>
+                    </div>
+                </form>
+            </div>
+        `;
+        
+        document.body.appendChild(filterModal);
+        
+        // Close modal
+        document.getElementById('closeFilter').addEventListener('click', function() {
+            document.body.removeChild(filterModal);
+        });
+        
+        // Clear all filters
+        document.getElementById('clearFilter').addEventListener('click', function() {
+            window.location.href = window.location.pathname;
+        });
+        
+        // Submit form
+        document.getElementById('filterForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const params = new URLSearchParams();
+            
+            for (let [key, value] of formData.entries()) {
+                if (value) params.append(key, value);
+            }
+            
+            window.location.href = window.location.pathname + '?' + params.toString();
+        });
+    });
+    
+    // Quick department filter buttons
+    const deptCards = document.querySelectorAll('.dept-card');
+    deptCards.forEach(card => {
+        card.style.cursor = 'pointer';
+        card.addEventListener('click', function() {
+            const deptName = this.querySelector('h3').textContent.replace(' ', '').trim();
+            const url = new URL(window.location.href);
+            url.searchParams.set('department', deptName === 'Unknown' ? '' : deptName);
+            window.location.href = url.toString();
+        });
+    });
+    
+    // Add quick status filter buttons
+    const statusFilterDiv = document.createElement('div');
+    statusFilterDiv.className = 'filter-tags';
+    statusFilterDiv.style.marginBottom = '20px';
+    statusFilterDiv.style.display = 'flex';
+    statusFilterDiv.style.gap = '10px';
+    statusFilterDiv.style.flexWrap = 'wrap';
+    
+    const quickFilters = [
+        {text: 'All', value: '', color: 'var(--gray)'},
+        {text: 'Ready for Payment', value: 'ready', color: 'var(--success)'},
+        {text: 'Pending Review', value: 'not_ready', color: 'var(--warning)'},
+    ];
+    
+    quickFilters.forEach(filter => {
+        const button = document.createElement('button');
+        button.textContent = filter.text;
+        button.style.cssText = `
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: none;
+            background: ${filter.color};
+            color: white;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 500;
+        `;
+        
+        // Check if this filter is active
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentStatus = urlParams.get('finance_status') || '';
+        if ((!currentStatus && !filter.value) || currentStatus === filter.value) {
+            button.style.boxShadow = '0 0 0 2px var(--primary)';
+        }
+        
+        button.addEventListener('click', function() {
+            const url = new URL(window.location.href);
+            if (filter.value) {
+                url.searchParams.set('finance_status', filter.value);
+            } else {
+                url.searchParams.delete('finance_status');
+            }
+            window.location.href = url.toString();
+        });
+        
+        statusFilterDiv.appendChild(button);
+    });
+    
+    // Insert filter buttons after the header
+    const cardHeader = document.querySelector('.card .card-title').parentElement;
+    cardHeader.parentNode.insertBefore(statusFilterDiv, cardHeader.nextElementSibling);
+});
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Finance specific styles */
+.dept-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.dept-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+}
+
+.status-warning {
+    background: linear-gradient(135deg, var(--warning), #d97706);
+    color: white;
+}
+
+/* Finance status badges */
+.finance-status {
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 0.8em;
+    font-weight: 600;
+}
+
+.finance-ready {
+    background: var(--success);
+    color: white;
+}
+
+.finance-pending {
+    background: var(--warning);
+    color: white;
+}
+
+/* Export button */
+#exportFinanceBtn {
+    background: linear-gradient(135deg, var(--success), #059669);
+}
+
+#exportFinanceBtn:hover {
+    background: linear-gradient(135deg, #059669, var(--success));
+}
+
+/* Modal styles */
+.filter-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.filter-content {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 500px;
+}
+
+@media (max-width: 768px) {
+    .dept-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+</style>
+{% endblock %}

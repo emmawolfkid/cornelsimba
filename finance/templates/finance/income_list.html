@@ -1,0 +1,401 @@
+{% extends 'finance/base.html' %}
+{% load static %}
+{% load humanize %}
+{% load finance_filters %}
+
+{% block title %}Income Records - Finance{% endblock %}
+
+{% block page_title %}💰 Income Records{% endblock %}
+
+{% block breadcrumb %}
+<a href="{% url 'finance:dashboard' %}">Dashboard</a> / Income Records
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'finance/css/income.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="income-header-actions">
+    <a href="{% url 'finance:income_create' %}" class="btn btn-success">
+        <i class="fas fa-plus-circle"></i> Add New Income
+    </a>
+    
+    <div class="income-header-buttons">
+        <a href="{% url 'finance:dashboard' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Dashboard
+        </a>
+        
+        {% if request.GET.show_cancelled != 'true' %}
+        <a href="?show_cancelled=true" class="btn btn-warning">
+            <i class="fas fa-history"></i> Show Cancelled Records
+        </a>
+        {% else %}
+        <a href="{% url 'finance:income_list' %}" class="btn btn-info">
+            <i class="fas fa-eye"></i> Show Active Only
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="fas fa-filter"></i> Filters
+        </h3>
+    </div>
+    <div class="card-body">
+        <form method="get" class="filter-form">
+            <div class="income-filter-row">
+                <div class="form-group">
+                    <label class="form-label">Income Type</label>
+                    <select name="type" class="form-control">
+                        <option value="">All Income Types</option>
+                        {% for type_code, type_name in income_types %}
+                        <option value="{{ type_code }}" {% if request.GET.type == type_code %}selected{% endif %}>
+                            {{ type_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Year</label>
+                    <select name="year" class="form-control">
+                        <option value="">All Years</option>
+                        {% for year in years %}
+                        <option value="{{ year.year }}" {% if request.GET.year == year.year|stringformat:"i" %}selected{% endif %}>
+                            {{ year.year }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Month</label>
+                    <select name="month" class="form-control">
+                        <option value="">All Months</option>
+                        <option value="1" {% if request.GET.month == "1" %}selected{% endif %}>January</option>
+                        <option value="2" {% if request.GET.month == "2" %}selected{% endif %}>February</option>
+                        <option value="3" {% if request.GET.month == "3" %}selected{% endif %}>March</option>
+                        <option value="4" {% if request.GET.month == "4" %}selected{% endif %}>April</option>
+                        <option value="5" {% if request.GET.month == "5" %}selected{% endif %}>May</option>
+                        <option value="6" {% if request.GET.month == "6" %}selected{% endif %}>June</option>
+                        <option value="7" {% if request.GET.month == "7" %}selected{% endif %}>July</option>
+                        <option value="8" {% if request.GET.month == "8" %}selected{% endif %}>August</option>
+                        <option value="9" {% if request.GET.month == "9" %}selected{% endif %}>September</option>
+                        <option value="10" {% if request.GET.month == "10" %}selected{% endif %}>October</option>
+                        <option value="11" {% if request.GET.month == "11" %}selected{% endif %}>November</option>
+                        <option value="12" {% if request.GET.month == "12" %}selected{% endif %}>December</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Search</label>
+                    <input type="text" name="search" class="form-control" 
+                           placeholder="Search source, reference..." 
+                           value="{{ request.GET.search }}">
+                </div>
+            </div>
+            
+            <div class="income-filter-actions">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search"></i> Apply Filters
+                </button>
+                
+                {% if request.GET %}
+                <a href="{% url 'finance:income_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Clear All
+                </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Summary Card -->
+<div class="income-summary-card">
+    <div class="income-summary-content">
+        <div class="income-summary-icon">
+            <i class="fas fa-money-bill-wave"></i>
+        </div>
+        <div class="income-summary-details">
+            <h3>Total Income</h3>
+            <div class="income-summary-value tsh-amount income">
+                Tsh {{ total_amount|floatformat:0|intcomma|default:"0" }}
+            </div>
+            <p class="income-summary-count">{{ incomes.paginator.count }} record(s) found</p>
+        </div>
+    </div>
+</div>
+
+<!-- Income Table -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="fas fa-list"></i> Income Records
+        </h3>
+        <div class="income-card-actions">
+            <span class="badge badge-info">
+                Page {{ incomes.number }} of {{ incomes.paginator.num_pages }}
+            </span>
+        </div>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Source</th>
+                    <th>Type</th>
+                    <th>Amount (Tsh)</th>
+                    <th>Reference</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for income in incomes %}
+                <tr class="income-row">
+                    <td>
+                        <strong>{{ income.date|date:"Y-m-d" }}</strong>
+                        <br>
+                        <small class="text-muted">{{ income.date|date:"D" }}</small>
+                    </td>
+                    <td>
+                        <div class="income-source">
+                            <strong>{{ income.source|truncatechars:25 }}</strong>
+                            {% if income.sale %}
+                            <br><small class="text-info"><i class="fas fa-tag"></i> Sale: {{ income.sale.sale_number }}</small>
+                            {% endif %}
+                            {% if income.department %}
+                            <br><small class="text-primary"><i class="fas fa-building"></i> {{ income.department }}</small>
+                            {% endif %}
+                            {% if income.description %}
+                            <br><small class="text-muted">{{ income.description|truncatechars:30 }}</small>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>
+                        {% if income.income_type == 'Sales' %}
+                            <span class="badge badge-success">Sales</span>
+                        {% elif income.income_type == 'Service' %}
+                            <span class="badge badge-primary">Service</span>
+                        {% elif income.income_type == 'Interest' %}
+                            <span class="badge badge-warning">Interest</span>
+                        {% else %}
+                            <span class="badge badge-secondary">Other</span>
+                        {% endif %}
+                    </td>
+                    <td class="tsh-amount income">
+                        Tsh {{ income.amount|floatformat:0|intcomma }}
+                    </td>
+                    <td>
+                        {% if income.reference %}
+                        <code>{{ income.reference|truncatechars:15 }}</code>
+                        {% else %}
+                        <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if income.is_cancelled %}
+                            <span class="badge badge-danger">Cancelled</span>
+                            <br>
+                            <small class="text-muted">{{ income.cancellation_date|date:"Y-m-d" }}</small>
+                        {% elif income.is_paid %}
+                            <span class="badge badge-success">
+                                <i class="fas fa-check-circle"></i> Paid
+                            </span>
+                            <br>
+                            <small class="text-muted">{{ income.payment_date|date:"Y-m-d" }}</small>
+                        {% else %}
+                            <span class="badge badge-warning">
+                                <i class="fas fa-clock"></i> Pending
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="income-action-buttons">
+                            {% if not income.is_cancelled %}
+                            <a href="{% url 'finance:income_edit' income.pk %}" class="income-btn-action income-btn-edit" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            
+                            {% if not income.is_paid %}
+                            <a href="{% url 'finance:income_mark_paid' income.pk %}" class="income-btn-action income-btn-success" 
+                               title="Mark as Paid">
+                                <i class="fas fa-check"></i>
+                            </a>
+                            {% endif %}
+                            
+                            <a href="{% url 'finance:income_cancel' income.pk %}" class="income-btn-action income-btn-danger" 
+                               title="Cancel">
+                                <i class="fas fa-ban"></i>
+                            </a>
+                            {% else %}
+                            <span class="text-muted">Cancelled</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center py-5">
+                        <div class="income-empty-state">
+                            <i class="fas fa-money-bill-wave fa-3x text-muted mb-3"></i>
+                            <h4>No income records found</h4>
+                            <p class="text-muted">
+                                {% if request.GET %}
+                                    Try adjusting your filters
+                                {% else %}
+                                    Start by adding your first income record
+                                {% endif %}
+                            </p>
+                            <a href="{% url 'finance:income_create' %}" class="btn btn-success mt-2">
+                                <i class="fas fa-plus-circle"></i> Add Income Record
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <div class="card-footer">
+        <div class="pagination-container">
+            <div class="pagination-info">
+                Showing {{ incomes.start_index }} to {{ incomes.end_index }} of {{ incomes.paginator.count }} records
+            </div>
+            
+            <nav class="pagination">
+                {% if incomes.has_previous %}
+                <a href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                   class="page-link">
+                    <i class="fas fa-angle-double-left"></i>
+                </a>
+                <a href="?page={{ incomes.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                   class="page-link">
+                    <i class="fas fa-angle-left"></i>
+                </a>
+                {% endif %}
+                
+                {% for num in incomes.paginator.page_range %}
+                    {% if incomes.number == num %}
+                    <span class="page-link active">{{ num }}</span>
+                    {% elif num > incomes.number|add:'-3' and num < incomes.number|add:'3' %}
+                    <a href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                       class="page-link">{{ num }}</a>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if incomes.has_next %}
+                <a href="?page={{ incomes.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                   class="page-link">
+                    <i class="fas fa-angle-right"></i>
+                </a>
+                <a href="?page={{ incomes.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                   class="page-link">
+                    <i class="fas fa-angle-double-right"></i>
+                </a>
+                {% endif %}
+            </nav>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Quick Stats -->
+<div class="income-quick-stats">
+    <div class="income-stat-card">
+        <h4><i class="fas fa-check-circle text-success"></i> Paid</h4>
+        <div class="amount tsh-amount income">
+            Tsh {{ paid_amount|floatformat:0|intcomma|default:"0" }}
+        </div>
+    </div>
+    
+    <div class="income-stat-card">
+        <h4><i class="fas fa-clock text-warning"></i> Pending</h4>
+        <div class="amount tsh-amount expense">
+            Tsh {{ pending_amount|floatformat:0|intcomma|default:"0" }}
+        </div>
+    </div>
+    
+    <div class="income-stat-card">
+        <h4><i class="fas fa-ban text-danger"></i> Cancelled</h4>
+        <div class="amount">
+            Tsh {{ cancelled_amount|floatformat:0|intcomma|default:"0" }}
+        </div>
+    </div>
+    
+    <div class="income-stat-card">
+        <h4><i class="fas fa-chart-line text-info"></i> Average</h4>
+        <div class="amount">
+            Tsh {{ average_amount|floatformat:0|intcomma|default:"0" }}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Confirmation for actions
+    document.addEventListener('DOMContentLoaded', function() {
+        // Mark as paid confirmation
+        document.querySelectorAll('.income-btn-success').forEach(link => {
+            link.addEventListener('click', function(e) {
+                if (!confirm('Are you sure you want to mark this income as paid?')) {
+                    e.preventDefault();
+                }
+            });
+        });
+        
+        // Cancel income confirmation
+        document.querySelectorAll('.income-btn-danger').forEach(link => {
+            link.addEventListener('click', function(e) {
+                if (!confirm('Are you sure you want to cancel this income record?\n\nThis action will:\n1. Mark the income as cancelled\n2. Create a reversal transaction\n3. Cannot be undone')) {
+                    e.preventDefault();
+                }
+            });
+        });
+        
+        // Auto-format all currency amounts
+        document.querySelectorAll('.tsh-amount').forEach(element => {
+            const text = element.textContent;
+            const amount = text.replace(/[^\d.]/g, '');
+            if (amount && !isNaN(parseFloat(amount))) {
+                const num = parseFloat(amount);
+                element.textContent = 'Tsh ' + Math.abs(num).toLocaleString();
+                if (num < 0) {
+                    element.textContent = '-Tsh ' + Math.abs(num).toLocaleString();
+                }
+            }
+        });
+        
+        // Make income rows clickable
+        document.querySelectorAll('.income-row').forEach(row => {
+            row.addEventListener('click', function(e) {
+                // Don't trigger if clicking on action buttons
+                if (!e.target.closest('.income-action-buttons') && 
+                    !e.target.closest('a') && 
+                    !e.target.closest('button')) {
+                    
+                    const editLink = this.querySelector('.income-btn-edit');
+                    if (editLink) {
+                        window.location.href = editLink.href;
+                    }
+                }
+            });
+            
+            // Change cursor on hover
+            if (row.querySelector('.income-btn-edit')) {
+                row.style.cursor = 'pointer';
+            }
+        });
+    });
+</script>
+{% endblock %}

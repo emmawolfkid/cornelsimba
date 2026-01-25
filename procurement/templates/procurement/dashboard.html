@@ -1,0 +1,113 @@
+{% extends 'procurement/base.html' %}
+
+{% block title %}Procurement Dashboard{% endblock %}
+{% block page_title %}Procurement Dashboard{% endblock %}
+
+{% block content %}
+<!-- Quick Stats -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-content">
+                <h3>Total Suppliers</h3>
+                <p>{{ total_suppliers }}</p>
+            </div>
+            <div class="stat-icon">
+                <i class="fas fa-building"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="stat-card success">
+        <div class="stat-header">
+            <div class="stat-content">
+                <h3>Total Purchase Orders</h3>
+                <p>{{ total_pos }}</p>
+            </div>
+            <div class="stat-icon">
+                <i class="fas fa-file-invoice-dollar"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="stat-card warning">
+        <div class="stat-header">
+            <div class="stat-content">
+                <h3>Pending Approval</h3>
+                <p>{{ pending_pos }}</p>
+            </div>
+            <div class="stat-icon">
+                <i class="fas fa-clock"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Purchase Orders -->
+<div class="card">
+    <h2 class="card-title">
+        <i class="fas fa-receipt"></i>
+        Recent Purchase Orders
+    </h2>
+
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>PO Number</th>
+                    <th>Supplier</th>
+                    <th>Requested By</th>
+                    <th>Status</th>
+                    <th>Amount</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for po in recent_pos %}
+                <tr>
+                    <td><strong>{{ po.po_number|default:"-" }}</strong></td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-building" style="color: var(--primary);"></i>
+                            <span>{{ po.supplier.name }}</span>
+                        </div>
+                    </td>
+                    <td>{{ po.requested_by.full_name|default:"-" }}</td>
+                    <td>
+                        <span class="status-badge status-{{ po.status|lower }}">{{ po.status }}</span>
+                    </td>
+                    <td><strong style="color: var(--success);">${{ po.total_amount|floatformat:2 }}</strong></td>
+                    <td>
+                        <div class="action-links">
+                            <a href="{% url 'procurement:purchase_order_detail' po.pk %}" class="action-btn info">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                            {% if po.status == 'Pending' %}
+                            <a href="{% url 'procurement:purchase_order_approve' po.pk %}" class="action-btn success">
+                                <i class="fas fa-check-circle"></i> Approve
+                            </a>
+                            {% endif %}
+                            {% if po.status == 'Approved' %}
+                            <a href="{% url 'procurement:mark_delivered' po.id %}" class="action-btn primary">
+                                <i class="fas fa-truck"></i> Deliver
+                            </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6">
+                        <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <p>No purchase orders found.</p>
+                            <small style="color: var(--gray);">Create your first purchase order to get started.</small>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

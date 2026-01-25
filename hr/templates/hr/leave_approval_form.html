@@ -1,0 +1,445 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Review Leave Request - HR System</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Our HR CSS Files -->
+    <link rel="stylesheet" href="{% static 'css/hr-main.css' %}">
+    <link rel="stylesheet" href="{% static 'css/hr-components.css' %}">
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <i class="fas fa-building"></i>
+            <span>HR Portal</span>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-title">Main Menu</div>
+            <a href="{% url 'hr:leave_dashboard' %}" class="nav-item">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="{% url 'hr:leave_approval_list' %}" class="nav-item active">
+                <i class="fas fa-check-circle"></i>
+                <span>Approvals</span>
+            </a>
+            <a href="{% url 'hr:my_leave_requests' %}" class="nav-item">
+                <i class="fas fa-history"></i>
+                <span>My Leaves</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <div class="header">
+            <h1>
+                <i class="fas fa-gavel"></i>
+                Review Leave Request
+            </h1>
+            <a href="{% url 'hr:leave_approval_list' %}" class="btn">
+                <i class="fas fa-arrow-left"></i> Back to List
+            </a>
+        </div>
+
+        <!-- Error Messages -->
+        {% if form.errors %}
+        <div class="alert alert-danger">
+            <i class="fas fa-exclamation-triangle"></i>
+            <strong>Please fix the following errors:</strong>
+            <ul style="margin: 10px 0 0 20px;">
+                {% for field, errors in form.errors.items %}
+                    {% for error in errors %}
+                        <li>{{ field|title }}: {{ error }}</li>
+                    {% endfor %}
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <!-- Leave Summary -->
+        <div class="card" style="margin-bottom: 30px;">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <i class="fas fa-file-alt"></i>
+                    Leave Request Details
+                </h2>
+            </div>
+            <div style="padding: 25px;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                    <!-- Employee Info -->
+                    <div>
+                        <h3 style="color: var(--dark); margin-bottom: 15px;">
+                            <i class="fas fa-user"></i> Employee
+                        </h3>
+                        <div style="background: var(--gray-extra-light); padding: 15px; border-radius: var(--border-radius);">
+                            <strong style="font-size: 1.2em;">{{ leave.employee.full_name }}</strong>
+                            <div style="margin-top: 10px;">
+                                <div>
+                                    <small style="color: var(--gray);">ID:</small>
+                                    {{ leave.employee.employee_id|default:"N/A" }}
+                                </div>
+                                <div>
+                                    <small style="color: var(--gray);">Department:</small>
+                                    <span class="badge badge-primary">{{ leave.employee.department }}</span>
+                                </div>
+                                <div>
+                                    <small style="color: var(--gray);">Position:</small>
+                                    {{ leave.employee.position|default:"Not set" }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Leave Details -->
+                    <div>
+                        <h3 style="color: var(--dark); margin-bottom: 15px;">
+                            <i class="fas fa-calendar-alt"></i> Leave Details
+                        </h3>
+                        <div style="background: var(--gray-extra-light); padding: 15px; border-radius: var(--border-radius);">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                                <span class="badge badge-info">{{ leave.leave_type.name }}</span>
+                                {% if leave.is_paid_leave %}
+                                <span class="badge badge-success">Paid</span>
+                                {% else %}
+                                <span class="badge badge-warning">Unpaid</span>
+                                {% endif %}
+                            </div>
+                            
+                            <div style="margin-top: 15px;">
+                                <div>
+                                    <small style="color: var(--gray);">Dates:</small>
+                                    <div>
+                                        {{ leave.start_date|date:"M d, Y" }} to {{ leave.end_date|date:"M d, Y" }}
+                                    </div>
+                                </div>
+                                <div style="margin-top: 10px;">
+                                    <small style="color: var(--gray);">Duration:</small>
+                                    <div>
+                                        <strong>{{ leave.days_requested }}</strong> days
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Timeline -->
+                    <div>
+                        <h3 style="color: var(--dark); margin-bottom: 15px;">
+                            <i class="fas fa-clock"></i> Timeline
+                        </h3>
+                        <div style="background: var(--gray-extra-light); padding: 15px; border-radius: var(--border-radius);">
+                            <div>
+                                <small style="color: var(--gray);">Submitted:</small>
+                                <div>{{ leave.submitted_date|date:"M d, Y H:i" }}</div>
+                                <div class="text-muted" style="font-size: 0.85em;">
+                                    {{ leave.submitted_date|timesince }} ago
+                                </div>
+                            </div>
+                            <div style="margin-top: 10px;">
+                                <small style="color: var(--gray);">Status:</small>
+                                <div>
+                                    <span class="badge badge-warning">Pending Approval</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reason -->
+                <div style="margin-top: 20px;">
+                    <h3 style="color: var(--dark); margin-bottom: 10px;">
+                        <i class="fas fa-sticky-note"></i> Reason for Leave
+                    </h3>
+                    <div style="background: var(--gray-extra-light); padding: 15px; border-radius: var(--border-radius);">
+                        {{ leave.reason|linebreaks }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Long Leave Warning -->
+        {% if leave.days_requested > 5 %}
+        <div class="alert alert-warning" style="margin-bottom: 30px;">
+            <i class="fas fa-exclamation-triangle"></i>
+            <strong>Long Leave Notice:</strong> This is a {{ leave.days_requested }}-day leave request. 
+            Ensure work coverage is arranged before approving.
+        </div>
+        {% endif %}
+
+        <!-- Approval Form -->
+        <div class="card" style="max-width: 800px; margin: 0 auto;">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <i class="fas fa-decision"></i>
+                    Make Your Decision
+                </h2>
+            </div>
+
+            <form method="post" id="approvalForm" style="padding: 30px;">
+                {% csrf_token %}
+                
+                <!-- Decision Options -->
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <h3 style="color: var(--dark); margin-bottom: 20px;">
+                        Select Your Decision
+                    </h3>
+                    <div style="display: flex; gap: 20px; justify-content: center;">
+                        <!-- Approve Option -->
+                        <div class="decision-option" id="approveOption" onclick="selectDecision('approve')" 
+                             style="flex: 1; max-width: 200px; cursor: pointer; border: 2px solid var(--gray-light); border-radius: var(--border-radius); padding: 25px; text-align: center; transition: var(--transition-normal);">
+                            <div style="font-size: 3em; color: var(--success); margin-bottom: 15px;">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <h4 style="color: var(--success); margin-bottom: 10px;">Approve</h4>
+                            <p style="color: var(--gray); font-size: 0.9em;">
+                                Grant this leave request
+                            </p>
+                        </div>
+
+                        <!-- Reject Option -->
+                        <div class="decision-option" id="rejectOption" onclick="selectDecision('reject')"
+                             style="flex: 1; max-width: 200px; cursor: pointer; border: 2px solid var(--gray-light); border-radius: var(--border-radius); padding: 25px; text-align: center; transition: var(--transition-normal);">
+                            <div style="font-size: 3em; color: var(--danger); margin-bottom: 15px;">
+                                <i class="fas fa-times-circle"></i>
+                            </div>
+                            <h4 style="color: var(--danger); margin-bottom: 10px;">Reject</h4>
+                            <p style="color: var(--gray); font-size: 0.9em;">
+                                Decline this leave request
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hidden Action Field -->
+                <div style="display: none;">
+                    {{ form.action }}
+                </div>
+
+                <!-- Comment Field -->
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-comment"></i> Comments (Optional)
+                    </label>
+                    {{ form.manager_comment }}
+                    <small class="form-text">
+                        Your comments will be visible to the employee and HR department.
+                    </small>
+                    {% if form.manager_comment.errors %}
+                    <div class="error-message text-danger mt-1">
+                        <i class="fas fa-exclamation-circle"></i> {{ form.manager_comment.errors.0 }}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-success" id="submitBtn" disabled>
+                        <i class="fas fa-paper-plane"></i> Submit Decision
+                    </button>
+                    <a href="{% url 'hr:leave_approval_list' %}" class="btn btn-outline">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Important Notes -->
+        <div class="card info" style="margin-top: 30px; max-width: 800px; margin-left: auto; margin-right: auto;">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <i class="fas fa-info-circle"></i>
+                    Important Notes
+                </h2>
+            </div>
+            <div style="padding: 20px;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+                    <div>
+                        <h4 style="color: var(--dark); margin-bottom: 10px;">
+                            <i class="fas fa-check-circle text-success"></i> When to Approve
+                        </h4>
+                        <p style="color: var(--gray); font-size: 0.9em;">
+                            • Work coverage is arranged<br>
+                            • No critical projects affected<br>
+                            • Adequate notice given
+                        </p>
+                    </div>
+                    <div>
+                        <h4 style="color: var(--dark); margin-bottom: 10px;">
+                            <i class="fas fa-times-circle text-danger"></i> When to Reject
+                        </h4>
+                        <p style="color: var(--gray); font-size: 0.9em;">
+                            • Insufficient coverage<br>
+                            • Peak business period<br>
+                            • Insufficient notice
+                        </p>
+                    </div>
+                    <div>
+                        <h4 style="color: var(--dark); margin-bottom: 10px;">
+                            <i class="fas fa-comment text-warning"></i> Comments Best Practice
+                        </h4>
+                        <p style="color: var(--gray); font-size: 0.9em;">
+                            • Be specific and constructive<br>
+                            • Provide alternatives if rejecting<br>
+                            • Keep it professional
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{% static 'js/hr-main.js' %}"></script>
+    
+    <script>
+        let selectedDecision = null;
+        
+        function selectDecision(decision) {
+            // Reset both options
+            $('#approveOption').css({
+                'border-color': 'var(--gray-light)',
+                'background': 'var(--white)',
+                'transform': 'none'
+            });
+            
+            $('#rejectOption').css({
+                'border-color': 'var(--gray-light)',
+                'background': 'var(--white)',
+                'transform': 'none'
+            });
+            
+            // Style selected option
+            const selectedOption = $(`#${decision}Option`);
+            if (decision === 'approve') {
+                selectedOption.css({
+                    'border-color': 'var(--success)',
+                    'background': 'linear-gradient(to right, #d1fae5, var(--white))',
+                    'transform': 'translateY(-5px)'
+                });
+            } else {
+                selectedOption.css({
+                    'border-color': 'var(--danger)',
+                    'background': 'linear-gradient(to right, #fee2e2, var(--white))',
+                    'transform': 'translateY(-5px)'
+                });
+            }
+            
+            // Set the radio button value
+            $(`input[value="${decision}"]`).prop('checked', true);
+            
+            // Enable and style submit button
+            const submitBtn = $('#submitBtn');
+            submitBtn.prop('disabled', false);
+            
+            if (decision === 'approve') {
+                submitBtn.removeClass('btn-danger').addClass('btn-success');
+                submitBtn.html('<i class="fas fa-check-circle"></i> Approve Request');
+            } else {
+                submitBtn.removeClass('btn-success').addClass('btn-danger');
+                submitBtn.html('<i class="fas fa-times-circle"></i> Reject Request');
+            }
+            
+            selectedDecision = decision;
+        }
+        
+        // Form submission
+        $(document).ready(function() {
+            $('#approvalForm').on('submit', function(e) {
+                if (!selectedDecision) {
+                    e.preventDefault();
+                    HRSystem.showNotification('Please select Approve or Reject', 'error');
+                    return;
+                }
+                
+                const comment = $('#id_manager_comment').val().trim();
+                let confirmMessage;
+                
+                if (selectedDecision === 'approve') {
+                    confirmMessage = 'Are you sure you want to APPROVE this leave request?';
+                } else {
+                    confirmMessage = 'Are you sure you want to REJECT this leave request?';
+                    
+                    if (!comment && !confirm('You are rejecting without comments. Continue?')) {
+                        e.preventDefault();
+                        return;
+                    }
+                }
+                
+                if (!confirm(confirmMessage)) {
+                    e.preventDefault();
+                }
+            });
+            
+            // Add hover effects
+            $('.decision-option').on('mouseenter', function() {
+                if (!$(this).css('border-color').includes('success') && 
+                    !$(this).css('border-color').includes('danger')) {
+                    $(this).css('transform', 'translateY(-3px)');
+                }
+            }).on('mouseleave', function() {
+                if (!$(this).css('border-color').includes('success') && 
+                    !$(this).css('border-color').includes('danger')) {
+                    $(this).css('transform', 'none');
+                }
+            });
+        });
+        
+        // Download decision as PDF (placeholder)
+        function downloadDecision() {
+            if (!selectedDecision) {
+                HRSystem.showNotification('Please make a decision first', 'warning');
+                return;
+            }
+            
+            const details = `
+LEAVE DECISION SUMMARY
+=====================
+Request ID: #{{ leave.id }}
+Employee: {{ leave.employee.full_name }}
+Leave Type: {{ leave.leave_type.name }}
+Dates: {{ leave.start_date|date:"Y-m-d" }} to {{ leave.end_date|date:"Y-m-d" }}
+Duration: {{ leave.days_requested }} days
+Your Decision: ${selectedDecision.toUpperCase()}
+Decision Date: ${new Date().toISOString().split('T')[0]}
+Comments: ${$('#id_manager_comment').val() || 'None'}
+            `.trim();
+            
+            const blob = new Blob([details], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `leave_decision_${selectedDecision}_${new Date().toISOString().split('T')[0]}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            
+            HRSystem.showNotification('Decision summary downloaded!', 'success');
+        }
+        
+        // Add download button
+        $(document).ready(function() {
+            $('.form-actions').prepend(`
+                <button type="button" onclick="downloadDecision()" class="btn btn-info">
+                    <i class="fas fa-download"></i> Download Summary
+                </button>
+            `);
+        });
+    </script>
+</body>
+</html>

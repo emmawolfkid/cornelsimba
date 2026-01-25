@@ -1,0 +1,191 @@
+{% extends 'procurement/base.html' %}
+
+{% block title %}{{ supplier.name }} - Supplier Details{% endblock %}
+{% block page_title %}Supplier Details{% endblock %}
+
+{% block content %}
+<div class="card">
+    <!-- Supplier Header -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
+        <div>
+            <h2 class="card-title">
+                <i class="fas fa-building"></i>
+                {{ supplier.name }}
+            </h2>
+            <div style="display: flex; align-items: center; gap: 15px; margin-top: 10px;">
+                {% if supplier.is_active %}
+                <span class="status-badge status-approved">Active</span>
+                {% else %}
+                <span class="status-badge status-cancelled">Inactive</span>
+                {% endif %}
+                <span style="color: var(--gray); font-size: 0.9em;">
+                    <i class="far fa-calendar"></i> Created: {{ supplier.created_at|date:"M d, Y"|default:"-" }}
+                </span>
+            </div>
+        </div>
+        <div class="action-links">
+            <a href="{% url 'procurement:supplier_update' supplier.pk %}" class="action-btn primary">
+                <i class="fas fa-edit"></i> Edit
+            </a>
+            <a href="{% url 'procurement:supplier_list' %}" class="action-btn info">
+                <i class="fas fa-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <!-- Supplier Information Grid -->
+    <div class="info-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 25px; margin-bottom: 30px;">
+        <div class="info-card" style="background: var(--light); padding: 20px; border-radius: 10px;">
+            <div style="color: var(--primary); margin-bottom: 10px;">
+                <i class="fas fa-user-tie fa-lg"></i>
+            </div>
+            <h3 style="color: var(--gray); font-size: 0.9em; margin-bottom: 5px;">Contact Person</h3>
+            <p style="font-size: 1.1em; font-weight: 600; color: var(--dark);">{{ supplier.contact_person|default:"-" }}</p>
+        </div>
+        
+        <div class="info-card" style="background: var(--light); padding: 20px; border-radius: 10px;">
+            <div style="color: var(--success); margin-bottom: 10px;">
+                <i class="fas fa-phone fa-lg"></i>
+            </div>
+            <h3 style="color: var(--gray); font-size: 0.9em; margin-bottom: 5px;">Phone</h3>
+            {% if supplier.phone %}
+            <a href="tel:{{ supplier.phone }}" style="font-size: 1.1em; font-weight: 600; color: var(--info); text-decoration: none;">
+                {{ supplier.phone }}
+            </a>
+            {% else %}
+            <p style="font-size: 1.1em; color: var(--gray);">-</p>
+            {% endif %}
+        </div>
+        
+        <div class="info-card" style="background: var(--light); padding: 20px; border-radius: 10px;">
+            <div style="color: var(--warning); margin-bottom: 10px;">
+                <i class="fas fa-envelope fa-lg"></i>
+            </div>
+            <h3 style="color: var(--gray); font-size: 0.9em; margin-bottom: 5px;">Email</h3>
+            {% if supplier.email %}
+            <a href="mailto:{{ supplier.email }}" style="font-size: 1.1em; font-weight: 600; color: var(--info); text-decoration: none;">
+                {{ supplier.email }}
+            </a>
+            {% else %}
+            <p style="font-size: 1.1em; color: var(--gray);">-</p>
+            {% endif %}
+        </div>
+        
+        <div class="info-card" style="background: var(--light); padding: 20px; border-radius: 10px;">
+            <div style="color: var(--danger); margin-bottom: 10px;">
+                <i class="fas fa-id-card fa-lg"></i>
+            </div>
+            <h3 style="color: var(--gray); font-size: 0.9em; margin-bottom: 5px;">TIN Number</h3>
+            <p style="font-size: 1.1em; font-weight: 600; color: var(--dark);">{{ supplier.tin_number|default:"Not provided" }}</p>
+        </div>
+    </div>
+
+    <!-- Address and Additional Info -->
+    <div class="card" style="margin-bottom: 30px;">
+        <h3 style="color: var(--dark); margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+            <i class="fas fa-map-marker-alt" style="color: var(--primary);"></i>
+            Address
+        </h3>
+        <div style="background: var(--light); padding: 20px; border-radius: 10px;">
+            {% if supplier.address %}
+            <p style="white-space: pre-line; color: var(--dark); line-height: 1.6; margin: 0;">{{ supplier.address }}</p>
+            {% else %}
+            <p style="color: var(--gray); text-align: center; padding: 10px;">No address provided</p>
+            {% endif %}
+        </div>
+        
+        {% if supplier.payment_terms %}
+        <h3 style="color: var(--dark); margin-top: 25px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+            <i class="fas fa-file-contract" style="color: var(--primary);"></i>
+            Payment Terms
+        </h3>
+        <div style="background: var(--light); padding: 20px; border-radius: 10px;">
+            <p style="white-space: pre-line; color: var(--dark); line-height: 1.6; margin: 0;">{{ supplier.payment_terms }}</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Purchase Orders Section -->
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+        <h2 class="card-title">
+            <i class="fas fa-file-invoice-dollar"></i>
+            Purchase Orders from {{ supplier.name }}
+        </h2>
+        <span class="status-badge" style="background: var(--primary); color: white;">
+            {{ purchase_orders|length }} order{{ purchase_orders|length|pluralize }}
+        </span>
+    </div>
+
+    {% if purchase_orders %}
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>PO Number</th>
+                    <th>Date</th>
+                    <th>Requested By</th>
+                    <th>Status</th>
+                    <th>Amount</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for po in purchase_orders %}
+                <tr>
+                    <td><strong>{{ po.po_number|default:"-" }}</strong></td>
+                    <td>{{ po.order_date|date:"M d, Y" }}</td>
+                    <td>{{ po.requested_by.full_name|default:"-" }}</td>
+                    <td>
+                        <span class="status-badge status-{{ po.status|lower }}">{{ po.status }}</span>
+                    </td>
+                    <td><strong style="color: var(--success);">${{ po.total_amount|floatformat:2 }}</strong></td>
+                    <td>
+                        <div class="action-links">
+                            <a href="{% url 'procurement:purchase_order_detail' po.pk %}" class="action-btn info">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                            {% if po.status == 'Pending' %}
+                            <a href="{% url 'procurement:purchase_order_approve' po.pk %}" class="action-btn success">
+                                <i class="fas fa-check-circle"></i> Approve
+                            </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    {% if purchase_orders.has_other_pages %}
+    <div class="pagination">
+        {% if purchase_orders.has_previous %}
+            <a href="?page=1">&laquo; First</a>
+            <a href="?page={{ purchase_orders.previous_page_number }}">Previous</a>
+        {% endif %}
+        
+        <span class="current">
+            Page {{ purchase_orders.number }} of {{ purchase_orders.paginator.num_pages }}
+        </span>
+        
+        {% if purchase_orders.has_next %}
+            <a href="?page={{ purchase_orders.next_page_number }}">Next</a>
+            <a href="?page={{ purchase_orders.paginator.num_pages }}">Last &raquo;</a>
+        {% endif %}
+    </div>
+    {% endif %}
+    
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-inbox" style="font-size: 3em;"></i>
+        <p>No purchase orders from this supplier yet</p>
+        <small style="color: var(--gray);">Create a purchase order to get started</small>
+        <a href="{% url 'procurement:purchase_order_create' %}" class="btn btn-primary" style="margin-top: 15px;">
+            <i class="fas fa-plus-circle"></i> Create Purchase Order
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

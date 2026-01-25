@@ -1,0 +1,161 @@
+{% extends 'inventory/base.html' %}
+
+{% block title %}Adjustment Details{% endblock %}
+
+{% block extra_css %}
+{% load static %} 
+<link rel="stylesheet" href="{% static 'inventory/css/adjustments.css' %}">
+<link rel="stylesheet" href="{% static 'inventory/css/forms.css' %}">
+<style>
+    .container { 
+        max-width: 1000px; 
+        margin: 0 auto; 
+    }
+    
+    h1 { 
+        color: #2c3e50; 
+        margin-bottom: 30px; 
+        padding-bottom: 10px; 
+        border-bottom: 3px solid #f39c12; 
+    }
+    
+    .header { 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        margin-bottom: 30px; 
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+    
+    .card-header h2 {
+        margin: 0; 
+        color: white; 
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h1>📋 Adjustment Details</h1>
+    <a href="{% url 'inventory:adjustment_list' %}" class="btn btn-secondary">
+        ← Back to List
+    </a>
+</div>
+
+<div class="row">
+    <!-- Left Column: Adjustment Details -->
+    <div class="col-2">
+        <div class="card">
+            <div class="card-header">
+                <h2>Adjustment Information</h2>
+            </div>
+            <div class="card-body">
+                <table class="details-table">
+                    <tr>
+                        <th>Item:</th>
+                        <td>{{ adjustment.item.name }}</td>
+                    </tr>
+                    <tr>
+                        <th>Adjustment Quantity:</th>
+                        <td>
+                            <span class="badge {% if adjustment.adjustment_quantity > 0 %}bg-success{% else %}bg-danger{% endif %}">
+                                {% if adjustment.adjustment_quantity > 0 %}+{% endif %}{{ adjustment.adjustment_quantity|floatformat:3 }} {{ adjustment.item.unit_of_measure }}
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Type:</th>
+                        <td>{{ adjustment.get_adjustment_type_display }}</td>
+                    </tr>
+                    <tr>
+                        <th>Reason:</th>
+                        <td style="white-space: pre-line;">{{ adjustment.reason }}</td>
+                    </tr>
+                    <tr>
+                        <th>Status:</th>
+                        <td>
+                            {% if adjustment.status == 'pending' %}
+                                <span class="badge bg-warning">Pending Approval</span>
+                            {% elif adjustment.status == 'approved' %}
+                                <span class="badge bg-success">Approved</span>
+                            {% else %}
+                                <span class="badge bg-danger">Rejected</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Reference Stock In:</th>
+                        <td>
+                            {% if adjustment.reference_stock_in %}
+                                {{ adjustment.reference_stock_in.reference }}
+                            {% else %}
+                                <span class="text-muted">None</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Right Column: Audit Trail -->
+    <div class="col">
+        <div class="card">
+            <div class="card-header">
+                <h2>Audit Trail</h2>
+            </div>
+            <div class="card-body">
+                <table class="details-table">
+                    <tr>
+                        <th>Requested By:</th>
+                        <td>{{ adjustment.requested_by.get_full_name|default:adjustment.requested_by.username }}</td>
+                    </tr>
+                    <tr>
+                        <th>Requested At:</th>
+                        <td>{{ adjustment.requested_at|date:"Y-m-d H:i" }}</td>
+                    </tr>
+                    
+                    {% if adjustment.approved_by %}
+                    <tr>
+                        <th>Approved By:</th>
+                        <td>{{ adjustment.approved_by.get_full_name|default:adjustment.approved_by.username }}</td>
+                    </tr>
+                    <tr>
+                        <th>Approved At:</th>
+                        <td>{{ adjustment.approved_at|date:"Y-m-d H:i" }}</td>
+                    </tr>
+                    {% endif %}
+                    
+                    {% if adjustment.rejected_by %}
+                    <tr>
+                        <th>Rejected By:</th>
+                        <td>{{ adjustment.rejected_by.get_full_name|default:adjustment.rejected_by.username }}</td>
+                    </tr>
+                    <tr>
+                        <th>Rejected At:</th>
+                        <td>{{ adjustment.rejected_at|date:"Y-m-d H:i" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Rejection Reason:</th>
+                        <td style="white-space: pre-line;">{{ adjustment.rejection_reason }}</td>
+                    </tr>
+                    {% endif %}
+                </table>
+            </div>
+        </div>
+        
+        {% if adjustment.status == 'pending' %}
+        <div class="card" style="margin-top: 20px;">
+            <div class="card-body" style="text-align: center;">
+                <a href="{% url 'inventory:adjustment_approve' adjustment.pk %}" class="btn btn-warning" style="font-size: 1.1em; padding: 15px 30px;">
+                    ✓ Review & Decide
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<a href="{% url 'inventory:adjustment_list' %}" class="back-link">← Back to Adjustments List</a>
+{% endblock %}

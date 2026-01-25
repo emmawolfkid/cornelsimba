@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Inventory System{% endblock %}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'inventory/css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'inventory/css/components.css' %}">
+    
+    <!-- Toast Notification Styles -->
+    <style>
+        /* Toast Notification Container */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            min-width: 300px;
+            max-width: 400px;
+        }
+        
+        .toast {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            margin-bottom: 10px;
+            overflow: hidden;
+            animation: slideIn 0.3s ease-out;
+            border-left: 4px solid #3498db;
+            max-width: 400px;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .toast-header {
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            font-weight: 600;
+        }
+        
+        .toast-body {
+            padding: 15px;
+            font-size: 0.95em;
+        }
+        
+        /* Toast Types */
+        .toast-success {
+            border-left-color: #27ae60;
+        }
+        
+        .toast-success .toast-header {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .toast-error {
+            border-left-color: #e74c3c;
+        }
+        
+        .toast-error .toast-header {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .toast-warning {
+            border-left-color: #f39c12;
+        }
+        
+        .toast-warning .toast-header {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .toast-info {
+            border-left-color: #3498db;
+        }
+        
+        .toast-info .toast-header {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .toast-icon {
+            margin-right: 8px;
+            font-size: 18px;
+        }
+        
+        .btn-close {
+            margin-left: auto;
+            background: none;
+            border: none;
+            font-size: 1.2em;
+            cursor: pointer;
+            color: #666;
+            padding: 0;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn-close:hover {
+            color: #333;
+        }
+        
+        /* Auto-dismiss progress bar */
+        .toast-progress {
+            height: 3px;
+            background-color: rgba(0,0,0,0.1);
+            width: 100%;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+        }
+        
+        .toast-progress-bar {
+            height: 100%;
+            width: 100%;
+            background-color: currentColor;
+            opacity: 0.3;
+            animation: progressBar 5s linear forwards;
+        }
+        
+        @keyframes progressBar {
+            from { width: 100%; }
+            to { width: 0%; }
+        }
+        
+        /* Message badges in sidebar */
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: 15px;
+            padding: 3px 7px;
+            border-radius: 50%;
+            background-color: #e74c3c;
+            color: white;
+            font-size: 11px;
+            font-weight: bold;
+            min-width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Permission error fix */
+        .permission-error {
+            display: none !important;
+        }
+        
+        /* Mobile responsive toast */
+        @media (max-width: 768px) {
+            .toast-container {
+                top: 10px;
+                right: 10px;
+                left: 10px;
+                max-width: none;
+            }
+            
+            .toast {
+                max-width: none;
+            }
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Toast Notification Container -->
+    <div class="toast-container" id="toastContainer"></div>
+    
+    <!-- Mobile Menu Toggle -->
+    <button class="menu-toggle" id="menuToggle">☰</button>
+    
+    <!-- Overlay for mobile -->
+    <div class="overlay" id="overlay"></div>
+    
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2>📦 Inventory System</h2>
+        </div>
+        
+        <div class="sidebar-menu">
+            <!-- Dashboard -->
+            <div class="menu-section">
+                <div class="menu-section-title">Main</div>
+                <a href="{% url 'inventory:dashboard' %}" class="menu-item" id="dashboard-link">
+                    📊 Dashboard
+                    {% if pending_actions_count and pending_actions_count.dashboard_count > 0 %}
+                    <span class="notification-badge">{{ pending_actions_count.dashboard_count }}</span>
+                    {% endif %}
+                </a>
+            </div>
+            
+            <!-- Items Management -->
+            <div class="menu-section">
+                <div class="menu-section-title">Items Management</div>
+                <a href="{% url 'inventory:item_list' %}" class="menu-item" id="items-link">
+                    📦 All Items
+                </a>
+                <a href="{% url 'inventory:item_create' %}" class="menu-item">
+                    ➕ Add New Item
+                </a>
+                <a href="{% url 'inventory:stock_report' %}" class="menu-item">
+                    📊 Stock Report
+                </a>
+            </div>
+            
+            <!-- Stock Movements -->
+            <div class="menu-section">
+                <div class="menu-section-title">Stock Movements</div>
+                <a href="{% url 'inventory:stock_in_create' %}" class="menu-item">
+                    📥 Stock In
+                </a>
+                <a href="{% url 'inventory:stock_in_list' %}" class="menu-item">
+                    📋 Stock In History
+                </a>
+                <a href="{% url 'inventory:stock_out_create' %}" class="menu-item">
+                    📤 Stock Out
+                </a>
+                <a href="{% url 'inventory:stock_out_list' %}" class="menu-item">
+                    📋 Stock Out History
+                </a>
+            </div>
+            
+            <!-- Adjustments -->
+            <div class="menu-section">
+                <div class="menu-section-title">Adjustments</div>
+                <a href="{% url 'inventory:adjustment_create' %}" class="menu-item">
+                    🔄 Request Adjustment
+                </a>
+                <a href="{% url 'inventory:adjustment_list' %}" class="menu-item">
+                    📋 All Adjustments
+                </a>
+                <a href="{% url 'inventory:adjustment_list' %}?status=pending" class="menu-item">
+                    ⏳ Pending Approvals
+                    {% if pending_actions_count and pending_actions_count.pending_adjustments > 0 %}
+                    <span class="notification-badge">{{ pending_actions_count.pending_adjustments }}</span>
+                    {% endif %}
+                </a>
+            </div>
+            
+            <!-- Sales Integration -->
+            <div class="menu-section">
+                <div class="menu-section-title">Sales Integration</div>
+                <a href="{% url 'inventory:pending_sales_stockouts' %}" class="menu-item">
+                    📈 Pending Stock Outs
+                    {% if pending_actions_count and pending_actions_count.pending_stock_outs > 0 %}
+                    <span class="notification-badge">{{ pending_actions_count.pending_stock_outs }}</span>
+                    {% endif %}
+                </a>
+                <a href="{% url 'inventory:procurement_stock' %}" class="menu-item">
+                    🛒 From Procurement
+                </a>
+            </div>
+            
+            <!-- System -->
+            <div class="menu-section">
+                <div class="menu-section-title">System</div>
+                <a href="/" class="menu-item">
+                    🏠 Main Dashboard
+                </a>
+                <a href="{% url 'logout' %}" class="menu-item" onclick="return confirm('Are you sure you want to logout?')">
+                    🔒 Logout
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <div class="container">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+    
+    <script>
+        // Toast Notification System
+        class ToastNotification {
+            static show(message, type = 'info', duration = 5000) {
+                const toastContainer = document.getElementById('toastContainer');
+                if (!toastContainer) return;
+                
+                const toastId = 'toast-' + Date.now();
+                const icons = {
+                    'success': '✓',
+                    'error': '✗',
+                    'warning': '⚠',
+                    'info': 'ℹ'
+                };
+                
+                const icon = icons[type] || 'ℹ';
+                
+                const toast = document.createElement('div');
+                toast.className = `toast toast-${type}`;
+                toast.id = toastId;
+                toast.innerHTML = `
+                    <div class="toast-header">
+                        <span class="toast-icon">${icon}</span>
+                        <span>${this.capitalize(type)}</span>
+                        <button class="btn-close" onclick="ToastNotification.close('${toastId}')">&times;</button>
+                    </div>
+                    <div class="toast-body">${message}</div>
+                    <div class="toast-progress">
+                        <div class="toast-progress-bar"></div>
+                    </div>
+                `;
+                
+                toastContainer.appendChild(toast);
+                
+                // Auto-remove after duration
+                setTimeout(() => {
+                    this.close(toastId);
+                }, duration);
+            }
+            
+            static close(toastId) {
+                const toast = document.getElementById(toastId);
+                if (toast) {
+                    toast.style.animation = 'slideIn 0.3s ease-out reverse';
+                    setTimeout(() => {
+                        if (toast.parentNode) {
+                            toast.parentNode.removeChild(toast);
+                        }
+                    }, 300);
+                }
+            }
+            
+            static capitalize(str) {
+                return str.charAt(0).toUpperCase() + str.slice(1);
+            }
+            
+            static clearAll() {
+                const toastContainer = document.getElementById('toastContainer');
+                if (toastContainer) {
+                    toastContainer.innerHTML = '';
+                }
+            }
+        }
+        
+        // Display Django messages as toasts
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get Django messages from template
+            const messageElements = document.querySelectorAll('.alert, .message, .error, .permission-error');
+            
+            messageElements.forEach(element => {
+                let message = element.textContent.trim();
+                let type = 'info';
+                
+                // Determine message type from classes
+                if (element.classList.contains('alert-success')) type = 'success';
+                else if (element.classList.contains('alert-danger') || element.classList.contains('alert-error')) type = 'error';
+                else if (element.classList.contains('alert-warning')) type = 'warning';
+                else if (element.classList.contains('alert-info')) type = 'info';
+                else if (element.classList.contains('permission-error')) {
+                    // Hide permission errors instead of showing as toasts
+                    element.style.display = 'none';
+                    return;
+                }
+                
+                // Show as toast
+                ToastNotification.show(message, type);
+                
+                // Hide the original message element
+                element.style.display = 'none';
+            });
+            
+            // Check for URL parameters for specific notifications
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('success')) {
+                ToastNotification.show(urlParams.get('success'), 'success');
+            }
+            if (urlParams.has('error')) {
+                ToastNotification.show(urlParams.get('error'), 'error');
+            }
+            if (urlParams.has('warning')) {
+                ToastNotification.show(urlParams.get('warning'), 'warning');
+            }
+            if (urlParams.has('info')) {
+                ToastNotification.show(urlParams.get('info'), 'info');
+            }
+            
+            // Test notifications (remove in production)
+            // setTimeout(() => ToastNotification.show('Welcome to Inventory System!', 'info'), 1000);
+        });
+        
+        // Mobile menu toggle functionality
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+        
+        // Toggle sidebar
+        menuToggle.addEventListener('click', function() {
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        });
+        
+        // Close sidebar when clicking overlay
+        overlay.addEventListener('click', function() {
+            sidebar.classList.remove('active');
+            overlay.classList.remove('active');
+        });
+        
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(event) {
+            if (window.innerWidth <= 768) {
+                const isClickInsideSidebar = sidebar.contains(event.target);
+                const isClickOnToggle = menuToggle.contains(event.target);
+                
+                if (!isClickInsideSidebar && !isClickOnToggle && sidebar.classList.contains('active')) {
+                    sidebar.classList.remove('active');
+                    overlay.classList.remove('active');
+                }
+            }
+        });
+        
+        // Highlight current page in sidebar
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentPath = window.location.pathname;
+            const menuItems = document.querySelectorAll('.menu-item');
+            
+            menuItems.forEach(item => {
+                // Remove active class from all items first
+                item.classList.remove('active');
+                
+                // Check if this menu item links to current page
+                if (item.href && currentPath.includes(new URL(item.href).pathname)) {
+                    item.classList.add('active');
+                }
+            });
+        });
+        
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 768) {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+            }
+        });
+        
+        // Make ToastNotification globally available
+        window.ToastNotification = ToastNotification;
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

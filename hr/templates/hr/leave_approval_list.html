@@ -1,0 +1,343 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leave Approvals - HR System</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Our HR CSS Files -->
+    <link rel="stylesheet" href="{% static 'css/hr-main.css' %}">
+    <link rel="stylesheet" href="{% static 'css/hr-components.css' %}">
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <i class="fas fa-building"></i>
+            <span>HR Portal</span>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-title">Main Menu</div>
+            <a href="{% url 'hr:leave_dashboard' %}" class="nav-item">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="{% url 'hr:leave_approval_list' %}" class="nav-item active">
+                <i class="fas fa-check-circle"></i>
+                <span>Approvals</span>
+                {% if pending_leaves %}
+                <span class="nav-badge">{{ pending_leaves|length }}</span>
+                {% endif %}
+            </a>
+            <a href="{% url 'hr:my_leave_requests' %}" class="nav-item">
+                <i class="fas fa-history"></i>
+                <span>My Leaves</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <div class="header">
+            <div>
+                <h1>
+                    <i class="fas fa-check-circle"></i>
+                    Leave Approvals
+                </h1>
+                <div style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
+                    <span class="badge badge-warning">{{ pending_leaves|length }} pending</span>
+                    {% if user_employee %}
+                    <span class="text-muted">Department: {{ user_employee.department }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div>
+                <button onclick="downloadApprovalList()" class="btn btn-info">
+                    <i class="fas fa-download"></i> Download List
+                </button>
+                <a href="{% url 'hr:leave_dashboard' %}" class="btn" style="margin-left: 10px;">
+                    <i class="fas fa-arrow-left"></i> Dashboard
+                </a>
+            </div>
+        </div>
+
+        <!-- Statistics -->
+        <div class="stats-grid">
+            <div class="stat-card orange">
+                <div class="stat-header">
+                    <div>
+                        <h3>Pending Approvals</h3>
+                        <p class="stat-number">{{ pending_leaves|length }}</p>
+                        <small class="stat-description">Awaiting review</small>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div>
+                        <h3>This Week</h3>
+                        <p class="stat-number">{{ pending_leaves|length }}</p>
+                        <small class="stat-description">To be processed</small>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-calendar-week"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card info">
+                <div class="stat-header">
+                    <div>
+                        <h3>Your Department</h3>
+                        <p class="stat-number">
+                            {% if user_employee %}
+                                {{ user_employee.department }}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </p>
+                        <small class="stat-description">Department name</small>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-building"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card green">
+                <div class="stat-header">
+                    <div>
+                        <h3>Team Size</h3>
+                        <p class="stat-number">{{ pending_leaves|length|add:"1" }}</p>
+                        <small class="stat-description">Including you</small>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Leaves -->
+        <div class="card warning">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <i class="fas fa-list"></i>
+                    Pending Leave Requests
+                    <span class="badge badge-warning" style="margin-left: 10px;">
+                        {{ pending_leaves|length }}
+                    </span>
+                </h2>
+                <select class="form-control" style="width: 150px;" onchange="filterByEmployee(this.value)">
+                    <option value="">All Employees</option>
+                    {% for leave in pending_leaves %}
+                    <option value="{{ leave.employee.id }}">{{ leave.employee.full_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            {% if pending_leaves %}
+            <div class="table-container">
+                <table id="approvalTable">
+                    <thead>
+                        <tr>
+                            <th>Employee</th>
+                            <th>Leave Type</th>
+                            <th>Dates</th>
+                            <th>Days</th>
+                            <th>Submitted</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for leave in pending_leaves %}
+                        <tr data-employee="{{ leave.employee.id }}">
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--secondary)); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600;">
+                                        {{ leave.employee.full_name|first|upper }}
+                                    </div>
+                                    <div>
+                                        <strong>{{ leave.employee.full_name }}</strong>
+                                        <div class="text-muted" style="font-size: 0.85em;">
+                                            {{ leave.employee.position|default:"No position" }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge badge-info">{{ leave.leave_type.name }}</span>
+                            </td>
+                            <td>
+                                {{ leave.start_date|date:"M d" }} - {{ leave.end_date|date:"M d, Y" }}
+                            </td>
+                            <td>
+                                <strong>{{ leave.days_requested }}</strong> days
+                            </td>
+                            <td>
+                                {{ leave.submitted_date|date:"M d" }}
+                                <div class="text-muted" style="font-size: 0.85em;">
+                                    {{ leave.submitted_date|timesince }} ago
+                                </div>
+                            </td>
+                            <td>
+                                <div class="action-links">
+                                    <a href="{% url 'hr:leave_detail' leave.id %}" class="action-link">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                    <a href="{% url 'hr:leave_approve_reject' leave.id %}" class="action-link success">
+                                        <i class="fas fa-check"></i> Review
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div style="text-align: center; padding: 50px;">
+                <i class="fas fa-check-circle fa-4x text-success" style="margin-bottom: 20px;"></i>
+                <h3 style="color: var(--dark); margin-bottom: 10px;">All Caught Up!</h3>
+                <p class="text-muted mb-3">No pending leave requests to approve.</p>
+                <a href="{% url 'hr:leave_dashboard' %}" class="btn btn-success">
+                    <i class="fas fa-home"></i> Back to Dashboard
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card info" style="margin-top: 30px;">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <i class="fas fa-bolt"></i>
+                    Quick Actions
+                </h2>
+            </div>
+            <div style="padding: 25px;">
+                <div class="action-buttons">
+                    <button onclick="approveAll()" class="btn btn-success">
+                        <i class="fas fa-check-double"></i> Bulk Approve
+                    </button>
+                    <button onclick="downloadApprovalList()" class="btn btn-info">
+                        <i class="fas fa-download"></i> Download List
+                    </button>
+                    <a href="{% url 'hr:leave_dashboard' %}" class="btn">
+                        <i class="fas fa-home"></i> Dashboard
+                    </a>
+                    <a href="{% url 'hr:my_leave_requests' %}" class="btn">
+                        <i class="fas fa-history"></i> My Leaves
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{% static 'js/hr-main.js' %}"></script>
+    
+    <script>
+        // Filter by employee
+        function filterByEmployee(employeeId) {
+            const rows = document.querySelectorAll('#approvalTable tbody tr');
+            
+            rows.forEach(row => {
+                if (!employeeId || row.getAttribute('data-employee') === employeeId) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+        
+        // Download approval list
+        function downloadApprovalList() {
+            let csv = 'Employee,Position,Leave Type,Dates,Days,Submitted,Reason\n';
+            
+            document.querySelectorAll('#approvalTable tbody tr').forEach(row => {
+                if (row.style.display !== 'none') {
+                    const cells = row.querySelectorAll('td');
+                    if (cells.length >= 6) {
+                        const employee = cells[0].querySelector('strong')?.textContent?.trim() || '';
+                        const position = cells[0].querySelector('.text-muted')?.textContent?.trim() || '';
+                        const leaveType = cells[1].querySelector('.badge')?.textContent?.trim() || '';
+                        const dates = cells[2].textContent?.trim() || '';
+                        const days = cells[3].querySelector('strong')?.textContent?.trim() || '';
+                        const submitted = cells[4].textContent?.trim() || '';
+                        
+                        csv += `"${employee}","${position}","${leaveType}","${dates}","${days}","${submitted}",""\n`;
+                    }
+                }
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `pending_approvals_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            
+            HRSystem.showNotification('Approval list downloaded!', 'success');
+        }
+        
+        // Bulk approve confirmation
+        function approveAll() {
+            HRSystem.confirmAction('Approve all pending leaves? This action cannot be undone.').then(function(confirmed) {
+                if (confirmed) {
+                    HRSystem.showNotification('Bulk approval feature coming soon!', 'info');
+                }
+            });
+        }
+        
+        // Auto-refresh for new requests
+        let refreshInterval;
+        
+        function startAutoRefresh() {
+            if (document.querySelectorAll('#approvalTable tbody tr').length > 0) {
+                refreshInterval = setInterval(() => {
+                    if (document.visibilityState === 'visible') {
+                        location.reload();
+                    }
+                }, 60000); // 60 seconds
+            }
+        }
+        
+        function stopAutoRefresh() {
+            clearInterval(refreshInterval);
+        }
+        
+        // Start auto-refresh
+        $(document).ready(function() {
+            startAutoRefresh();
+            
+            // Pause when tab is not visible
+            document.addEventListener('visibilitychange', function() {
+                if (document.visibilityState === 'hidden') {
+                    stopAutoRefresh();
+                } else {
+                    startAutoRefresh();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

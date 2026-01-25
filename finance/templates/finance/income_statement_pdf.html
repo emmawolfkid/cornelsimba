@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Income Statement - {{ start_date }} to {{ end_date }}</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            font-size: 12px; 
+            margin: 20px; 
+        }
+        h1 { 
+            color: #2c3e50; 
+            text-align: center; 
+            margin-bottom: 5px; 
+        }
+        h2 { 
+            color: #7f8c8d; 
+            text-align: center; 
+            margin-top: 0; 
+        }
+        h3 { 
+            color: #2c3e50; 
+            margin-top: 25px; 
+            margin-bottom: 10px; 
+            border-bottom: 1px solid #3498db; 
+            padding-bottom: 5px; 
+        }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin: 15px 0; 
+        }
+        th { 
+            background-color: #f8f9fa; 
+            border: 1px solid #dee2e6; 
+            padding: 8px; 
+            text-align: left; 
+        }
+        td { 
+            border: 1px solid #dee2e6; 
+            padding: 8px; 
+        }
+        .amount { 
+            text-align: right; 
+            font-weight: bold; 
+        }
+        .positive { 
+            color: #27ae60; 
+        }
+        .negative { 
+            color: #e74c3c; 
+        }
+        .total-row { 
+            background-color: #f8f9fa; 
+            font-weight: bold; 
+        }
+        .header { 
+            text-align: center; 
+            margin-bottom: 20px; 
+        }
+        .company { 
+            font-size: 18px; 
+            font-weight: bold; 
+            color: #2c3e50; 
+            margin-bottom: 5px; 
+        }
+        .footer { 
+            text-align: center; 
+            margin-top: 30px; 
+            font-size: 10px; 
+            color: #95a5a6; 
+            padding-top: 10px; 
+            border-top: 1px solid #dee2e6; 
+        }
+        .summary-box { 
+            margin-top: 20px; 
+            padding: 15px; 
+            background-color: #f8f9fa; 
+            border: 1px solid #dee2e6; 
+        }
+        .summary-title { 
+            font-weight: bold; 
+            margin-bottom: 10px; 
+            color: #2c3e50; 
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="company">Cornel Simba Mining Enterprise</div>
+        <h2>Income Statement</h2>
+        <div>Period: {{ start_date|date:"F j, Y" }} to {{ end_date|date:"F j, Y" }}</div>
+        <div>Generated: {{ date|date:"F j, Y" }}</div>
+    </div>
+    
+    <h3>Revenue</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Account</th>
+                <th>Amount (Tsh)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for revenue in revenue_details %}
+            <tr>
+                <td>{{ revenue.account.name }}</td>
+                <td class="amount">{{ revenue.amount }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="2" style="text-align: center;">No revenue accounts found</td>
+            </tr>
+            {% endfor %}
+            <tr class="total-row">
+                <td><strong>Total Revenue</strong></td>
+                <td class="amount"><strong>{{ total_revenue }}</strong></td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <h3>Expenses</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Account</th>
+                <th>Amount (Tsh)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for expense in expense_details %}
+            <tr>
+                <td>{{ expense.account.name }}</td>
+                <td class="amount">{{ expense.amount }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="2" style="text-align: center;">No expense accounts found</td>
+            </tr>
+            {% endfor %}
+            <tr class="total-row">
+                <td><strong>Total Expenses</strong></td>
+                <td class="amount"><strong>{{ total_expense }}</strong></td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <div class="summary-box">
+        <div class="summary-title">Net Profit/Loss</div>
+        <p><strong>Total Revenue:</strong> Tsh {{ total_revenue }}</p>
+        <p><strong>Total Expenses:</strong> Tsh {{ total_expense }}</p>
+        <p><strong>Net Profit/Loss:</strong> 
+            <span class="{% if net_profit >= 0 %}positive{% else %}negative{% endif %}">
+                {% if net_profit >= 0 %}+{% endif %}Tsh {{ net_profit }}
+            </span>
+        </p>
+    </div>
+    
+    <div class="footer">
+        <p>Cornel Simba Mining Enterprise - Financial Reports</p>
+        <p>Generated automatically by the Finance System</p>
+    </div>
+</body>
+</html>

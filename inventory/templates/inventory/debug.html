@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head><title>Debug Groups</title></head>
+<body>
+    <h1>Debug Info</h1>
+    <p><strong>User:</strong> {{ user }}</p>
+    <p><strong>User ID:</strong> {{ user.id }}</p>
+    <p><strong>Groups:</strong> {{ groups }}</p>
+    <p><strong>Is in 'Inventory' group:</strong> {{ is_in_inventory_group }}</p>
+    <p><strong>All groups in database:</strong> 
+        {% for group in user.groups.all %}
+            {{ group.name }} (id: {{ group.id }})<br>
+        {% endfor %}
+    </p>
+</body>
+</html>

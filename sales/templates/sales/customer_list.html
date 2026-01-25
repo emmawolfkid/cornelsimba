@@ -1,0 +1,390 @@
+{% extends 'sales/base.html' %}
+{% load static %}
+
+{% block title %}Customers - CornelSimba ERP{% endblock %}
+{% block page_title %}Customers{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/customer_list.css' %}">
+{% endblock %}
+
+{% block content %}
+    <!-- Django messages as JSON -->
+    <div id="django-messages" data-messages='{{ django_messages_json|safe }}' style="display: none;"></div>
+    
+    <!-- Quick Stats -->
+    <div class="quick-stats">
+        <div class="stat-card">
+            <div class="stat-label">Total Customers</div>
+            <div class="stat-value">{{ customers.count|default:"0" }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Active Customers</div>
+            <div class="stat-value">
+                {{ customers|length|default:"0" }}
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Credit Customers</div>
+            <div class="stat-value">0</div>
+        </div>
+    </div>
+
+    <!-- Search Card -->
+    <div class="card-custom">
+        <div class="card-body-custom">
+            <h5 class="card-title mb-3">Search Customers</h5>
+            <form method="get" class="search-form">
+                <input type="text" 
+                       name="search" 
+                       class="search-input" 
+                       placeholder="Search by name, phone, email or contact person..." 
+                       value="{{ request.GET.search }}"
+                       aria-label="Search customers">
+                <button type="submit" class="btn-custom btn-primary-custom">
+                    <i class="bi bi-search"></i>
+                    Search
+                </button>
+                {% if request.GET.search %}
+                <a href="{% url 'sales:customer_list' %}" class="btn-custom btn-outline-custom">
+                    Clear
+                </a>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+    <!-- Customers Table Card -->
+    <div class="card-custom">
+        <div class="card-header-custom">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Customer List</h5>
+                <a href="{% url 'sales:customer_create' %}" class="btn-custom btn-success-custom">
+                    <i class="bi bi-plus-lg"></i>
+                    Add Customer
+                </a>
+            </div>
+        </div>
+        
+        <!-- Desktop Table View -->
+        <div class="customer-table-container mobile-hidden">
+            <table class="customer-table">
+                <thead>
+                    <tr>
+                        <th>Customer</th>
+                        <th>Type</th>
+                        <th>Contact</th>
+                        <th>Phone</th>
+                        <th>Credit Limit</th>
+                        <th>Status</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for customer in customers %}
+                    <tr>
+                        <td>
+                            <div class="customer-info-cell">
+                                <div class="customer-avatar-list">
+                                    {{ customer.name|first|upper }}
+                                </div>
+                                <div>
+                                    <div class="customer-name-list">{{ customer.name }}</div>
+                                    <div class="customer-email">{{ customer.email|default:"No email" }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge-customer {{ customer.customer_type|lower }}">
+                                {{ customer.get_customer_type_display|default:"-" }}
+                            </span>
+                        </td>
+                        <td>{{ customer.contact_person|default:"-" }}</td>
+                        <td>
+                            {% if customer.phone %}
+                            <a href="tel:{{ customer.phone }}" class="phone-link">
+                                {{ customer.phone }}
+                            </a>
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if customer.credit_limit %}
+                            <span class="currency-tsh">{{ customer.credit_limit|floatformat:0|default:"0" }}</span>
+                            {% else %}
+                            <span class="text-muted">No limit</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if customer.is_active %}
+                            <span class="status-indicator status-active">Active</span>
+                            {% else %}
+                            <span class="status-indicator status-inactive">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="action-buttons-list">
+                                <a href="{% url 'sales:customer_detail' customer.pk %}" 
+                                   class="action-btn view"
+                                   title="View details">
+                                    <i class="bi bi-eye"></i>
+                                    View
+                                </a>
+                                <a href="{% url 'sales:customer_edit' customer.pk %}" 
+                                   class="action-btn edit"
+                                   title="Edit customer">
+                                    <i class="bi bi-pencil"></i>
+                                    Edit
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7">
+                            <div class="empty-state-customers">
+                                <i class="bi bi-people"></i>
+                                <h5>No customers found</h5>
+                                <p>Add your first customer to get started</p>
+                                <a href="{% url 'sales:customer_create' %}" class="btn-custom btn-primary-custom">
+                                    <i class="bi bi-plus-lg"></i>
+                                    Add First Customer
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Mobile Cards View -->
+        <div class="mobile-cards">
+            {% for customer in customers %}
+            <div class="mobile-card hover-card">
+                <div class="mobile-card-header">
+                    <div class="mobile-card-avatar">
+                        {{ customer.name|first|upper }}
+                    </div>
+                    <div class="mobile-card-info">
+                        <div class="mobile-card-name">{{ customer.name }}</div>
+                        <div class="mobile-card-type">{{ customer.get_customer_type_display|default:"-" }}</div>
+                    </div>
+                    <div>
+                        {% if customer.is_active %}
+                        <span class="status-indicator status-active">Active</span>
+                        {% else %}
+                        <span class="status-indicator status-inactive">Inactive</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="mobile-card-details">
+                    <div class="mobile-detail-item">
+                        <span class="mobile-detail-label">Contact</span>
+                        <span class="mobile-detail-value">{{ customer.contact_person|default:"-" }}</span>
+                    </div>
+                    <div class="mobile-detail-item">
+                        <span class="mobile-detail-label">Phone</span>
+                        <span class="mobile-detail-value">
+                            {% if customer.phone %}
+                            <a href="tel:{{ customer.phone }}" class="phone-link">{{ customer.phone }}</a>
+                            {% else %}-{% endif %}
+                        </span>
+                    </div>
+                    <div class="mobile-detail-item">
+                        <span class="mobile-detail-label">Email</span>
+                        <span class="mobile-detail-value">{{ customer.email|default:"-" }}</span>
+                    </div>
+                    <div class="mobile-detail-item">
+                        <span class="mobile-detail-label">Credit Limit</span>
+                        <span class="mobile-detail-value">
+                            {% if customer.credit_limit %}
+                            Tsh {{ customer.credit_limit|floatformat:0|default:"0" }}
+                            {% else %}No limit{% endif %}
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="action-buttons-list">
+                    <a href="{% url 'sales:customer_detail' customer.pk %}" class="action-btn view" style="flex: 1;">
+                        <i class="bi bi-eye"></i>
+                        View Details
+                    </a>
+                    <a href="{% url 'sales:customer_edit' customer.pk %}" class="action-btn edit" style="flex: 1;">
+                        <i class="bi bi-pencil"></i>
+                        Edit
+                    </a>
+                </div>
+            </div>
+            {% empty %}
+            <div class="empty-state-customers">
+                <i class="bi bi-people"></i>
+                <h5>No customers found</h5>
+                <p>Add your first customer to get started</p>
+                <a href="{% url 'sales:customer_create' %}" class="btn-custom btn-primary-custom">
+                    <i class="bi bi-plus-lg"></i>
+                    Add First Customer
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <div class="pagination-custom">
+            {% if page_obj.has_previous %}
+            <a href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" class="page-link-custom">
+                <i class="bi bi-chevron-double-left"></i>
+            </a>
+            <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" class="page-link-custom">
+                <i class="bi bi-chevron-left"></i>
+            </a>
+            {% else %}
+            <span class="page-link-custom disabled">
+                <i class="bi bi-chevron-double-left"></i>
+            </span>
+            <span class="page-link-custom disabled">
+                <i class="bi bi-chevron-left"></i>
+            </span>
+            {% endif %}
+            
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                <a href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" class="page-link-custom active">
+                    {{ num }}
+                </a>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <a href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" class="page-link-custom">
+                    {{ num }}
+                </a>
+                {% endif %}
+            {% endfor %}
+            
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" class="page-link-custom">
+                <i class="bi bi-chevron-right"></i>
+            </a>
+            <a href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" class="page-link-custom">
+                <i class="bi bi-chevron-double-right"></i>
+            </a>
+            {% else %}
+            <span class="page-link-custom disabled">
+                <i class="bi bi-chevron-right"></i>
+            </span>
+            <span class="page-link-custom disabled">
+                <i class="bi bi-chevron-double-right"></i>
+            </span>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+    // Toast notification system
+    function showToast(message, type = 'success') {
+        const toast = document.createElement('div');
+        toast.className = `toast-notification toast-${type}`;
+        toast.innerHTML = `
+            <div class="toast-icon">
+                <i class="bi ${type === 'success' ? 'bi-check-circle' : type === 'error' ? 'bi-x-circle' : 'bi-exclamation-circle'}"></i>
+            </div>
+            <div class="toast-content">
+                ${message}
+            </div>
+        `;
+        
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 3000);
+    }
+    
+    // Check for messages
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle Django messages from data attribute
+        const messagesContainer = document.getElementById('django-messages');
+        if (messagesContainer) {
+            try {
+                const messages = JSON.parse(messagesContainer.getAttribute('data-messages'));
+                messages.forEach(msg => {
+                    showToast(msg.message, msg.tags);
+                });
+            } catch (e) {
+                console.log('No messages or error parsing messages');
+            }
+        }
+        
+        // Check for URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('success')) {
+            showToast(urlParams.get('success'), 'success');
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+        
+        // Mobile touch feedback
+        if ('ontouchstart' in window) {
+            const cards = document.querySelectorAll('.mobile-card, .stat-card');
+            cards.forEach(card => {
+                card.addEventListener('touchstart', function() {
+                    this.style.opacity = '0.7';
+                });
+                card.addEventListener('touchend', function() {
+                    this.style.opacity = '1';
+                });
+            });
+            
+            // Make table rows more touch-friendly
+            const tableRows = document.querySelectorAll('.customer-table tbody tr');
+            tableRows.forEach(row => {
+                row.style.cursor = 'pointer';
+                row.addEventListener('click', function(e) {
+                    if (!e.target.closest('a')) {
+                        const viewLink = this.querySelector('a.view');
+                        if (viewLink) {
+                            window.location.href = viewLink.href;
+                        }
+                    }
+                });
+            });
+        }
+        
+        // Search input enhancement
+        const searchInput = document.querySelector('input[name="search"]');
+        if (searchInput) {
+            // Clear button functionality
+            const clearBtn = document.querySelector('a[href*="customer_list"]');
+            if (clearBtn && searchInput.value) {
+                clearBtn.addEventListener('click', function(e) {
+                    searchInput.value = '';
+                });
+            }
+            
+            // Auto-focus on search input
+            if (!searchInput.value && window.innerWidth > 768) {
+                setTimeout(() => {
+                    searchInput.focus();
+                }, 300);
+            }
+        }
+        
+        // Loading state for pagination links
+        const pageLinks = document.querySelectorAll('.page-link-custom:not(.disabled)');
+        pageLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                if (!this.classList.contains('active')) {
+                    this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span>';
+                    this.style.pointerEvents = 'none';
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

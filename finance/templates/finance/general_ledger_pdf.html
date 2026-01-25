@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>General Ledger - {{ start_date }} to {{ end_date }}</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            font-size: 12px; 
+            margin: 20px; 
+        }
+        h1 { 
+            color: #2c3e50; 
+            text-align: center; 
+            margin-bottom: 5px; 
+        }
+        h2 { 
+            color: #7f8c8d; 
+            text-align: center; 
+            margin-top: 0; 
+        }
+        h3 { 
+            color: #2c3e50; 
+            margin-top: 20px; 
+            margin-bottom: 10px; 
+            border-bottom: 1px solid #3498db; 
+            padding-bottom: 5px; 
+        }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin: 10px 0; 
+        }
+        th { 
+            background-color: #f8f9fa; 
+            border: 1px solid #dee2e6; 
+            padding: 8px; 
+            text-align: left; 
+        }
+        td { 
+            border: 1px solid #dee2e6; 
+            padding: 8px; 
+        }
+        .amount { 
+            text-align: right; 
+            font-weight: bold; 
+        }
+        .debit { 
+            color: #e74c3c; 
+        }
+        .credit { 
+            color: #27ae60; 
+        }
+        .total-row { 
+            background-color: #f8f9fa; 
+            font-weight: bold; 
+        }
+        .header { 
+            text-align: center; 
+            margin-bottom: 20px; 
+        }
+        .company { 
+            font-size: 18px; 
+            font-weight: bold; 
+            color: #2c3e50; 
+            margin-bottom: 5px; 
+        }
+        .footer { 
+            text-align: center; 
+            margin-top: 30px; 
+            font-size: 10px; 
+            color: #95a5a6; 
+            padding-top: 10px; 
+            border-top: 1px solid #dee2e6; 
+        }
+        .status-box { 
+            margin-top: 30px; 
+            padding: 15px; 
+            border: 2px solid; 
+            text-align: center; 
+        }
+        .balanced { 
+            border-color: #27ae60; 
+            background-color: #e8f8ed; 
+        }
+        .not-balanced { 
+            border-color: #e74c3c; 
+            background-color: #fde8e8; 
+        }
+        .status-title { 
+            font-weight: bold; 
+            margin-bottom: 10px; 
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="company">Cornel Simba Mining Enterprise</div>
+        <h2>General Ledger</h2>
+        <div>Period: {{ start_date|date:"F j, Y" }} to {{ end_date|date:"F j, Y" }}</div>
+    </div>
+    
+    <h3>Transactions Summary</h3>
+    <table>
+        <tr>
+            <td><strong>Total Debits</strong></td>
+            <td class="amount debit">Tsh {{ debit_total }}</td>
+        </tr>
+        <tr>
+            <td><strong>Total Credits</strong></td>
+            <td class="amount credit">Tsh {{ credit_total }}</td>
+        </tr>
+        <tr class="total-row">
+            <td><strong>Difference</strong></td>
+            <td class="amount">
+                {% if balance_difference == 0 %}
+                    <span class="balanced">✓ Balanced</span>
+                {% else %}
+                    <span class="not-balanced">Tsh {{ balance_difference }}</span>
+                {% endif %}
+            </td>
+        </tr>
+    </table>
+    
+    <div class="status-box {% if balance_difference == 0 %}balanced{% else %}not-balanced{% endif %}">
+        <div class="status-title">Ledger Balance Status</div>
+        {% if balance_difference == 0 %}
+            <p><strong>✓ BALANCED</strong></p>
+            <p>Debits: {{ debit_total }} = Credits: {{ credit_total }}</p>
+        {% else %}
+            <p><strong>✗ NOT BALANCED</strong></p>
+            <p>Difference: Tsh {{ balance_difference }}</p>
+        {% endif %}
+    </div>
+    
+    <div class="footer">
+        <p>Cornel Simba Mining Enterprise - Financial Reports</p>
+        <p>Generated automatically by the Finance System</p>
+    </div>
+</body>
+</html>

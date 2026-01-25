@@ -1,0 +1,358 @@
+{% extends 'finance/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Payroll Records - Finance{% endblock %}
+
+{% block page_title %}💰 Payroll Records{% endblock %}
+
+{% block breadcrumb %}
+<a href="{% url 'finance:dashboard' %}">Dashboard</a> / Payroll Records
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'finance/css/payroll.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="payroll-header-actions">
+    <a href="{% url 'finance:payroll_create' %}" class="btn btn-success">
+        <i class="fas fa-plus-circle"></i> Add New Payroll
+    </a>
+    
+    <div class="payroll-header-buttons">
+        <a href="{% url 'finance:dashboard' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Dashboard
+        </a>
+    </div>
+</div>
+
+<!-- Current Period Info -->
+<div class="payroll-period-header">
+    <div class="payroll-period-badge">
+        Current: {{ payrolls.0.month|default:"N/A" }} {{ payrolls.0.year|default:"" }}
+    </div>
+    <span class="payroll-period-info">
+        Total Employees: {{ payrolls.paginator.count|default:payrolls.count }}
+    </span>
+</div>
+
+<!-- Filters -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="fas fa-filter"></i> Filters
+        </h3>
+    </div>
+    <div class="card-body">
+        <form method="get" class="filter-form">
+            <div class="payroll-filter-row">
+                <div class="form-group">
+                    <label class="form-label">Year</label>
+                    <select name="year" class="form-control">
+                        <option value="">All Years</option>
+                        {% for year in years %}
+                        <option value="{{ year }}" {% if request.GET.year == year|stringformat:"i" %}selected{% endif %}>
+                            {{ year }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Month</label>
+                    <select name="month" class="form-control">
+                        <option value="">All Months</option>
+                        {% for month_code, month_name in months %}
+                        <option value="{{ month_code }}" {% if request.GET.month == month_code %}selected{% endif %}>
+                            {{ month_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Payment Status</label>
+                    <select name="paid" class="form-control">
+                        <option value="">All Status</option>
+                        <option value="true" {% if request.GET.paid == "true" %}selected{% endif %}>Paid</option>
+                        <option value="false" {% if request.GET.paid == "false" %}selected{% endif %}>Pending</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="payroll-filter-actions">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search"></i> Apply Filters
+                </button>
+                
+                {% if request.GET %}
+                <a href="{% url 'finance:payroll_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Clear All
+                </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="payroll-summary-cards">
+    <div class="payroll-summary-card total">
+        <h3>Total Payroll</h3>
+        <div class="payroll-summary-value">
+            Tsh {{ total_net|floatformat:0|intcomma|default:"0" }}
+        </div>
+        <p class="text-muted">Net salary total</p>
+    </div>
+    
+    <div class="payroll-summary-card gross">
+        <h3>Total Gross</h3>
+        <div class="payroll-summary-value">
+            Tsh {{ total_gross|floatformat:0|intcomma|default:"0" }}
+        </div>
+        <p class="text-muted">Before deductions</p>
+    </div>
+    
+    <div class="payroll-summary-card deductions">
+        <h3>Total Deductions</h3>
+        <div class="payroll-summary-value">
+            Tsh {{ total_gross|default:0|add:"0"|floatformat:0|default:"0"|add:"0"|floatformat:0|default:"0"|add:"0"|floatformat:0|default:"0" }}
+        </div>
+        <p class="text-muted">Tax + Pension + Other</p>
+    </div>
+</div>
+
+<!-- Payroll Table -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="fas fa-users"></i> Payroll Records
+        </h3>
+        <div class="payroll-card-actions">
+            <span class="badge badge-info">
+                Page {{ payrolls.number }} of {{ payrolls.paginator.num_pages }}
+            </span>
+        </div>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Employee</th>
+                    <th>Month/Year</th>
+                    <th>Basic Salary (Tsh)</th>
+                    <th>Allowances (Tsh)</th>
+                    <th>Deductions (Tsh)</th>
+                    <th>Net Salary (Tsh)</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for payroll in payrolls %}
+                <tr class="{% if payroll.is_current_period %}payroll-current-period{% endif %}">
+                    <td>
+                        <strong>{{ payroll.employee.full_name|truncatechars:20 }}</strong>
+                        <br>
+                        <small class="text-muted">{{ payroll.employee.position|default:"-" }}</small>
+                    </td>
+                    <td>
+                        <strong>{{ payroll.month }} {{ payroll.year }}</strong>
+                    </td>
+                    <td>
+                        <div class="payroll-salary-breakdown">
+                            <div class="payroll-salary-item">
+                                <span class="payroll-salary-label">Basic:</span>
+                                <span class="payroll-salary-value">Tsh {{ payroll.basic_salary|floatformat:0|intcomma }}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="payroll-salary-breakdown">
+                            <div class="payroll-salary-item">
+                                <span class="payroll-salary-label">Allowances:</span>
+                                <span class="payroll-salary-value">Tsh {{ payroll.allowances|floatformat:0|intcomma }}</span>
+                            </div>
+                            <div class="payroll-salary-item">
+                                <span class="payroll-salary-label">Gross:</span>
+                                <span class="payroll-salary-value payroll-salary-gross">
+                                    Tsh {{ payroll.gross_salary|floatformat:0|intcomma }}
+                                </span>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="payroll-salary-breakdown">
+                            <div class="payroll-salary-item">
+                                <span class="payroll-salary-label">Tax:</span>
+                                <span class="payroll-salary-value">Tsh {{ payroll.tax_amount|floatformat:0|intcomma }}</span>
+                            </div>
+                            <div class="payroll-salary-item">
+                                <span class="payroll-salary-label">Pension:</span>
+                                <span class="payroll-salary-value">Tsh {{ payroll.pension_amount|floatformat:0|intcomma }}</span>
+                            </div>
+                            <div class="payroll-salary-item">
+                                <span class="payroll-salary-label">Other:</span>
+                                <span class="payroll-salary-value">Tsh {{ payroll.other_deductions|floatformat:0|intcomma }}</span>
+                            </div>
+                            <div class="payroll-salary-item">
+                                <span class="payroll-salary-label">Total:</span>
+                                <span class="payroll-salary-value payroll-salary-deductions">
+                                    Tsh {{ payroll.total_deductions|floatformat:0|intcomma }}
+                                </span>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="payroll-salary-net">
+                            Tsh {{ payroll.net_salary|floatformat:0|intcomma }}
+                        </div>
+                        <small class="text-muted">
+                            Paid: {{ payroll.payment_date|date:"M d, Y"|default:"Not paid" }}
+                        </small>
+                    </td>
+                    <td>
+                        {% if payroll.is_paid %}
+                        <span class="payroll-status-badge payroll-status-paid">
+                            ✓ Paid
+                        </span>
+                        {% else %}
+                        <span class="payroll-status-badge payroll-status-pending">
+                            ● Pending
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="payroll-actions">
+                            {% if not payroll.is_paid %}
+                            <a href="{% url 'finance:payroll_mark_paid' payroll.pk %}" 
+                               class="payroll-action-btn payroll-pay-btn" 
+                               title="Mark as Paid">
+                                💳 Pay
+                            </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center py-5">
+                        <div class="payroll-empty-state">
+                            No payroll records found. 
+                            <br>
+                            <a href="{% url 'finance:payroll_create' %}">Add your first payroll record</a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <div class="card-footer">
+        <div class="pagination-container">
+            <div class="pagination-info">
+                Showing {{ payrolls.start_index }} to {{ payrolls.end_index }} of {{ payrolls.paginator.count }} records
+            </div>
+            
+            <nav class="pagination">
+                {% if payrolls.has_previous %}
+                <a href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                   class="page-link">
+                    <i class="fas fa-angle-double-left"></i>
+                </a>
+                <a href="?page={{ payrolls.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                   class="page-link">
+                    <i class="fas fa-angle-left"></i>
+                </a>
+                {% endif %}
+                
+                {% for num in payrolls.paginator.page_range %}
+                    {% if payrolls.number == num %}
+                    <span class="page-link active">{{ num }}</span>
+                    {% elif num > payrolls.number|add:'-3' and num < payrolls.number|add:'3' %}
+                    <a href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                       class="page-link">{{ num }}</a>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if payrolls.has_next %}
+                <a href="?page={{ payrolls.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                   class="page-link">
+                    <i class="fas fa-angle-right"></i>
+                </a>
+                <a href="?page={{ payrolls.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                   class="page-link">
+                    <i class="fas fa-angle-double-right"></i>
+                </a>
+                {% endif %}
+            </nav>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Total Summary -->
+{% if payrolls %}
+<div class="payroll-total-footer">
+    <div class="payroll-total-content">
+        <div>
+            <strong>{{ payrolls.paginator.count|default:payrolls.count }} record(s)</strong>
+        </div>
+        <div>
+            <strong>Total Net Payroll: Tsh {{ total_net|floatformat:0|intcomma|default:"0" }}</strong>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Confirmation for mark as paid
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.payroll-pay-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                if (!confirm('Are you sure you want to mark this payroll as paid?\n\nThis will update the payment date and status.')) {
+                    e.preventDefault();
+                }
+            });
+        });
+        
+        // Highlight current month/year
+        const currentDate = new Date();
+        const currentMonth = currentDate.toLocaleString('default', { month: 'long' });
+        const currentYear = currentDate.getFullYear();
+        
+        // Find and highlight current period rows
+        document.querySelectorAll('tbody tr').forEach(row => {
+            const monthCell = row.querySelector('td:nth-child(2) strong');
+            if (monthCell) {
+                const text = monthCell.textContent;
+                if (text.includes(currentMonth) && text.includes(currentYear.toString())) {
+                    row.classList.add('payroll-current-period');
+                }
+            }
+        });
+        
+        // Auto-format currency amounts
+        document.querySelectorAll('.payroll-salary-value, .payroll-salary-net, .payroll-summary-value').forEach(element => {
+            const text = element.textContent;
+            if (text.includes('Tsh')) {
+                const amount = text.replace(/[^\d.]/g, '');
+                if (amount && !isNaN(parseFloat(amount))) {
+                    const num = parseFloat(amount);
+                    element.textContent = 'Tsh ' + Math.abs(num).toLocaleString();
+                    if (num < 0) {
+                        element.textContent = '-Tsh ' + Math.abs(num).toLocaleString();
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

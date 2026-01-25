@@ -1,0 +1,142 @@
+{% extends 'procurement/base.html' %}
+
+{% block title %}Suppliers - Procurement{% endblock %}
+{% block page_title %}Suppliers Management{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+        <h2 class="card-title">
+            <i class="fas fa-building"></i>
+            Suppliers List
+        </h2>
+        <a href="{% url 'procurement:supplier_create' %}" class="btn btn-success">
+            <i class="fas fa-plus-circle"></i> Add New Supplier
+        </a>
+    </div>
+
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Contact Person</th>
+                    <th>Phone</th>
+                    <th>Email</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for supplier in suppliers %}
+                <tr>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="width: 40px; height: 40px; background: linear-gradient(135deg, var(--primary), var(--secondary)); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600;">
+                                {{ supplier.name|first|upper }}
+                            </div>
+                            <div>
+                                <strong>{{ supplier.name }}</strong>
+                                {% if supplier.company_id %}
+                                <div style="font-size: 0.8em; color: var(--gray);">ID: {{ supplier.company_id }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </td>
+                    <td>{{ supplier.contact_person|default:"-" }}</td>
+                    <td>
+                        {% if supplier.phone %}
+                        <a href="tel:{{ supplier.phone }}" style="color: var(--info); text-decoration: none;">
+                            <i class="fas fa-phone"></i> {{ supplier.phone }}
+                        </a>
+                        {% else %}
+                        -
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if supplier.email %}
+                        <a href="mailto:{{ supplier.email }}" style="color: var(--info); text-decoration: none;">
+                            <i class="fas fa-envelope"></i> {{ supplier.email }}
+                        </a>
+                        {% else %}
+                        -
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if supplier.is_active %}
+                        <span class="status-badge status-approved">Active</span>
+                        {% else %}
+                        <span class="status-badge status-cancelled">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="action-links">
+                            <a href="{% url 'procurement:supplier_detail' supplier.pk %}" class="action-btn info">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                            <a href="{% url 'procurement:supplier_update' supplier.pk %}" class="action-btn primary">
+                                <i class="fas fa-edit"></i> Edit
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6">
+                        <div class="empty-state">
+                            <i class="fas fa-users-slash"></i>
+                            <p>No suppliers found</p>
+                            <small style="color: var(--gray);">Add your first supplier to get started</small>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    {% if suppliers.has_other_pages %}
+    <div class="pagination">
+        {% if suppliers.has_previous %}
+            <a href="?page=1">&laquo; First</a>
+            <a href="?page={{ suppliers.previous_page_number }}">Previous</a>
+        {% endif %}
+        
+        <span class="current">
+            Page {{ suppliers.number }} of {{ suppliers.paginator.num_pages }}
+        </span>
+        
+        {% if suppliers.has_next %}
+            <a href="?page={{ suppliers.next_page_number }}">Next</a>
+            <a href="?page={{ suppliers.paginator.num_pages }}">Last &raquo;</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Add search functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.createElement('input');
+    searchInput.type = 'text';
+    searchInput.placeholder = 'Search suppliers...';
+    searchInput.className = 'form-control';
+    searchInput.style.marginBottom = '20px';
+    
+    const cardHeader = document.querySelector('.card .card-title').parentElement;
+    cardHeader.parentNode.insertBefore(searchInput, cardHeader.nextElementSibling);
+    
+    searchInput.addEventListener('keyup', function() {
+        const searchTerm = this.value.toLowerCase();
+        const rows = document.querySelectorAll('tbody tr');
+        
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(searchTerm) ? '' : 'none';
+        });
+    });
+});
+</script>
+{% endblock %}

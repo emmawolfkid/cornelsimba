@@ -1,0 +1,109 @@
+{% extends 'sales/base.html' %}
+{% load static %}
+
+{% block title %}Pending Stock Outs - CornelSimba ERP{% endblock %}
+{% block page_title %}Pending Stock Outs{% endblock %}
+
+{% block content %}
+    <div class="dashboard-header">
+        <div class="header-info">
+            <h1>Pending Stock Out Requests</h1>
+            <p class="text-muted">Sales waiting for inventory approval</p>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'sales:sale_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i>
+                Back to Sales
+            </a>
+        </div>
+    </div>
+
+    {% if pending_sales %}
+    <div class="card table-card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Sale #</th>
+                            <th>Customer</th>
+                            <th>Date</th>
+                            <th>Amount</th>
+                            <th>Stock Out Status</th>
+                            <th>Stock Availability</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sale in pending_sales %}
+                        <tr>
+                            <td>
+                                <strong>{{ sale.sale_number }}</strong>
+                            </td>
+                            <td>{{ sale.customer.name|truncatechars:20 }}</td>
+                            <td>{{ sale.sale_date|date:"M d, Y" }}</td>
+                            <td>
+                                <strong class="text-primary">Tsh {{ sale.net_amount|floatformat:0 }}</strong>
+                            </td>
+                            <td>
+                                {% if sale.inventory_stock_out %}
+                                    <span class="badge bg-warning-subtle text-warning">
+                                        <i class="bi bi-clock me-1"></i>
+                                        Pending Approval
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary-subtle text-secondary">
+                                        <i class="bi bi-question-circle me-1"></i>
+                                        Not Requested
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                               {% comment %} Temporarily remove or simplify this check {% endcomment %}
+{% if sale.inventory_stock_out %}
+    <span class="badge bg-success-subtle text-success">
+        <i class="bi bi-check-circle me-1"></i>
+        Stock Out Requested
+    </span>
+{% else %}
+    <span class="badge bg-secondary-subtle text-secondary">
+        <i class="bi bi-question-circle me-1"></i>
+        No Request Yet
+    </span>
+{% endif %}
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <a href="{% url 'sales:sale_detail' sale.pk %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                        View
+                                    </a>
+                                    {% if sale.can_request_stock_out %}
+                                    <a href="{% url 'sales:request_stock_out' sale.pk %}" class="btn btn-sm btn-warning">
+                                        <i class="bi bi-box-arrow-up"></i>
+                                        Request Stock Out
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="empty-state text-center py-5">
+        <div class="empty-icon mb-3">
+            <i class="bi bi-check-circle display-4 text-success"></i>
+        </div>
+        <h5 class="text-success">All stock outs processed!</h5>
+        <p class="text-muted">No pending stock out requests found.</p>
+        <a href="{% url 'sales:sale_list' %}" class="btn btn-primary">
+            <i class="bi bi-list me-1"></i>
+            View All Sales
+        </a>
+    </div>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,335 @@
+/* Mobile Navigation */
+.mobile-nav-toggle {
+    display: none;
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 1.2em;
+    cursor: pointer;
+    margin-bottom: 15px;
+    width: 100%;
+}
+
+.sidebar {
+    display: none;
+}
+
+.sidebar.active {
+    display: block;
+}
+
+.items-per-page {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.leave-section {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    margin: 30px 0;
+    border-top: 5px solid #27ae60;
+}
+
+.leave-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
+    margin-top: 20px;
+}
+
+.leave-card {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    border-top: 4px solid #f39c12;
+}
+
+.leave-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 15px;
+    color: white;
+    font-size: 1.5em;
+}
+
+.leave-icon.balance { background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); }
+.leave-icon.actions { background: linear-gradient(135deg, #27ae60 0%, #219653 100%); }
+.leave-icon.pending { background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); }
+
+.leave-title {
+    color: #2c3e50;
+    font-size: 1.2em;
+    font-weight: 600;
+    margin-bottom: 15px;
+}
+
+.leave-balance-details {
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+.balance-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.balance-item:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.balance-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #34495e;
+}
+
+.balance-value {
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.quick-actions-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.quick-action-btn {
+    background: #e8f4fc;
+    border: 1px solid #b3e0ff;
+    border-radius: 6px;
+    padding: 10px;
+    text-align: center;
+    color: #2980b9;
+    text-decoration: none;
+    font-size: 0.9em;
+    transition: all 0.3s;
+}
+
+.quick-action-btn:hover {
+    background: #d1ecf1;
+    transform: translateY(-2px);
+}
+
+.last-updated {
+    text-align: center;
+    color: var(--gray);
+    font-size: 0.85em;
+    margin-top: 15px;
+}
+
+.pending-requests-list {
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+.pending-request-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.pending-request-item:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.request-info {
+    flex: 1;
+}
+
+.request-type {
+    font-weight: 500;
+    color: var(--primary);
+}
+
+.request-dates {
+    font-size: 0.85em;
+    color: var(--gray);
+}
+
+.request-status {
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    font-weight: 500;
+}
+
+.request-status.pending { background: #ffc107; color: #000; }
+.request-status.approved { background: #28a745; color: white; }
+.request-status.rejected { background: #dc3545; color: white; }
+
+.no-pending-requests {
+    padding: 20px;
+    text-align: center;
+    color: var(--gray);
+}
+
+.no-pending-requests i {
+    color: var(--success);
+    font-size: 2em;
+    margin-bottom: 10px;
+}
+
+.more-requests {
+    text-align: center;
+    color: var(--secondary);
+    font-size: 0.9em;
+    margin-top: 5px;
+}
+
+.leave-link {
+    display: block;
+    text-align: center;
+    text-decoration: none;
+    color: white;
+    background: #2c3e50;
+    padding: 10px;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s;
+    width: 100%;
+}
+
+.leave-link:hover {
+    background: #34495e;
+    transform: scale(1.02);
+}
+
+.view-all-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #3498db;
+    text-decoration: none;
+    font-weight: 500;
+    padding: 8px 15px;
+    border-radius: 6px;
+    border: 1px solid #3498db;
+    background: white;
+}
+
+.view-all-link:hover {
+    background: #3498db;
+    color: white;
+}
+
+.footer-subtext {
+    font-size: 0.8em;
+    margin-top: 5px;
+}
+
+.footer-subtext i {
+    margin-right: 5px;
+}
+
+/* Responsive Media Queries */
+@media (max-width: 768px) {
+    .mobile-nav-toggle {
+        display: block;
+    }
+    
+    .header {
+        flex-direction: column;
+        text-align: center;
+        gap: 20px;
+    }
+    
+    .company-brand {
+        flex-direction: column;
+    }
+    
+    .user-info {
+        text-align: center;
+    }
+    
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .quick-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .sidebar-modules {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .leave-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .items-per-page {
+        margin-left: 0;
+        margin-top: 10px;
+        width: 100%;
+    }
+    
+    .view-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .view-controls .items-per-page {
+        order: -1;
+        margin-bottom: 10px;
+    }
+    
+    .view-btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .notification-center {
+        width: 90vw;
+        right: 5vw;
+    }
+}
+
+@media (max-width: 480px) {
+    .quick-stats {
+        grid-template-columns: 1fr;
+    }
+    
+    .sidebar-modules {
+        grid-template-columns: 1fr;
+    }
+    
+    .quick-actions-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .module-card {
+        padding: 20px;
+    }
+    
+    .leave-card {
+        padding: 20px;
+    }
+}

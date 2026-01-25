@@ -1,0 +1,311 @@
+/* ============================================
+   NOTIFICATION STYLES
+   Popup Notifications & Messages
+   ============================================ */
+
+/* Notification Container */
+#notification-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: var(--z-notification);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 400px;
+}
+
+/* Notification Toast */
+.notification-toast {
+    background: var(--white);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    box-shadow: var(--box-shadow-lg);
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    animation: slideInRight 0.3s ease forwards;
+    transform: translateX(100%);
+    opacity: 0;
+    border-left: 5px solid var(--primary);
+    position: relative;
+    overflow: hidden;
+}
+
+.notification-toast.success {
+    border-left-color: var(--success);
+    background: linear-gradient(to right, #f0fdf4 0%, white 100%);
+}
+
+.notification-toast.warning {
+    border-left-color: var(--warning);
+    background: linear-gradient(to right, #fffbeb 0%, white 100%);
+}
+
+.notification-toast.error {
+    border-left-color: var(--danger);
+    background: linear-gradient(to right, #fef2f2 0%, white 100%);
+}
+
+.notification-toast.info {
+    border-left-color: var(--info);
+    background: linear-gradient(to right, #eff6ff 0%, white 100%);
+}
+
+.notification-toast::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: var(--primary);
+}
+
+.notification-toast.success::before {
+    background: var(--success);
+}
+
+.notification-toast.warning::before {
+    background: var(--warning);
+}
+
+.notification-toast.error::before {
+    background: var(--danger);
+}
+
+.notification-toast.info::before {
+    background: var(--info);
+}
+
+.notification-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2em;
+    flex-shrink: 0;
+}
+
+.notification-toast .notification-icon {
+    background: rgba(79, 70, 229, 0.1);
+    color: var(--primary);
+}
+
+.notification-toast.success .notification-icon {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--success);
+}
+
+.notification-toast.warning .notification-icon {
+    background: rgba(245, 158, 11, 0.1);
+    color: var(--warning);
+}
+
+.notification-toast.error .notification-icon {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger);
+}
+
+.notification-toast.info .notification-icon {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--info);
+}
+
+.notification-content {
+    flex: 1;
+}
+
+.notification-title {
+    font-weight: 600;
+    color: var(--dark);
+    margin-bottom: 5px;
+    font-size: 1.1em;
+}
+
+.notification-message {
+    color: var(--gray-dark);
+    font-size: 0.95em;
+    line-height: 1.5;
+}
+
+.notification-close {
+    background: none;
+    border: none;
+    color: var(--gray);
+    font-size: 1.2em;
+    cursor: pointer;
+    padding: 5px;
+    transition: var(--transition-fast);
+    flex-shrink: 0;
+}
+
+.notification-close:hover {
+    color: var(--danger);
+}
+
+/* Progress Bar for Auto-Close */
+.notification-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.notification-progress-bar {
+    height: 100%;
+    background: var(--primary);
+    width: 100%;
+    animation: progressBar 5s linear forwards;
+}
+
+.notification-toast.success .notification-progress-bar {
+    background: var(--success);
+}
+
+.notification-toast.warning .notification-progress-bar {
+    background: var(--warning);
+}
+
+.notification-toast.error .notification-progress-bar {
+    background: var(--danger);
+}
+
+.notification-toast.info .notification-progress-bar {
+    background: var(--info);
+}
+
+/* Animations */
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutRight {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+@keyframes progressBar {
+    from {
+        width: 100%;
+    }
+    to {
+        width: 0%;
+    }
+}
+
+.notification-toast.hide {
+    animation: slideOutRight 0.3s ease forwards;
+}
+
+/* Message Styles (Django messages converted) */
+.django-messages {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: var(--z-notification);
+    width: 90%;
+    max-width: 500px;
+}
+
+.message-alert {
+    padding: 15px 20px;
+    border-radius: var(--border-radius);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    animation: slideDown 0.3s ease;
+    box-shadow: var(--box-shadow-lg);
+    border-left: 4px solid;
+}
+
+.message-alert.success {
+    background: #d1fae5;
+    color: #065f46;
+    border-left-color: var(--success);
+}
+
+.message-alert.warning {
+    background: #fef3c7;
+    color: #92400e;
+    border-left-color: var(--warning);
+}
+
+.message-alert.error {
+    background: #fee2e2;
+    color: #991b1b;
+    border-left-color: var(--danger);
+}
+
+.message-alert.info {
+    background: #dbeafe;
+    color: #1e40af;
+    border-left-color: var(--info);
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Confirmation Modal */
+.confirmation-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: var(--z-modal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: fadeIn 0.3s ease;
+}
+
+.confirmation-content {
+    background: var(--white);
+    border-radius: var(--border-radius-lg);
+    padding: 30px;
+    max-width: 500px;
+    width: 100%;
+    box-shadow: var(--box-shadow-lg);
+    animation: scaleIn 0.3s ease;
+}
+
+@keyframes scaleIn {
+    from {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}

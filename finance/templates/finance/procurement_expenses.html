@@ -1,0 +1,319 @@
+{% extends 'finance/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Procurement Expenses - Finance{% endblock %}
+
+{% block page_title %}🛒 Purchase Orders Ready for Expenses{% endblock %}
+
+{% block breadcrumb %}
+<a href="{% url 'finance:dashboard' %}">Dashboard</a> / Procurement Expenses
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'finance/css/procurement_expenses.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="procurement-expenses-container">
+    <!-- Header -->
+    <div class="procurement-header">
+        <h1><i class="fas fa-shopping-cart"></i> Purchase Orders Ready for Expenses</h1>
+        <div class="procurement-subtitle">
+            <i class="fas fa-exchange-alt"></i> Convert delivered Purchase Orders to expense records in Tsh
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="procurement-quick-actions">
+        <a href="{% url 'finance:dashboard' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Finance Dashboard
+        </a>
+        <a href="{% url 'procurement:dashboard' %}" class="btn btn-secondary">
+            <i class="fas fa-shopping-cart"></i> Procurement Module
+        </a>
+        <a href="{% url 'finance:expense_list' %}" class="btn btn-secondary">
+            <i class="fas fa-file-invoice-dollar"></i> View All Expenses
+        </a>
+    </div>
+    
+    <!-- Stats -->
+    <div class="procurement-stats-grid">
+        <div class="procurement-stat-card">
+            <h3><i class="fas fa-clipboard-check"></i> POs Ready for Processing</h3>
+            <div class="procurement-stat-value">{{ purchase_orders.count|default:"0" }}</div>
+            <div class="procurement-stat-detail">Delivered Purchase Orders</div>
+        </div>
+        
+        <div class="procurement-stat-card">
+            <h3><i class="fas fa-money-bill-wave"></i> Total Value</h3>
+            <div class="procurement-stat-value">Tsh {{ total_value|floatformat:0|default:"0"|intcomma }}</div>
+            <div class="procurement-stat-detail">To be converted to expenses</div>
+        </div>
+        
+        <div class="procurement-stat-card">
+            <h3><i class="fas fa-building"></i> Departments</h3>
+            <div class="procurement-stat-value">{{ department_summary|length|default:"0" }}</div>
+            <div class="procurement-stat-detail">Different departments</div>
+        </div>
+        
+        <div class="procurement-stat-card">
+            <h3><i class="fas fa-calculator"></i> Average PO Value</h3>
+            <div class="procurement-stat-value">
+                {% if purchase_orders.count > 0 %}
+                Tsh {{ total_value|default:0|divide:purchase_orders.count|floatformat:0|intcomma }}
+                {% else %}
+                Tsh 0
+                {% endif %}
+            </div>
+            <div class="procurement-stat-detail">Per Purchase Order</div>
+        </div>
+    </div>
+    
+    <!-- High Value Warning -->
+    {% with high_value_count=purchase_orders|length %}
+        {% if high_value_count > 0 %}
+        <div class="procurement-warning" id="highValueWarning">
+            <h4><i class="fas fa-exclamation-triangle"></i> High Value Transactions</h4>
+            <p>There are {{ high_value_count }} Purchase Order(s) ready for processing. Large amounts may require additional approval.</p>
+        </div>
+        {% endif %}
+    {% endwith %}
+    
+    <!-- Department Summary -->
+    <div class="procurement-dept-summary">
+        <h2 class="procurement-section-title">
+            <i class="fas fa-chart-pie"></i> Cost by Department
+        </h2>
+        <div class="procurement-dept-grid">
+            {% for dept, data in department_summary.items %}
+            <div class="procurement-dept-card">
+                <h4>{{ dept|default:"Unassigned" }}</h4>
+                <div class="procurement-dept-detail">
+                    <span class="procurement-dept-label">Purchase Orders:</span>
+                    <span class="procurement-dept-value">{{ data.count|default:"0" }}</span>
+                </div>
+                <div class="procurement-dept-detail">
+                    <span class="procurement-dept-label">Total Value:</span>
+                    <span class="procurement-dept-value procurement-dept-amount">
+                        Tsh {{ data.total|floatformat:0|default:"0"|intcomma }}
+                    </span>
+                </div>
+                <div class="procurement-dept-detail">
+                    <span class="procurement-dept-label">Average:</span>
+                    <span class="procurement-dept-value">
+                        {% if data.count > 0 %}
+                        Tsh {{ data.total|default:0|divide:data.count|floatformat:0|intcomma }}
+                        {% else %}
+                        Tsh 0
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+            {% empty %}
+            <div class="procurement-empty-state" style="grid-column: 1 / -1;">
+                <i class="fas fa-building fa-3x mb-3"></i>
+                <h3>No Department Data</h3>
+                <p>No delivered purchase orders found with department information.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Purchase Orders Table -->
+    <h2 class="procurement-section-title">
+        <i class="fas fa-clipboard-list"></i> Purchase Orders Ready for Expenses
+    </h2>
+    
+    {% if purchase_orders %}
+    <div class="procurement-table-container">
+        <table class="procurement-table">
+            <thead>
+                <tr>
+                    <th>PO Number</th>
+                    <th>Supplier</th>
+                    <th>Requested By</th>
+                    <th>Department</th>
+                    <th>Total Amount (Tsh)</th>
+                    <th>Order Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for po in purchase_orders %}
+                <tr>
+                    <td>
+                        <strong>{{ po.po_number|default:"-" }}</strong>
+                        {% if po.total_amount > 5000000 %}
+                        <br><span class="high-value-indicator">
+                            <i class="fas fa-exclamation-triangle"></i> High Value
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td>{{ po.supplier.name|truncatechars:20 }}</td>
+                    <td>{{ po.requested_by.full_name|default:"-"|truncatechars:20 }}</td>
+                    <td>{{ po.department|default:"-" }}</td>
+                    <td class="procurement-currency">Tsh {{ po.total_amount|floatformat:0|intcomma }}</td>
+                    <td>{{ po.order_date|date:"M d, Y" }}</td>
+                    <td>
+                        {% if po.has_expense %}
+                        <span class="procurement-status-badge status-processed">
+                            <i class="fas fa-check-circle"></i> Expense Created
+                        </span>
+                        {% else %}
+                        <span class="procurement-status-badge status-pending">
+                            <i class="fas fa-clock"></i> Ready for Expense
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="procurement-actions">
+                            {% if not po.has_expense %}
+                            <a href="{% url 'finance:create_expense_from_po' po.id %}" class="btn btn-success btn-pay" 
+                               data-po-number="{{ po.po_number }}"
+                               data-amount="{{ po.total_amount }}">
+                                <i class="fas fa-file-invoice-dollar"></i> Create Expense
+                            </a>
+                            {% else %}
+                            <span class="btn btn-disabled">
+                                <i class="fas fa-check-circle"></i> Already Expensed
+                            </span>
+                            {% endif %}
+                            <a href="{% url 'procurement:purchase_order_detail' po.pk %}" class="btn btn-secondary" title="View PO Details">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                
+                <!-- High value warning -->
+                {% if po.total_amount > 5000000 and not po.has_expense %}
+                <tr style="background: #fff3cd;">
+                    <td colspan="8">
+                        <div class="procurement-warning">
+                            <h4><i class="fas fa-shield-alt"></i> High Value Purchase Order</h4>
+                            <p>This PO ({{ po.po_number }}) exceeds Tsh 5,000,000. Manager approval may be required for the expense.</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Summary Footer -->
+    <div class="procurement-summary-footer">
+        <div class="procurement-footer-content">
+            <div>
+                <strong>{{ purchase_orders.count }} PO(s) ready</strong>
+            </div>
+            <div>
+                <strong>Total Value: Tsh {{ total_value|floatformat:0|default:"0"|intcomma }}</strong>
+            </div>
+            <div>
+                {% with pending_pos=purchase_orders|length %}
+                {% if pending_pos > 0 %}
+                <a href="{% url 'finance:expense_create' %}" class="btn btn-purple">
+                    <i class="fas fa-bolt"></i> Process All POs
+                </a>
+                {% endif %}
+                {% endwith %}
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="procurement-empty-state">
+        <i class="fas fa-shopping-cart fa-3x mb-3"></i>
+        <h3>No Purchase Orders Ready</h3>
+        <p>No delivered purchase orders found that need to be converted to expenses.</p>
+        <p>Purchase Orders will appear here after they are marked as "Delivered" in the Procurement module.</p>
+        <div style="margin-top: 20px;">
+            <a href="{% url 'procurement:dashboard' %}" class="btn btn-primary">
+                <i class="fas fa-shopping-cart"></i> Check Procurement Module
+            </a>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Navigation -->
+    <div class="procurement-back-links">
+        <a href="{% url 'finance:dashboard' %}" class="procurement-back-link">
+            <i class="fas fa-arrow-left"></i> Back to Finance Dashboard
+        </a>
+        <a href="{% url 'procurement:dashboard' %}" class="procurement-back-link">
+            <i class="fas fa-shopping-cart"></i> Go to Procurement Module
+        </a>
+        <a href="/" class="procurement-back-link">
+            <i class="fas fa-home"></i> Back to Main Dashboard
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-format currency
+document.addEventListener('DOMContentLoaded', function() {
+    // Format table amounts
+    document.querySelectorAll('.procurement-currency').forEach(el => {
+        const text = el.textContent;
+        const amount = text.replace(/[^\d.]/g, '');
+        if (amount) {
+            el.textContent = 'Tsh ' + parseInt(amount).toLocaleString();
+        }
+    });
+    
+    // Format department amounts
+    document.querySelectorAll('.procurement-dept-amount').forEach(el => {
+        const text = el.textContent;
+        const amount = text.replace(/[^\d.]/g, '');
+        if (amount) {
+            el.textContent = 'Tsh ' + parseInt(amount).toLocaleString();
+        }
+    });
+    
+    // Format stat values
+    document.querySelectorAll('.procurement-stat-value').forEach(el => {
+        const text = el.textContent;
+        const amount = text.replace(/[^\d.]/g, '');
+        if (amount && !text.includes('PO')) {
+            el.textContent = 'Tsh ' + parseInt(amount).toLocaleString();
+        }
+    });
+});
+
+// Confirmation for creating expense
+document.querySelectorAll('.btn-pay').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+        const poNumber = this.getAttribute('data-po-number');
+        const amount = this.getAttribute('data-amount');
+        const formattedAmount = parseInt(amount).toLocaleString();
+        
+        if (!confirm(`Create expense record for:\n\nPO: ${poNumber}\nAmount: Tsh ${formattedAmount}\n\nThis will create a new expense entry in Finance.`)) {
+            e.preventDefault();
+        }
+    });
+});
+
+// Highlight high value POs
+document.addEventListener('DOMContentLoaded', function() {
+    const highValuePOs = document.querySelectorAll('.high-value-indicator');
+    if (highValuePOs.length > 0) {
+        const warningDiv = document.getElementById('highValueWarning');
+        if (warningDiv) {
+            warningDiv.innerHTML = `
+                <h4><i class="fas fa-exclamation-triangle"></i> High Value Transactions Detected</h4>
+                <p>There are ${highValuePOs.length} Purchase Order(s) exceeding Tsh 5,000,000. These may require additional approval.</p>
+            `;
+        }
+    }
+});
+
+// Auto-refresh page every 2 minutes for new POs
+setTimeout(function() {
+    location.reload();
+}, 120000); // 2 minutes
+</script>
+{% endblock %}

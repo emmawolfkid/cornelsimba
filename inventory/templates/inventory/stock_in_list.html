@@ -1,0 +1,331 @@
+{% extends 'inventory/base.html' %}
+{% load static %}
+
+{% block title %}Stock In Records - Inventory{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'inventory/css/list.css' %}">
+<style>
+    /* Stock in list specific styles */
+    .container { 
+        max-width: 1400px; 
+        margin: 0 auto; 
+    }
+    
+    h1 { 
+        color: #2c3e50; 
+        margin-bottom: 20px; 
+        padding-bottom: 10px; 
+        border-bottom: 3px solid #27ae60; 
+    }
+    
+    /* Button colors for stock in */
+    .btn { 
+        background: #27ae60; 
+    }
+    
+    .btn:hover { 
+        background: #219653; 
+    }
+    
+    .filter-group button {
+        background: #27ae60;
+    }
+    
+    .filter-group button:hover {
+        background: #219653;
+    }
+    
+    /* Pagination button styling */
+    .pagination a {
+        padding: 8px 12px;
+        background: #6c757d;
+        color: white;
+        text-decoration: none;
+        border-radius: 4px;
+        font-size: 0.9em;
+    }
+    
+    .pagination a:hover {
+        background: #5a6268;
+    }
+    
+    .pagination .current {
+        background: #27ae60;
+        color: white;
+        padding: 8px 12px;
+        border-radius: 4px;
+        font-size: 0.9em;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="header-actions">
+    <h1>📥 Stock In Records</h1>
+    <div>
+        <a href="{% url 'inventory:stock_in_create' %}" class="btn">➕ New Stock In</a>
+        <a href="{% url 'inventory:dashboard' %}" class="btn btn-secondary">← Dashboard</a>
+    </div>
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+
+<!-- Summary Stats -->
+<div class="summary-stats">
+    <div class="summary-stat">
+        <div class="summary-stat-value">{{ stock_ins|length }}</div>
+        <div class="summary-stat-label">Total Records</div>
+    </div>
+    <div class="summary-stat">
+        <div class="summary-stat-value">
+            {% with purchase_count=0 %}
+            {% for stock_in in stock_ins %}
+                {% if stock_in.source == 'Purchase' %}
+                    {% with purchase_count=purchase_count|add:1 %}{% endwith %}
+                {% endif %}
+            {% endfor %}
+            {{ purchase_count }}
+            {% endwith %}
+        </div>
+        <div class="summary-stat-label">Purchases</div>
+    </div>
+    <div class="summary-stat">
+        <div class="summary-stat-value">
+            {% with total_qty=0 %}
+            {% for stock_in in stock_ins %}
+                {% with total_qty=total_qty|add:stock_in.quantity %}{% endwith %}
+            {% endfor %}
+            {{ total_qty|floatformat:3 }}
+            {% endwith %}
+        </div>
+        <div class="summary-stat-label">Total Quantity</div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="filters">
+    <form method="GET" class="filter-row">
+        <div class="filter-group">
+            <label for="source">Source</label>
+            <select name="source" id="source">
+                <option value="">All Sources</option>
+                {% for value, label in source_choices %}
+                <option value="{{ value }}" {% if request.GET.source == value %}selected{% endif %}>
+                    {{ label }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="filter-group">
+            <label for="date_from">From Date</label>
+            <input type="date" name="date_from" id="date_from" value="{{ request.GET.date_from }}">
+        </div>
+        
+        <div class="filter-group">
+            <label for="date_to">To Date</label>
+            <input type="date" name="date_to" id="date_to" value="{{ request.GET.date_to }}">
+        </div>
+        
+        <div class="filter-group">
+            <button type="submit">Apply Filters</button>
+            {% if request.GET.source or request.GET.date_from or request.GET.date_to %}
+            <a href="{% url 'inventory:stock_in_list' %}" style="margin-left: 10px; color: #666; font-size: 0.9em;">Clear filters</a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<!-- Table -->
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Item</th>
+                <th>Quantity</th>
+                <th>Source</th>
+                <th>Supplier</th>
+                <th>Reference</th>
+                <th>Received By</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for stock_in in stock_ins %}
+            <tr>
+                <td>
+                    <div class="item-name">{{ stock_in.date|date:"M d, Y" }}</div>
+                    <div class="item-details">{{ stock_in.date|date:"H:i" }}</div>
+                </td>
+                <td>
+                    <a href="{% url 'inventory:item_detail' stock_in.item.pk %}" style="color: #2c3e50; text-decoration: none;">
+                        <div class="item-name">{{ stock_in.item.name }}</div>
+                    </a>
+                    <div class="item-details">{{ stock_in.item.unit_of_measure }}</div>
+                </td>
+                <td>
+                    <span class="decimal">{{ stock_in.quantity|floatformat:3 }}</span>
+                </td>
+                <td>
+                    <span class="badge source-{{ stock_in.source|lower }}">
+                        {{ stock_in.get_source_display }}
+                    </span>
+                </td>
+                <td>{{ stock_in.supplier|default:"-" }}</td>
+                <td>{{ stock_in.reference|default:"-" }}</td>
+                <td>{{ stock_in.received_by|default:"-" }}</td>
+                <td>
+                    {% if stock_in.notes %}
+                    <span title="{{ stock_in.notes }}">
+                        {{ stock_in.notes|truncatechars:20 }}
+                    </span>
+                    {% else %}
+                    -
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8" class="empty-state">
+                    <p>No stock in records found.</p>
+                    {% if request.GET.source or request.GET.date_from or request.GET.date_to %}
+                    <a href="{% url 'inventory:stock_in_list' %}">Clear filters</a> or 
+                    {% endif %}
+                    <a href="{% url 'inventory:stock_in_create' %}">Record your first stock in</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Pagination -->
+{% if stock_ins.has_other_pages %}
+<div style="text-align: center; margin-top: 30px;">
+    <div style="display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap;">
+        {% if stock_ins.has_previous %}
+        <a href="?page=1{% if request.GET.source %}&source={{ request.GET.source }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}" 
+           class="btn btn-secondary" style="padding: 8px 12px;">
+            « First
+        </a>
+        <a href="?page={{ stock_ins.previous_page_number }}{% if request.GET.source %}&source={{ request.GET.source }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}" 
+           class="btn btn-secondary" style="padding: 8px 12px;">
+            ← Previous
+        </a>
+        {% endif %}
+        
+        <div style="display: flex; gap: 5px; align-items: center;">
+            {% for num in stock_ins.paginator.page_range %}
+                {% if stock_ins.number == num %}
+                <span class="btn" style="background: #27ae60; color: white; padding: 8px 12px; cursor: default;">
+                    {{ num }}
+                </span>
+                {% elif num > stock_ins.number|add:'-3' and num < stock_ins.number|add:'3' %}
+                <a href="?page={{ num }}{% if request.GET.source %}&source={{ request.GET.source }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}" 
+                   class="btn btn-secondary" style="padding: 8px 12px;">
+                    {{ num }}
+                </a>
+                {% endif %}
+            {% endfor %}
+        </div>
+        
+        {% if stock_ins.has_next %}
+        <a href="?page={{ stock_ins.next_page_number }}{% if request.GET.source %}&source={{ request.GET.source }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}" 
+           class="btn btn-secondary" style="padding: 8px 12px;">
+            Next →
+        </a>
+        <a href="?page={{ stock_ins.paginator.num_pages }}{% if request.GET.source %}&source={{ request.GET.source }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}" 
+           class="btn btn-secondary" style="padding: 8px 12px;">
+            Last »
+        </a>
+        {% endif %}
+    </div>
+    
+    <div style="margin-top: 10px; color: #666; font-size: 0.9em;">
+        Page {{ stock_ins.number }} of {{ stock_ins.paginator.num_pages }} 
+        ({{ stock_ins.paginator.count }} total records)
+    </div>
+</div>
+{% endif %}
+
+<a href="{% url 'inventory:dashboard' %}" class="back-link">← Back to Inventory Dashboard</a>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-submit filter form when source changes
+    document.getElementById('source').addEventListener('change', function() {
+        this.form.submit();
+    });
+    
+    // Set max date for date_to to today
+    document.addEventListener('DOMContentLoaded', function() {
+        const today = new Date().toISOString().split('T')[0];
+        const dateFrom = document.getElementById('date_from');
+        const dateTo = document.getElementById('date_to');
+        
+        if (dateFrom && !dateFrom.value) {
+            dateFrom.max = today;
+        }
+        
+        if (dateTo) {
+            dateTo.max = today;
+            if (dateFrom && dateFrom.value) {
+                dateTo.min = dateFrom.value;
+            }
+        }
+        
+        if (dateFrom) {
+            dateFrom.addEventListener('change', function() {
+                if (dateTo) {
+                    dateTo.min = this.value;
+                }
+            });
+        }
+        
+        // Add tooltips for truncated notes
+        const noteCells = document.querySelectorAll('td span[title]');
+        noteCells.forEach(cell => {
+            cell.addEventListener('mouseenter', function() {
+                const tooltip = document.createElement('div');
+                tooltip.className = 'tooltip';
+                tooltip.textContent = this.title;
+                tooltip.style.cssText = `
+                    position: absolute;
+                    background: #333;
+                    color: white;
+                    padding: 5px 10px;
+                    border-radius: 4px;
+                    font-size: 0.85em;
+                    z-index: 1000;
+                    max-width: 300px;
+                    word-wrap: break-word;
+                `;
+                document.body.appendChild(tooltip);
+                
+                const rect = this.getBoundingClientRect();
+                tooltip.style.left = (rect.left + window.scrollX) + 'px';
+                tooltip.style.top = (rect.bottom + window.scrollY + 5) + 'px';
+                
+                this._tooltip = tooltip;
+            });
+            
+            cell.addEventListener('mouseleave', function() {
+                if (this._tooltip) {
+                    this._tooltip.remove();
+                    this._tooltip = null;
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

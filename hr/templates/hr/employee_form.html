@@ -1,0 +1,648 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} - HR Management System</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Our HR CSS Files -->
+    <link rel="stylesheet" href="{% static 'css/hr-main.css' %}">
+    <link rel="stylesheet" href="{% static 'css/hr-components.css' %}">
+    <link rel="stylesheet" href="{% static 'css/hr-responsive.css' %}">
+    <link rel="stylesheet" href="{% static 'css/hr-notifications.css' %}">
+    
+    <style>
+        /* Form-specific styles */
+        .form-card {
+            background: var(--white);
+            border-radius: var(--border-radius-lg);
+            padding: 40px;
+            box-shadow: var(--box-shadow-lg);
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .form-header {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--gray-light);
+        }
+        
+        .form-header h1 {
+            color: var(--dark);
+            font-size: 1.8em;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .form-header .subtitle {
+            color: var(--gray);
+            margin-top: 10px;
+            font-size: 0.95em;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .form-section {
+            background: var(--gray-extra-light);
+            padding: 25px;
+            border-radius: var(--border-radius);
+            border-left: 4px solid var(--primary);
+        }
+        
+        .form-section h3 {
+            color: var(--dark);
+            margin-bottom: 20px;
+            font-size: 1.2em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .required-field label::after {
+            content: " *";
+            color: var(--danger);
+        }
+        
+        .form-footer {
+            margin-top: 40px;
+            padding-top: 25px;
+            border-top: 2px solid var(--gray-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .form-note {
+            background: linear-gradient(to right, var(--primary-light), var(--white));
+            padding: 20px;
+            border-radius: var(--border-radius);
+            margin-top: 30px;
+            border-left: 4px solid var(--primary);
+        }
+        
+        .form-note h4 {
+            color: var(--dark);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .avatar-preview {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 3em;
+            font-weight: 700;
+            margin: 0 auto 20px;
+            border: 5px solid var(--white);
+            box-shadow: var(--box-shadow);
+        }
+        
+        .avatar-initials {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Notification Container -->
+    <div id="notification-container"></div>
+    
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <i class="fas fa-building"></i>
+            <span>HR Portal</span>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-title">Main Menu</div>
+            <a href="{% url 'hr:hr_dashboard' %}" class="nav-item">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="{% url 'hr:employee_list' %}" class="nav-item">
+                <i class="fas fa-user-friends"></i>
+                <span>All Employees</span>
+            </a>
+            <a href="{% url 'hr:leave_dashboard' %}" class="nav-item">
+                <i class="fas fa-chart-bar"></i>
+                <span>Leave Dashboard</span>
+            </a>
+            <a href="{% url 'hr:leave_approval_list' %}" class="nav-item">
+                <i class="fas fa-check-circle"></i>
+                <span>Approvals</span>
+                {% if pending_count > 0 %}
+                <span class="nav-badge">{{ pending_count }}</span>
+                {% endif %}
+            </a>
+        </div>
+
+        <div class="sidebar-divider"></div>
+
+        <div class="nav-section">
+            <div class="nav-title">Management</div>
+            <a href="{% url 'hr:hr_leave_management' %}" class="nav-item">
+                <i class="fas fa-cogs"></i>
+                <span>Leave Management</span>
+            </a>
+            <a href="{% url 'hr:finance_leaves_view' %}" class="nav-item">
+                <i class="fas fa-calculator"></i>
+                <span>Payroll</span>
+            </a>
+            <a href="{% url 'hr:user_sync' %}" class="nav-item">
+                <i class="fas fa-sync-alt"></i>
+                <span>User Sync</span>
+            </a>
+        </div>
+
+        <div class="sidebar-divider"></div>
+
+        <div class="nav-section sidebar-actions">
+            <div class="nav-title">Quick Actions</div>
+            <a href="{% url 'hr:employee_create' %}" class="sidebar-btn success active">
+                <i class="fas fa-user-plus"></i>
+                Add Employee
+            </a>
+            <a href="{% url 'hr:leave_request_create' %}" class="sidebar-btn">
+                <i class="fas fa-calendar-plus"></i>
+                Request Leave
+            </a>
+            <a href="{% url 'hr:hr_leave_add' %}" class="sidebar-btn danger">
+                <i class="fas fa-user-times"></i>
+                Add Absence
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <div class="header">
+            <h1>
+                <i class="fas fa-user-edit"></i>
+                {{ title }}
+            </h1>
+            <div class="header-right">
+                <div class="user-info">
+                    <div class="user-avatar">
+                        {% if user.get_full_name %}
+                            {{ user.get_full_name|first|upper }}
+                        {% else %}
+                            {{ user.username|first|upper }}
+                        {% endif %}
+                    </div>
+                    <div>
+                        <div style="color: var(--dark); font-weight: 600;">
+                            {% if user.get_full_name %}
+                                {{ user.get_full_name }}
+                            {% else %}
+                                {{ user.username }}
+                            {% endif %}
+                        </div>
+                        <small style="color: var(--gray); font-size: 0.85em;">
+                            {{ user.groups.first|default:"HR User" }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Django Messages -->
+        {% if messages %}
+        <div class="django-messages">
+            {% for message in messages %}
+            <div class="message-alert {{ message.tags }}">
+                <div>
+                    <i class="fas fa-info-circle me-2"></i>
+                    {{ message }}
+                </div>
+                <button class="close-alert">&times;</button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Breadcrumb -->
+        <div class="breadcrumb" style="margin-bottom: 20px;">
+            <a href="{% url 'hr:hr_dashboard' %}" class="action-link">
+                <i class="fas fa-home"></i> Dashboard
+            </a>
+            <i class="fas fa-chevron-right" style="color: var(--gray); margin: 0 10px;"></i>
+            <a href="{% url 'hr:employee_list' %}" class="action-link">
+                Employees
+            </a>
+            <i class="fas fa-chevron-right" style="color: var(--gray); margin: 0 10px;"></i>
+            <span style="color: var(--dark);">{{ title }}</span>
+        </div>
+
+        <!-- Main Form -->
+        <div class="form-card fade-in">
+            <div class="form-header">
+                <h1>
+                    {% if employee %}
+                    <i class="fas fa-user-edit" style="color: var(--warning);"></i>
+                    Edit Employee: {{ employee.full_name }}
+                    {% else %}
+                    <i class="fas fa-user-plus" style="color: var(--success);"></i>
+                    Add New Employee
+                    {% endif %}
+                </h1>
+                <p class="subtitle">
+                    {% if employee %}
+                    Update employee information. Changes will be logged in the audit trail.
+                    {% else %}
+                    Create a new employee record. Fill in all required fields marked with *.
+                    {% endif %}
+                </p>
+            </div>
+
+            <form method="POST" id="employeeForm">
+                {% csrf_token %}
+                
+                <!-- Avatar Preview -->
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <div class="avatar-preview" id="avatarPreview">
+                        {% if employee %}
+                            {{ employee.full_name|first|upper }}
+                        {% else %}
+                            <i class="fas fa-user"></i>
+                        {% endif %}
+                    </div>
+                    <div class="avatar-initials" id="avatarInitials"></div>
+                </div>
+
+                <div class="form-grid">
+                    <!-- Basic Information -->
+                    <div class="form-section">
+                        <h3>
+                            <i class="fas fa-id-card"></i>
+                            Basic Information
+                        </h3>
+                        
+                        <!-- Employee ID (Readonly if editing) -->
+                        <div class="form-group">
+                            <label for="id_employee_id" class="form-label">
+                                <i class="fas fa-hashtag"></i> Employee ID
+                            </label>
+                            {% if employee %}
+                            <input type="text" 
+                                   class="form-control" 
+                                   value="{{ employee.employee_id }}" 
+                                   readonly
+                                   style="background: var(--gray-extra-light);">
+                            <small class="form-text">Employee ID cannot be changed</small>
+                            {% else %}
+                            <input type="text" 
+                                   class="form-control" 
+                                   value="Auto-generated" 
+                                   readonly
+                                   style="background: var(--gray-extra-light);">
+                            <small class="form-text">Employee ID will be auto-generated when saved</small>
+                            {% endif %}
+                        </div>
+
+                        <!-- Full Name -->
+                        <div class="form-group required-field">
+                            {{ form.full_name.label_tag }}
+                            {{ form.full_name }}
+                            {% if form.full_name.errors %}
+                            <div class="error-message text-danger mt-1">
+                                {% for error in form.full_name.errors %}
+                                <i class="fas fa-exclamation-circle"></i> {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- User Linking (if creating from user) -->
+                        {% if user_to_link %}
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-link"></i> Link to User Account
+                            </label>
+                            <div style="background: var(--gray-extra-light); padding: 15px; border-radius: var(--border-radius-sm);">
+                                <strong>{{ user_to_link.username }}</strong>
+                                <div class="text-muted">{{ user_to_link.email|default:"No email" }}</div>
+                            </div>
+                            <input type="hidden" name="user_id" value="{{ user_to_link.id }}">
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Employment Details -->
+                    <div class="form-section">
+                        <h3>
+                            <i class="fas fa-briefcase"></i>
+                            Employment Details
+                        </h3>
+
+                        <!-- Department -->
+                        <div class="form-group required-field">
+                            {{ form.department.label_tag }}
+                            {{ form.department }}
+                            {% if form.department.errors %}
+                            <div class="error-message text-danger mt-1">
+                                {% for error in form.department.errors %}
+                                <i class="fas fa-exclamation-circle"></i> {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Position -->
+                        <div class="form-group required-field">
+                            {{ form.position.label_tag }}
+                            {{ form.position }}
+                            {% if form.position.errors %}
+                            <div class="error-message text-danger mt-1">
+                                {% for error in form.position.errors %}
+                                <i class="fas fa-exclamation-circle"></i> {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Date Joined -->
+                        <div class="form-group">
+                            {{ form.date_joined.label_tag }}
+                            {{ form.date_joined }}
+                            <small class="form-text">Format: YYYY-MM-DD</small>
+                            {% if form.date_joined.errors %}
+                            <div class="error-message text-danger mt-1">
+                                {% for error in form.date_joined.errors %}
+                                <i class="fas fa-exclamation-circle"></i> {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Status -->
+                        <div class="form-group">
+                            <div class="checkbox-group">
+                                {{ form.is_active }}
+                                <label for="id_is_active" class="form-label" style="margin-bottom: 0;">
+                                    <i class="fas fa-check-circle"></i> Active Employee
+                                </label>
+                            </div>
+                            <small class="form-text">Uncheck to deactivate employee</small>
+                        </div>
+                    </div>
+
+                    <!-- Contact Information -->
+                    <div class="form-section">
+                        <h3>
+                            <i class="fas fa-address-book"></i>
+                            Contact Information
+                        </h3>
+
+                        <!-- Phone -->
+                        <div class="form-group">
+                            {{ form.phone.label_tag }}
+                            {{ form.phone }}
+                            {% if form.phone.errors %}
+                            <div class="error-message text-danger mt-1">
+                                {% for error in form.phone.errors %}
+                                <i class="fas fa-exclamation-circle"></i> {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Email -->
+                        {% if form.email %}
+                        <div class="form-group">
+                            {{ form.email.label_tag }}
+                            {{ form.email }}
+                            <small class="form-text">Work email address</small>
+                            {% if form.email.errors %}
+                            <div class="error-message text-danger mt-1">
+                                {% for error in form.email.errors %}
+                                <i class="fas fa-exclamation-circle"></i> {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                        <!-- Address -->
+                        <div class="form-group">
+                            {{ form.address.label_tag }}
+                            {{ form.address }}
+                            <small class="form-text">Full residential address</small>
+                            {% if form.address.errors %}
+                            <div class="error-message text-danger mt-1">
+                                {% for error in form.address.errors %}
+                                <i class="fas fa-exclamation-circle"></i> {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Additional Fields (if any) -->
+                {% for field in form %}
+                    {% if field.name not in 'full_name,department,position,date_joined,is_active,phone,email,address,employee_id' %}
+                    <div class="form-group">
+                        {{ field.label_tag }}
+                        {{ field }}
+                        {% if field.help_text %}
+                        <small class="form-text">{{ field.help_text }}</small>
+                        {% endif %}
+                        {% if field.errors %}
+                        <div class="error-message text-danger mt-1">
+                            {% for error in field.errors %}
+                            <i class="fas fa-exclamation-circle"></i> {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                {% endfor %}
+
+                <!-- Form Note -->
+                <div class="form-note">
+                    <h4>
+                        <i class="fas fa-info-circle"></i>
+                        Important Notes
+                    </h4>
+                    <p class="text-muted">
+                        <i class="fas fa-circle me-1" style="font-size: 0.5em; vertical-align: middle;"></i>
+                        Fields marked with <span class="text-danger">*</span> are required.
+                    </p>
+                    <p class="text-muted">
+                        <i class="fas fa-circle me-1" style="font-size: 0.5em; vertical-align: middle;"></i>
+                        All changes are logged in the audit trail for compliance.
+                    </p>
+                    {% if employee %}
+                    <p class="text-muted">
+                        <i class="fas fa-circle me-1" style="font-size: 0.5em; vertical-align: middle;"></i>
+                        Last updated: {{ employee.updated_at|default:"Never" }}
+                    </p>
+                    {% endif %}
+                </div>
+
+                <!-- Form Actions -->
+                <div class="form-footer">
+                    <div class="action-buttons">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save"></i> 
+                            {% if employee %}Update Employee{% else %}Create Employee{% endif %}
+                        </button>
+                        <a href="{% url 'hr:employee_list' %}" class="btn btn-outline">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                    
+                    {% if employee %}
+                    <div class="action-buttons">
+                        <a href="{% url 'hr:employee_detail' employee.id %}" class="btn">
+                            <i class="fas fa-eye"></i> View Details
+                        </a>
+                        {% if not employee.user %}
+                        <a href="#" class="btn btn-info" onclick="linkToUser()">
+                            <i class="fas fa-link"></i> Link to User
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{% static 'js/hr-main.js' %}"></script>
+    
+    <script>
+        // Update avatar preview when name changes
+        $('#id_full_name').on('input', function() {
+            var fullName = $(this).val().trim();
+            if (fullName) {
+                var initials = fullName.split(' ')
+                    .map(name => name.charAt(0).toUpperCase())
+                    .join('');
+                
+                $('#avatarPreview').html(initials || '<i class="fas fa-user"></i>');
+                $('#avatarInitials').text(initials);
+            } else {
+                $('#avatarPreview').html('<i class="fas fa-user"></i>');
+                $('#avatarInitials').text('');
+            }
+        });
+        
+        // Form validation
+        $('#employeeForm').on('submit', function(e) {
+            var isValid = true;
+            var requiredFields = ['id_full_name', 'id_department', 'id_position'];
+            
+            requiredFields.forEach(function(fieldId) {
+                var field = $('#' + fieldId);
+                if (!field.val().trim()) {
+                    isValid = false;
+                    field.addClass('error');
+                    if (!field.next('.error-message').length) {
+                        field.after('<div class="error-message text-danger mt-1"><i class="fas fa-exclamation-circle"></i> This field is required</div>');
+                    }
+                } else {
+                    field.removeClass('error');
+                    field.next('.error-message').remove();
+                }
+            });
+            
+            if (!isValid) {
+                e.preventDefault();
+                HRSystem.showNotification('Please fill in all required fields', 'error');
+                $('html, body').animate({
+                    scrollTop: $('.error').first().offset().top - 100
+                }, 500);
+            }
+        });
+        
+        // Clear errors on input
+        $('.form-control').on('input', function() {
+            $(this).removeClass('error');
+            $(this).next('.error-message').remove();
+        });
+        
+        // Date picker enhancement
+        $('#id_date_joined').attr('type', 'date');
+        
+        // Link to user function
+        function linkToUser() {
+            HRSystem.confirmAction('Link this employee to an existing user account?').then(function(confirmed) {
+                if (confirmed) {
+                    window.location.href = '{% url "hr:user_sync" %}';
+                }
+            });
+        }
+        
+        // Initialize form with existing data
+        $(document).ready(function() {
+            // Trigger avatar update if editing
+            if ($('#id_full_name').val()) {
+                $('#id_full_name').trigger('input');
+            }
+            
+            // Add icons to form fields
+            $('.form-control').each(function() {
+                var fieldId = $(this).attr('id');
+                if (fieldId) {
+                    var icon = '';
+                    switch(fieldId) {
+                        case 'id_full_name':
+                            icon = '<i class="fas fa-user"></i>';
+                            break;
+                        case 'id_department':
+                            icon = '<i class="fas fa-building"></i>';
+                            break;
+                        case 'id_position':
+                            icon = '<i class="fas fa-briefcase"></i>';
+                            break;
+                        case 'id_phone':
+                            icon = '<i class="fas fa-phone"></i>';
+                            break;
+                        case 'id_email':
+                            icon = '<i class="fas fa-envelope"></i>';
+                            break;
+                        case 'id_address':
+                            icon = '<i class="fas fa-map-marker-alt"></i>';
+                            break;
+                        case 'id_date_joined':
+                            icon = '<i class="fas fa-calendar-alt"></i>';
+                            break;
+                    }
+                    
+                    if (icon) {
+                        $(this).before('<div class="input-icon" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--gray);">' + icon + '</div>');
+                        $(this).css('padding-left', '45px');
+                        $(this).parent().css('position', 'relative');
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

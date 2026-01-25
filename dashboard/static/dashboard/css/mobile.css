@@ -1,0 +1,78 @@
+/* cornelsimba/static/css/mobile.css */
+/* Mobile Navigation */
+.mobile-nav-toggle {
+    display: none;
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 1.2em;
+    cursor: pointer;
+    margin-bottom: 15px;
+    width: 100%;
+}
+
+.sidebar {
+    display: none;
+}
+
+.sidebar.active {
+    display: block;
+}
+
+@media (max-width: 768px) {
+    .mobile-nav-toggle {
+        display: block;
+    }
+    
+    .header {
+        flex-direction: column;
+        text-align: center;
+        gap: 20px;
+    }
+    
+    .company-brand {
+        flex-direction: column;
+    }
+    
+    .user-info {
+        text-align: center;
+    }
+    
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .quick-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .sidebar-modules {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .quick-stats {
+        grid-template-columns: 1fr;
+    }
+    
+    .sidebar-modules {
+        grid-template-columns: 1fr;
+    }
+    
+    .view-controls {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .view-controls select {
+        width: 100%;
+    }
+    
+    .notification-center {
+        width: 90vw;
+        right: 5vw;
+    }
+}

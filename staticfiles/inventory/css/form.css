@@ -1,0 +1,356 @@
+/* forms.css - Form specific styles for all forms */
+
+/* Card Styles */
+.card { 
+    background: white; 
+    border-radius: 8px; 
+    box-shadow: 0 2px 20px rgba(0,0,0,0.1); 
+    overflow: hidden; 
+    margin-bottom: 30px;
+}
+
+.card-header { 
+    background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); 
+    color: white; 
+    padding: 20px; 
+}
+
+.card-body { 
+    padding: 30px; 
+}
+
+/* Form Styles */
+.form-label { 
+    display: block; 
+    margin-bottom: 8px; 
+    font-weight: 600; 
+    color: #2c3e50; 
+}
+
+.required::after {
+    content: " *";
+    color: #e74c3c;
+}
+
+.form-control, .form-select, textarea.form-control { 
+    width: 100%; 
+    padding: 12px; 
+    border: 1px solid #ddd; 
+    border-radius: 4px; 
+    font-size: 1em; 
+    margin-bottom: 20px; 
+    box-sizing: border-box;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.form-control:focus, .form-select:focus, textarea.form-control:focus { 
+    outline: none; 
+    border-color: #f39c12; 
+    box-shadow: 0 0 0 3px rgba(243, 156, 18, 0.1);
+}
+
+textarea.form-control { 
+    min-height: 100px; 
+    resize: vertical; 
+}
+
+.form-text { 
+    font-size: 0.85em; 
+    color: #666; 
+    margin-top: -15px; 
+    margin-bottom: 15px; 
+    display: block;
+}
+
+/* Input Group */
+.input-group { 
+    display: flex; 
+}
+
+.input-group .form-control { 
+    flex: 1; 
+    border-radius: 4px 0 0 4px; 
+    border-right: none;
+}
+
+.input-group-text { 
+    background: #f8f9fa; 
+    border: 1px solid #ddd; 
+    border-left: none; 
+    padding: 12px 15px; 
+    border-radius: 0 4px 4px 0;
+    color: #666;
+    font-weight: 500;
+    min-width: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Error Messages */
+.error-message { 
+    color: #e74c3c; 
+    font-size: 0.9em; 
+    margin-top: -15px; 
+    margin-bottom: 15px; 
+    display: block;
+}
+
+.form-control.error, .form-select.error {
+    border-color: #e74c3c;
+    background-color: #fff8f8;
+}
+
+/* Form Footer */
+.form-footer { 
+    display: flex; 
+    justify-content: space-between; 
+    margin-top: 30px; 
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* Buttons for Forms */
+.btn { 
+    padding: 12px 24px; 
+    background: #f39c12; 
+    color: white; 
+    text-decoration: none; 
+    border-radius: 6px; 
+    font-weight: 500; 
+    display: inline-block; 
+    border: none; 
+    cursor: pointer; 
+    font-size: 1em;
+    transition: background 0.3s;
+}
+
+.btn:hover { 
+    background: #e67e22; 
+}
+
+.btn-warning { 
+    background: #f39c12; 
+}
+
+.btn-warning:hover { 
+    background: #e67e22; 
+}
+
+.btn-secondary { 
+    background: #6c757d; 
+}
+
+.btn-secondary:hover { 
+    background: #5a6268; 
+}
+
+/* Back link */
+.back-link { 
+    display: inline-block; 
+    margin-top: 20px; 
+    color: #3498db; 
+    text-decoration: none; 
+    font-weight: 500;
+}
+
+.back-link:hover { 
+    text-decoration: underline; 
+}
+
+/* Item info box */
+.item-info {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 6px;
+    margin-top: 10px;
+    border-left: 4px solid #f39c12;
+    margin-bottom: 20px;
+}
+
+.item-info p {
+    margin: 5px 0;
+    font-size: 0.9em;
+}
+
+.stock-value {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+/* Loading indicator */
+.loading { 
+    display: none; 
+    text-align: center; 
+    color: #666; 
+    padding: 10px;
+}
+
+/* Example section */
+.example-section {
+    background: #f8f9fa;
+    border-radius: 6px;
+    padding: 15px;
+    margin-top: 10px;
+    margin-bottom: 20px;
+    border-left: 4px solid #27ae60;
+}
+
+.example-section h4 {
+    margin-top: 0;
+    color: #2c3e50;
+}
+
+/* Alert Messages */
+.alert { 
+    padding: 15px; 
+    border-radius: 8px; 
+    margin-bottom: 25px;
+    border-left: 4px solid #17a2b8;
+}
+
+.alert-info { 
+    background: #d1ecf1; 
+    color: #0c5460; 
+}
+
+.alert-warning {
+    background: #fff3cd;
+    color: #856404;
+    border-left-color: #ffc107;
+}
+
+.alert-success {
+    background: #d4edda;
+    color: #155724;
+    border-left-color: #28a745;
+}
+
+.alert-danger {
+    background: #f8d7da;
+    color: #721c24;
+    border-left-color: #dc3545;
+}
+
+/* Details Table for forms */
+.details-table { 
+    width: 100%; 
+    border-collapse: collapse; 
+}
+
+.details-table th { 
+    text-align: left; 
+    padding: 12px 15px; 
+    background: #f8f9fa; 
+    border-bottom: 1px solid #eee; 
+    width: 30%; 
+    font-weight: 500; 
+}
+
+.details-table td { 
+    padding: 12px 15px; 
+    border-bottom: 1px solid #eee; 
+}
+
+/* Row and Column Layout */
+.row { 
+    display: flex; 
+    gap: 20px; 
+    margin-bottom: 20px; 
+    flex-wrap: wrap;
+}
+
+.col { 
+    flex: 1; 
+    min-width: 250px;
+}
+
+.col-2 { 
+    flex: 2; 
+}
+
+/* Text styling */
+.text-muted { 
+    color: #666; 
+}
+
+/* Action buttons */
+.action-buttons { 
+    display: flex; 
+    gap: 10px; 
+    margin-top: 10px; 
+    flex-wrap: wrap;
+}
+
+/* Mobile Responsive for Forms */
+@media (max-width: 768px) {
+    .card-body {
+        padding: 20px;
+    }
+    
+    .row {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .col, .col-2 {
+        width: 100%;
+    }
+    
+    .form-footer {
+        flex-direction: column;
+    }
+    
+    .form-footer .btn {
+        width: 100%;
+        text-align: center;
+    }
+    
+    .details-table th,
+    .details-table td {
+        display: block;
+        width: 100%;
+        padding: 8px 0;
+        border-bottom: none;
+    }
+    
+    .details-table th {
+        background: none;
+        font-weight: 600;
+        padding-top: 15px;
+        border-top: 1px solid #eee;
+    }
+    
+    .details-table tr:first-child th {
+        border-top: none;
+    }
+}
+
+/* Badge Styling */
+.badge { 
+    padding: 4px 8px; 
+    border-radius: 4px; 
+    font-size: 0.85em; 
+    font-weight: 500; 
+    display: inline-block;
+}
+
+.bg-warning { 
+    background: #ffc107; 
+    color: #000; 
+}
+
+.bg-success { 
+    background: #28a745; 
+    color: white; 
+}
+
+.bg-danger { 
+    background: #dc3545; 
+    color: white; 
+}
+
+.bg-info { 
+    background: #17a2b8; 
+    color: white; 
+}

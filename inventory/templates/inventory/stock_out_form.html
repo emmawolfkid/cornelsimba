@@ -1,0 +1,447 @@
+{% extends 'inventory/base.html' %}
+{% load static %}
+
+{% block title %}Stock Out - Inventory{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'inventory/css/forms.css' %}">
+<style>
+    /* Stock out form specific styles */
+    .container { 
+        max-width: 800px; 
+        margin: 0 auto; 
+    }
+    
+    h1 { 
+        color: #2c3e50; 
+        margin-bottom: 30px; 
+        padding-bottom: 10px; 
+        border-bottom: 3px solid #e74c3c; 
+    }
+    
+    /* Form card */
+    .form-card { 
+        background: white; 
+        padding: 30px; 
+        border-radius: 8px; 
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05); 
+        margin-bottom: 30px;
+    }
+    
+    /* Help text */
+    .help-text { 
+        font-size: 0.9em; 
+        color: #666; 
+        margin-top: 5px; 
+        display: block;
+    }
+    
+    /* Form row */
+    .form-row { 
+        display: flex; 
+        gap: 15px; 
+    }
+    
+    .form-row .form-group { 
+        flex: 1; 
+    }
+    
+    /* Required field */
+    .required::after {
+        content: " *";
+        color: #e74c3c;
+    }
+    
+    /* Errors */
+    .error { 
+        color: #e74c3c; 
+        font-size: 0.9em; 
+        margin-top: 5px; 
+    }
+    
+    .errorlist { 
+        list-style: none; 
+        padding: 0; 
+        margin: 5px 0; 
+        color: #e74c3c; 
+        font-size: 0.9em;
+    }
+    
+    /* Actions */
+    .actions { 
+        display: flex; 
+        gap: 10px; 
+        margin-top: 30px; 
+    }
+    
+    /* Back link */
+    .back-link { 
+        display: inline-block; 
+        margin-top: 20px; 
+        color: #3498db; 
+        text-decoration: none; 
+        font-weight: 500;
+    }
+    
+    .back-link:hover { 
+        text-decoration: underline; 
+    }
+    
+    /* Item info box */
+    .item-info {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 6px;
+        margin-top: 10px;
+        border-left: 4px solid #e74c3c;
+    }
+    
+    .item-info p {
+        margin: 5px 0;
+        font-size: 0.9em;
+    }
+    
+    .stock-warning {
+        color: #e74c3c;
+        font-weight: 600;
+    }
+    
+    .stock-ok {
+        color: #27ae60;
+        font-weight: 600;
+    }
+    
+    /* Alert messages */
+    .alert { 
+        padding: 15px; 
+        border-radius: 8px; 
+        margin-bottom: 20px;
+        border-left: 4px solid #f39c12;
+    }
+    
+    .alert-success { 
+        background: #d4edda; 
+        color: #155724; 
+        border-left-color: #28a745;
+    }
+    
+    .alert-danger { 
+        background: #f8d7da; 
+        color: #721c24; 
+        border-left-color: #dc3545;
+    }
+    
+    .alert-warning { 
+        background: #fff3cd; 
+        color: #856404; 
+        border-left-color: #ffc107;
+    }
+    
+    /* Form validation indicators */
+    .valid { 
+        border-color: #27ae60 !important; 
+    }
+    
+    .invalid { 
+        border-color: #e74c3c !important; 
+    }
+    
+    /* Mobile responsive */
+    @media (max-width: 768px) {
+        .form-row {
+            flex-direction: column;
+            gap: 0;
+        }
+        
+        .actions {
+            flex-direction: column;
+        }
+        
+        .actions .btn {
+            width: 100%;
+            text-align: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1>📤 Stock Out Entry</h1>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+
+<div class="form-card">
+    <form method="POST" id="stockOutForm">
+        {% csrf_token %}
+        
+        <!-- Item Selection -->
+        <div class="form-group">
+            <label for="id_item" class="required">Item</label>
+            {{ form.item }}
+            <div class="help-text">Select the item being issued (only items with stock available)</div>
+            {% if form.item.errors %}
+            <div class="error">{{ form.item.errors }}</div>
+            {% endif %}
+            
+            <!-- Item info will be displayed here -->
+            <div id="itemInfo" class="item-info" style="display: none;">
+                <p><strong>Current Stock:</strong> <span id="currentStock">0</span> <span id="stockUnit">units</span></p>
+                <p><strong>Unit of Measure:</strong> <span id="itemUnit">-</span></p>
+                <p><strong>Available:</strong> <span id="itemStatus">-</span></p>
+            </div>
+        </div>
+        
+        <!-- Quantity -->
+        <div class="form-group">
+            <label for="id_quantity" class="required">Quantity</label>
+            {{ form.quantity }}
+            <div class="help-text">Enter the quantity to issue (e.g., 5.250 for 5.25kg)</div>
+            {% if form.quantity.errors %}
+            <div class="error">{{ form.quantity.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <!-- Purpose and Issued To -->
+        <div class="form-row">
+            <div class="form-group">
+                <label for="id_purpose" class="required">Purpose</label>
+                {{ form.purpose }}
+                {% if form.purpose.errors %}
+                <div class="error">{{ form.purpose.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="id_issued_to">Issued To</label>
+                {{ form.issued_to }}
+                <div class="help-text">Person or department receiving the item</div>
+                {% if form.issued_to.errors %}
+                <div class="error">{{ form.issued_to.errors }}</div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Reference -->
+        <div class="form-group">
+            <label for="id_reference">Reference</label>
+            {{ form.reference }}
+            <div class="help-text">Sales Order, Requisition Number, etc. (For SALE purpose, enter Sales ID)</div>
+            {% if form.reference.errors %}
+            <div class="error">{{ form.reference.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <!-- Notes -->
+        <div class="form-group">
+            <label for="id_notes">Notes</label>
+            {{ form.notes }}
+            <div class="help-text">Additional information about this stock out</div>
+            {% if form.notes.errors %}
+            <div class="error">{{ form.notes.errors }}</div>
+            {% endif %}
+        </div>
+        
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+            {{ form.non_field_errors }}
+        </div>
+        {% endif %}
+        
+        <!-- Hidden field for item ID from URL -->
+        {% if request.GET.item %}
+        <input type="hidden" name="initial_item" value="{{ request.GET.item }}">
+        {% endif %}
+        
+        <div class="actions">
+            <button type="submit" class="btn btn-danger" id="submitBtn">
+                <span id="submitText">Record Stock Out</span>
+                <span id="loadingText" style="display: none;">Processing...</span>
+            </button>
+            <a href="{% url 'inventory:stock_out_list' %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<a href="{% url 'inventory:dashboard' %}" class="back-link">← Back to Inventory Dashboard</a>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Form elements
+    const itemSelect = document.getElementById('id_item');
+    const quantityInput = document.getElementById('id_quantity');
+    const purposeSelect = document.getElementById('id_purpose');
+    const issuedToInput = document.getElementById('id_issued_to');
+    const referenceInput = document.getElementById('id_reference');
+    const itemInfo = document.getElementById('itemInfo');
+    
+    // Auto-focus on quantity field
+    if (quantityInput) {
+        quantityInput.focus();
+        quantityInput.step = '0.001';
+        quantityInput.min = '0.001';
+    }
+    
+    // Fetch item details when item is selected
+    if (itemSelect) {
+        itemSelect.addEventListener('change', function() {
+            const itemId = this.value;
+            if (itemId) {
+                fetch(`/inventory/api/item/${itemId}/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            const currentStock = parseFloat(data.quantity);
+                            document.getElementById('currentStock').textContent = currentStock.toFixed(3);
+                            document.getElementById('stockUnit').textContent = data.unit_of_measure;
+                            document.getElementById('itemUnit').textContent = data.unit_of_measure;
+                            
+                            // Update quantity max value
+                            if (quantityInput) {
+                                quantityInput.max = currentStock;
+                            }
+                            
+                            // Determine stock status
+                            let statusText = '';
+                            let statusClass = '';
+                            
+                            if (currentStock <= 0) {
+                                statusText = 'Out of Stock';
+                                statusClass = 'stock-warning';
+                            } else if (currentStock <= data.minimum_stock) {
+                                statusText = 'Critical Stock';
+                                statusClass = 'stock-warning';
+                            } else if (currentStock <= data.reorder_level) {
+                                statusText = 'Low Stock';
+                                statusClass = 'stock-warning';
+                            } else {
+                                statusText = 'In Stock';
+                                statusClass = 'stock-ok';
+                            }
+                            
+                            document.getElementById('itemStatus').textContent = statusText;
+                            document.getElementById('itemStatus').className = statusClass;
+                            itemInfo.style.display = 'block';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching item details:', error);
+                    });
+            } else {
+                itemInfo.style.display = 'none';
+            }
+        });
+        
+        // Trigger change event if item is pre-selected from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const initialItem = urlParams.get('item');
+        if (initialItem && itemSelect.querySelector(`option[value="${initialItem}"]`)) {
+            itemSelect.value = initialItem;
+            itemSelect.dispatchEvent(new Event('change'));
+        }
+    }
+    
+    // Validate quantity against available stock
+    if (quantityInput) {
+        quantityInput.addEventListener('input', function() {
+            const requestedQty = parseFloat(this.value) || 0;
+            const currentStock = parseFloat(document.getElementById('currentStock')?.textContent || 0);
+            
+            if (requestedQty > currentStock) {
+                this.classList.add('invalid');
+                this.classList.remove('valid');
+                this.setCustomValidity(`Cannot issue ${requestedQty}. Only ${currentStock.toFixed(3)} available.`);
+            } else if (requestedQty <= 0) {
+                this.classList.add('invalid');
+                this.classList.remove('valid');
+                this.setCustomValidity('Quantity must be greater than 0');
+            } else {
+                this.classList.add('valid');
+                this.classList.remove('invalid');
+                this.setCustomValidity('');
+            }
+        });
+    }
+    
+    // Auto-validate issued_to for SALE purpose
+    if (purposeSelect && issuedToInput) {
+        purposeSelect.addEventListener('change', function() {
+            if (this.value === 'SALE') {
+                issuedToInput.placeholder = 'Customer Name (Required for Sales)';
+                issuedToInput.required = true;
+            } else {
+                issuedToInput.placeholder = 'Person/Department (Optional)';
+                issuedToInput.required = false;
+            }
+        });
+        
+        // Initial check
+        purposeSelect.dispatchEvent(new Event('change'));
+    }
+    
+    // Form submission
+    const form = document.getElementById('stockOutForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            // Validate quantity
+            if (quantityInput) {
+                const requestedQty = parseFloat(quantityInput.value) || 0;
+                const currentStock = parseFloat(document.getElementById('currentStock')?.textContent || 0);
+                
+                if (requestedQty > currentStock) {
+                    e.preventDefault();
+                    alert(`Cannot issue ${requestedQty} units. Only ${currentStock.toFixed(3)} units available.`);
+                    quantityInput.focus();
+                    return false;
+                }
+                
+                if (requestedQty <= 0) {
+                    e.preventDefault();
+                    alert('Please enter a valid quantity greater than 0.');
+                    quantityInput.focus();
+                    return false;
+                }
+            }
+            
+            // Validate issued_to for SALE purpose
+            if (purposeSelect && purposeSelect.value === 'SALE' && !issuedToInput.value.trim()) {
+                e.preventDefault();
+                alert('Customer name is required for Sales stock out.');
+                issuedToInput.focus();
+                return false;
+            }
+            
+            // Show loading state
+            const submitBtn = document.getElementById('submitBtn');
+            const submitText = document.getElementById('submitText');
+            const loadingText = document.getElementById('loadingText');
+            
+            if (submitBtn) {
+                submitText.style.display = 'none';
+                loadingText.style.display = 'inline';
+                submitBtn.disabled = true;
+            }
+            
+            return true;
+        });
+    }
+    
+    // Add error styling to form fields with errors
+    document.addEventListener('DOMContentLoaded', function() {
+        const formFields = form?.querySelectorAll('input, select, textarea');
+        if (formFields) {
+            formFields.forEach(field => {
+                if (field.parentElement.querySelector('.error')) {
+                    field.classList.add('error');
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

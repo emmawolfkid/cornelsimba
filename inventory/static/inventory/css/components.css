@@ -1,0 +1,243 @@
+/* components.css - Reusable components */
+
+/* Buttons */
+.btn { 
+    padding: 10px 20px; 
+    background: #3498db; 
+    color: white; 
+    text-decoration: none; 
+    border-radius: 6px; 
+    font-weight: 500; 
+    display: inline-block; 
+    cursor: pointer; 
+    border: none;
+    font-size: 0.95em;
+    transition: background 0.3s;
+}
+
+.btn:hover { 
+    background: #2980b9; 
+    text-decoration: none;
+}
+
+.btn-success { 
+    background: #27ae60; 
+}
+
+.btn-success:hover { 
+    background: #219653; 
+}
+
+.btn-warning { 
+    background: #f39c12; 
+}
+
+.btn-warning:hover { 
+    background: #e67e22; 
+}
+
+.btn-danger { 
+    background: #e74c3c; 
+}
+
+.btn-danger:hover { 
+    background: #c0392b; 
+}
+
+.btn-info { 
+    background: #17a2b8; 
+}
+
+.btn-info:hover { 
+    background: #138496; 
+}
+
+.btn-secondary { 
+    background: #6c757d; 
+}
+
+.btn-secondary:hover { 
+    background: #5a6268; 
+}
+
+.btn-sm { 
+    padding: 8px 15px; 
+    font-size: 0.9em; 
+}
+
+/* Message alerts */
+.alert-success { 
+    background: #d4edda; 
+    color: #155724; 
+    padding: 15px; 
+    border-radius: 8px; 
+    margin-bottom: 20px; 
+    border-left: 4px solid #28a745;
+}
+
+.alert-danger { 
+    background: #f8d7da; 
+    color: #721c24; 
+    padding: 15px; 
+    border-radius: 8px; 
+    margin-bottom: 20px; 
+    border-left: 4px solid #dc3545;
+}
+
+.alert-warning { 
+    background: #fff3cd; 
+    color: #856404; 
+    padding: 15px; 
+    border-radius: 8px; 
+    margin-bottom: 20px; 
+    border-left: 4px solid #ffc107;
+}
+
+/* Status badges */
+.status-badge { 
+    padding: 4px 10px; 
+    border-radius: 4px; 
+    font-size: 0.85em; 
+    font-weight: 500; 
+    display: inline-block;
+}
+
+.status-good { 
+    background: #d4edda; 
+    color: #155724; 
+}
+
+.status-low { 
+    background: #fff3cd; 
+    color: #856404; 
+}
+
+.status-critical { 
+    background: #f8d7da; 
+    color: #721c24; 
+}
+
+.status-inactive { 
+    background: #f8f9fa; 
+    color: #6c757d; 
+}
+
+/* Badge */
+.badge { 
+    padding: 4px 8px; 
+    border-radius: 4px; 
+    font-size: 0.8em; 
+    font-weight: 500; 
+}
+
+.bg-warning { 
+    background: #ffc107; 
+    color: #000; 
+}
+
+.bg-success { 
+    background: #28a745; 
+    color: white; 
+}
+
+.bg-danger { 
+    background: #dc3545; 
+    color: white; 
+}
+
+.bg-info { 
+    background: #17a2b8; 
+    color: white; 
+}
+
+/* Stock indicators */
+.stock-indicator {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 8px;
+}
+
+.stock-good { 
+    background: #28a745; 
+}
+
+.stock-low { 
+    background: #ffc107; 
+}
+
+.stock-critical { 
+    background: #dc3545; 
+}
+
+.stock-inactive { 
+    background: #6c757d; 
+}
+
+/* Notification Items */
+.notification-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+}
+
+.notification-info {
+    flex: 1;
+}
+
+.notification-title {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 3px;
+}
+
+.notification-details {
+    font-size: 0.9em;
+    color: #666;
+}
+
+.notification-actions {
+    margin-left: 15px;
+}
+
+/* Action links */
+.action-links { 
+    display: flex; 
+    gap: 10px; 
+    flex-wrap: wrap; 
+}
+
+.action-links a { 
+    color: #3498db; 
+    text-decoration: none; 
+    font-size: 0.9em;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background: #f8f9fa;
+}
+
+.action-links a:hover { 
+    background: #3498db; 
+    color: white; 
+    text-decoration: none;
+}
+
+/* Item name styling */
+.item-name { 
+    font-weight: 600; 
+    color: #2c3e50;
+    display: block;
+    margin-bottom: 3px;
+}
+
+.item-sku { 
+    font-size: 0.85em; 
+    color: #666;
+}
+
+/* Decimal formatting */
+.decimal { 
+    font-family: monospace; 
+}

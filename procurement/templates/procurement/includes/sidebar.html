@@ -1,0 +1,66 @@
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <div class="logo">
+            <i class="fas fa-shopping-cart"></i>
+            <span>Procurement</span>
+        </div>
+        <button class="sidebar-close" id="sidebarClose">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <div class="sidebar-content">
+        <div class="nav-section">
+            <div class="nav-title">Main Menu</div>
+            <a href="{% url 'procurement:dashboard' %}" class="nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="{% url 'procurement:purchase_order_list' %}" class="nav-item {% if 'purchase_order' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="fas fa-file-invoice"></i>
+                <span>Purchase Orders</span>
+            </a>
+            <a href="{% url 'procurement:supplier_list' %}" class="nav-item {% if 'supplier' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="fas fa-building"></i>
+                <span>Suppliers</span>
+            </a>
+        </div>
+
+        <div class="sidebar-divider"></div>
+
+        <div class="nav-section">
+            <div class="nav-title">Reports & Analytics</div>
+            <a href="#" class="nav-item">
+                <i class="fas fa-chart-bar"></i>
+                <span>Spending Analysis</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-history"></i>
+                <span>Order History</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-star"></i>
+                <span>Supplier Rating</span>
+            </a>
+        </div>
+
+        <div class="sidebar-divider"></div>
+
+        <div class="nav-section sidebar-actions">
+            <div class="nav-title">Quick Actions</div>
+            <a href="{% url 'procurement:purchase_order_create' %}" class="sidebar-btn success">
+                <i class="fas fa-plus-circle"></i>
+                New Purchase Order
+            </a>
+            <a href="{% url 'procurement:supplier_create' %}" class="sidebar-btn info">
+                <i class="fas fa-user-plus"></i>
+                Add Supplier
+            </a>
+            <a href="{% url 'logout' %}" class="sidebar-btn danger">
+                <i class="fas fa-sign-out-alt"></i>
+                Logout
+            </a>
+        </div>
+    </div>
+</aside>

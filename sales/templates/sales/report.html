@@ -1,0 +1,1045 @@
+{% extends 'sales/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Sales Reports - CornelSimba ERP{% endblock %}
+{% block page_title %}Sales Reports{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/report.css' %}">
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    /* Enhanced mobile responsive styles */
+    .reports-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 1rem;
+    }
+    
+    /* Mobile-first filter design */
+    .filter-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        width: 100%;
+    }
+    
+    @media (min-width: 576px) {
+        .filter-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    
+    @media (min-width: 992px) {
+        .filter-grid {
+            grid-template-columns: repeat(4, 1fr);
+        }
+    }
+    
+    /* Improved filter input design */
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 0;
+    }
+    
+    .filter-label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 0.375rem;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    
+    .filter-label i {
+        font-size: 0.75rem;
+        opacity: 0.7;
+    }
+    
+    .filter-input {
+        width: 100%;
+        height: 42px;
+        padding: 0.5rem 1rem;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        background: white;
+        transition: all 0.2s;
+    }
+    
+    .filter-input:focus {
+        border-color: #4361ee;
+        box-shadow: 0 0 0 0.2rem rgba(67, 97, 238, 0.25);
+        outline: none;
+    }
+    
+    /* Date picker specific styling */
+    .date-picker-group {
+        position: relative;
+    }
+    
+    .date-picker-icon {
+        position: absolute;
+        left: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6c757d;
+        font-size: 0.875rem;
+        pointer-events: none;
+    }
+    
+    .date-picker-group .filter-input {
+        padding-left: 2.25rem;
+    }
+    
+    /* Enhanced Apply Filter button */
+    .apply-filter-btn {
+        width: 100%;
+        height: 42px;
+        background: linear-gradient(135deg, #4361ee, #3a0ca3);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        transition: all 0.3s;
+        cursor: pointer;
+        padding: 0.5rem 1rem;
+    }
+    
+    .apply-filter-btn:hover {
+        background: linear-gradient(135deg, #3a0ca3, #4361ee);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+    }
+    
+    .apply-filter-btn:active {
+        transform: translateY(0);
+    }
+    
+    /* Period badge styling */
+    .period-badge {
+        width: 100%;
+        height: 42px;
+        background: linear-gradient(135deg, #7209b7, #4361ee);
+        color: white;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        padding: 0.5rem 1rem;
+        text-align: center;
+    }
+    
+    /* Mobile header adjustments */
+    @media (max-width: 768px) {
+        .report-header {
+            padding: 1rem 0;
+        }
+        
+        .report-title {
+            font-size: 1.5rem;
+            line-height: 1.3;
+        }
+        
+        .report-subtitle {
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+        
+        .download-buttons {
+            flex-wrap: wrap;
+            justify-content: flex-start;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        
+        .btn-download {
+            flex: 1;
+            min-width: 140px;
+            font-size: 0.8125rem;
+            padding: 0.5rem 0.75rem;
+        }
+    }
+    
+    /* Mobile stats grid */
+    @media (max-width: 576px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+            gap: 0.75rem;
+        }
+        
+        .stat-card {
+            padding: 1.25rem;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+        }
+        
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            font-size: 1.25rem;
+        }
+    }
+    
+    @media (min-width: 577px) and (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    
+    /* Mobile table adjustments */
+    @media (max-width: 768px) {
+        .report-table-container {
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 0 -0.5rem;
+            width: calc(100% + 1rem);
+        }
+        
+        .report-table {
+            min-width: 600px;
+            font-size: 0.8125rem;
+        }
+        
+        .report-table th,
+        .report-table td {
+            padding: 0.75rem 0.5rem;
+        }
+        
+        .product-name {
+            max-width: 100px;
+        }
+    }
+    
+    /* Mobile chart adjustments */
+    @media (max-width: 768px) {
+        .chart-container {
+            height: 250px;
+            padding: 1rem;
+            margin: 0 -0.5rem;
+            width: calc(100% + 1rem);
+            border-radius: 8px;
+        }
+        
+        .chart-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+        
+        .chart-title {
+            font-size: 1rem;
+            line-height: 1.4;
+        }
+        
+        .chart-controls {
+            width: 100%;
+            justify-content: space-between;
+        }
+        
+        .chart-type-select {
+            width: 100%;
+            max-width: 200px;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .chart-container {
+            height: 200px;
+            padding: 0.75rem;
+        }
+    }
+    
+    /* Mobile customer cards */
+    @media (max-width: 768px) {
+        .customer-card {
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .customer-name {
+            font-size: 0.875rem;
+        }
+        
+        .customer-meta {
+            font-size: 0.75rem;
+        }
+        
+        .customer-scrollable {
+            max-height: 250px;
+        }
+    }
+    
+    /* Mobile export buttons */
+    @media (max-width: 768px) {
+        .export-options {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .export-btn {
+            width: 100%;
+            justify-content: center;
+            padding: 0.75rem 1rem;
+            font-size: 0.875rem;
+        }
+    }
+    
+    /* Touch-friendly improvements */
+    .btn-download,
+    .export-btn,
+    .customer-card,
+    .stat-card {
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+    }
+    
+    .btn-download:active,
+    .export-btn:active {
+        transform: scale(0.98);
+    }
+    
+    /* Improved spacing for mobile */
+    .mobile-gap {
+        gap: 1rem;
+    }
+    
+    @media (max-width: 768px) {
+        .mobile-gap {
+            gap: 0.75rem;
+        }
+        
+        .row.g-4 {
+            --bs-gutter-x: 0.75rem;
+            --bs-gutter-y: 0.75rem;
+        }
+    }
+    
+    /* Quick period select mobile fix */
+    @media (max-width: 576px) {
+        .quick-period-select select {
+            font-size: 0.875rem;
+            height: 42px;
+        }
+    }
+    
+    /* Print improvements */
+    @media print {
+        .no-print {
+            display: none !important;
+        }
+        
+        .reports-container {
+            max-width: 100% !important;
+            padding: 0 !important;
+        }
+        
+        .card-custom {
+            border: 1px solid #ccc !important;
+            box-shadow: none !important;
+            break-inside: avoid;
+        }
+        
+        .report-table-container {
+            border: 1px solid #ccc;
+        }
+        
+        .report-table th {
+            background-color: #f0f0f0 !important;
+            color: #000 !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="reports-container">
+    <!-- Report Header -->
+    <div class="report-header">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mobile-gap">
+            <div class="flex-grow-1">
+                <h1 class="report-title">Sales Reports</h1>
+                <p class="report-subtitle">Analyze sales performance and trends</p>
+            </div>
+            <div class="d-flex gap-2 no-print flex-wrap">
+                <div class="download-buttons">
+                    <button onclick="downloadChart('salesTrendChart')" class="btn-download">
+                        <i class="bi bi-download"></i>
+                        <span class="d-none d-md-inline">Download Chart</span>
+                        <span class="d-md-none">Chart</span>
+                    </button>
+                    <button onclick="exportReport('csv')" class="btn-download">
+                        <i class="bi bi-file-earmark-spreadsheet"></i>
+                        <span class="d-none d-md-inline">Export CSV</span>
+                        <span class="d-md-none">CSV</span>
+                    </button>
+                    <button onclick="window.print()" class="btn-download">
+                        <i class="bi bi-printer"></i>
+                        <span class="d-none d-md-inline">Print Report</span>
+                        <span class="d-md-none">Print</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Date Filter Card -->
+    <div class="card-custom filters-card no-print mb-4">
+        <div class="card-header-custom">
+            <div class="d-flex align-items-center justify-content-between">
+                <h5 class="card-title mb-0">Report Filters</h5>
+                <button type="button" class="btn btn-sm btn-outline-secondary d-md-none" 
+                        onclick="toggleFilterVisibility()">
+                    <i class="bi bi-funnel"></i>
+                    <span>Filters</span>
+                </button>
+            </div>
+        </div>
+        <div class="card-body-custom" id="filterSection">
+            <form method="get" id="reportFilterForm" class="filter-grid">
+                <!-- Start Date -->
+                <div class="filter-group date-picker-group">
+                    <label for="startDate" class="filter-label">
+                        <i class="bi bi-calendar"></i>
+                        Start Date
+                    </label>
+                    <i class="date-picker-icon bi bi-calendar-date"></i>
+                    <input type="date" 
+                           name="start_date" 
+                           id="startDate" 
+                           class="filter-input" 
+                           value="{{ start_date|date:'Y-m-d' }}"
+                           max="{{ end_date|date:'Y-m-d' }}">
+                </div>
+                
+                <!-- End Date -->
+                <div class="filter-group date-picker-group">
+                    <label for="endDate" class="filter-label">
+                        <i class="bi bi-calendar"></i>
+                        End Date
+                    </label>
+                    <i class="date-picker-icon bi bi-calendar-date"></i>
+                    <input type="date" 
+                           name="end_date" 
+                           id="endDate" 
+                           class="filter-input" 
+                           value="{{ end_date|date:'Y-m-d' }}"
+                           min="{{ start_date|date:'Y-m-d' }}">
+                </div>
+                
+                <!-- Quick Date Filters -->
+                <div class="filter-group quick-period-select">
+                    <label for="quickPeriod" class="filter-label">
+                        <i class="bi bi-clock-history"></i>
+                        Quick Period
+                    </label>
+                    <select id="quickPeriod" class="filter-input filter-select">
+                        <option value="">Select Period</option>
+                        <option value="today" {% if quick_period == 'today' %}selected{% endif %}>Today</option>
+                        <option value="yesterday" {% if quick_period == 'yesterday' %}selected{% endif %}>Yesterday</option>
+                        <option value="week" {% if quick_period == 'week' %}selected{% endif %}>This Week</option>
+                        <option value="month" {% if quick_period == 'month' %}selected{% endif %}>This Month</option>
+                        <option value="last_month" {% if quick_period == 'last_month' %}selected{% endif %}>Last Month</option>
+                        <option value="quarter" {% if quick_period == 'quarter' %}selected{% endif %}>This Quarter</option>
+                        <option value="year" {% if quick_period == 'year' %}selected{% endif %}>This Year</option>
+                    </select>
+                </div>
+                
+                <!-- Apply Button -->
+                <div class="filter-group">
+                    <label class="filter-label">&nbsp;</label>
+                    <button type="submit" class="apply-filter-btn">
+                        <i class="bi bi-funnel-fill"></i>
+                        Apply Filters
+                    </button>
+                </div>
+                
+                <!-- Report Period Display -->
+                <div class="filter-group">
+                    <label class="filter-label">
+                        <i class="bi bi-calendar-range"></i>
+                        Selected Period
+                    </label>
+                    <div class="period-badge">
+                        <i class="bi bi-calendar-event"></i>
+                        {{ start_date|date:"M d, Y" }} to {{ end_date|date:"M d, Y" }}
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Summary Statistics -->
+    <div class="stats-grid mb-4">
+        <div class="stat-card">
+            <div class="stat-icon sales">
+                <i class="bi bi-cart-check"></i>
+            </div>
+            <div class="stat-value">{{ total_sales|default:0 }}</div>
+            <div class="stat-label">Total Sales</div>
+            <div class="stat-description">Completed transactions</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon revenue">
+                <i class="bi bi-cash-stack"></i>
+            </div>
+            <div class="stat-value">Tsh {{ total_revenue|floatformat:0|intcomma|default:0 }}</div>
+            <div class="stat-label">Total Revenue</div>
+            <div class="stat-description">Sum of all sales</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon average">
+                <i class="bi bi-graph-up-arrow"></i>
+            </div>
+            <div class="stat-value">Tsh {{ avg_sale_value|floatformat:0|intcomma|default:0 }}</div>
+            <div class="stat-label">Average Sale</div>
+            <div class="stat-description">Per transaction</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon days">
+                <i class="bi bi-calendar-week"></i>
+            </div>
+            <div class="stat-value">{{ daily_summary|length|default:0 }}</div>
+            <div class="stat-label">Days in Period</div>
+            <div class="stat-description">Active days with sales</div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="row g-4 mb-4">
+        <!-- Sales Trend Chart -->
+        <div class="col-lg-8 col-12">
+            <div class="card-custom">
+                <div class="chart-header">
+                    <h5 class="chart-title">Sales Trend - {{ start_date|date:"M d, Y" }} to {{ end_date|date:"M d, Y" }}</h5>
+                    <div class="chart-controls">
+                        <select id="trendChartType" class="chart-type-select">
+                            <option value="line">Line Chart</option>
+                            <option value="bar">Bar Chart</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="salesTrendChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sales by Type Chart -->
+        <div class="col-lg-4 col-12">
+            <div class="card-custom">
+                <div class="chart-header">
+                    <h5 class="chart-title">Sales by Type</h5>
+                </div>
+                <div class="chart-container">
+                    <canvas id="salesTypeChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Left Column (Main Content) -->
+        <div class="col-lg-8 col-12">
+            <!-- Daily Sales Summary -->
+            <div class="card-custom mb-4">
+                <div class="card-header-custom d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Daily Sales Summary</h5>
+                    <span class="badge-custom badge-primary">{{ daily_summary|length|default:0 }}</span>
+                </div>
+                
+                {% if daily_summary %}
+                <div class="report-table-container">
+                    <table class="report-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th class="text-end">Sales Count</th>
+                                <th class="text-end">Total Amount</th>
+                                <th class="text-end">Average</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for day in daily_summary %}
+                            <tr>
+                                <td><strong>{{ day.sale_date|date:"M d, Y" }}</strong></td>
+                                <td class="text-end">{{ day.total_sales|default:0 }}</td>
+                                <td class="text-end">Tsh {{ day.total_amount|floatformat:0|intcomma|default:0 }}</td>
+                                <td class="text-end">Tsh {{ day.avg_amount|floatformat:0|intcomma|default:0 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td><strong>Total</strong></td>
+                                <td class="text-end"><strong>{{ total_sales|default:0 }}</strong></td>
+                                <td class="text-end"><strong>Tsh {{ total_revenue|floatformat:0|intcomma|default:0 }}</strong></td>
+                                <td class="text-end"><strong>Tsh {{ avg_sale_value|floatformat:0|intcomma|default:0 }}</strong></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                {% else %}
+                <div class="empty-state py-4">
+                    <i class="bi bi-bar-chart display-4 text-muted"></i>
+                    <h5 class="mt-3">No sales data</h5>
+                    <p class="text-muted">No sales recorded for the selected period</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Top Selling Products -->
+            <div class="card-custom">
+                <div class="card-header-custom">
+                    <h5 class="card-title mb-0">Top Selling Products</h5>
+                </div>
+                
+                {% if product_sales %}
+                <div class="report-table-container">
+                    <table class="report-table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th class="text-end">Qty Sold</th>
+                                <th class="text-end">Revenue</th>
+                                <th class="text-end">Avg Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in product_sales|slice:":10" %}
+                            <tr>
+                                <td>
+                                    <div class="product-cell d-flex align-items-center">
+                                        <div class="product-avatar me-2">
+                                            {{ product.item__name|first|upper|default:"P" }}
+                                        </div>
+                                        <div class="product-name text-truncate" title="{{ product.item__name|default:'Unknown' }}">
+                                            {{ product.item__name|default:"Unknown" }}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-end">{{ product.total_quantity|floatformat:2|default:0 }}</td>
+                                <td class="text-end">Tsh {{ product.total_amount|floatformat:0|intcomma|default:0 }}</td>
+                                <td class="text-end">Tsh {{ product.avg_price|floatformat:0|intcomma|default:0 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="empty-state py-4">
+                    <p class="text-muted">No product sales data available</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="col-lg-4 col-12">
+            <!-- Top Customers -->
+            <div class="card-custom mb-4">
+                <div class="card-header-custom d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Top Customers</h5>
+                    <span class="badge-custom badge-success">{{ customer_summary|length|default:0 }}</span>
+                </div>
+                
+                {% if customer_summary %}
+                <div class="card-body-custom customer-scrollable">
+                    {% for customer in customer_summary|slice:":5" %}
+                    <div class="customer-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="flex-grow-1">
+                                <div class="customer-name text-truncate">{{ customer.customer__name|default:"Unknown Customer" }}</div>
+                                <div class="customer-meta">{{ customer.total_sales|default:0 }} sales</div>
+                            </div>
+                            <div class="customer-amount ms-2">Tsh {{ customer.total_amount|floatformat:0|intcomma|default:0 }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state py-3">
+                    <p class="text-muted mb-0">No customer data available</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Export Options -->
+            <div class="card-custom export-card no-print mb-4">
+                <div class="card-header-custom">
+                    <h5 class="card-title mb-0">Export Report</h5>
+                </div>
+                <div class="card-body-custom">
+                    <div class="export-options">
+                        <a href="{% url 'sales:report' %}?start_date={{ start_date|date:'Y-m-d' }}&end_date={{ end_date|date:'Y-m-d' }}&format=pdf" 
+                           class="export-btn pdf">
+                            <i class="bi bi-file-earmark-pdf"></i>
+                            <span>Export as PDF</span>
+                        </a>
+                        <a href="{% url 'sales:report' %}?start_date={{ start_date|date:'Y-m-d' }}&end_date={{ end_date|date:'Y-m-d' }}&format=csv" 
+                           class="export-btn csv">
+                            <i class="bi bi-file-earmark-spreadsheet"></i>
+                            <span>Export as CSV</span>
+                        </a>
+                        <a href="{% url 'sales:report' %}?start_date={{ start_date|date:'Y-m-d' }}&end_date={{ end_date|date:'Y-m-d' }}&format=xls" 
+                           class="export-btn excel">
+                            <i class="bi bi-file-earmark-excel"></i>
+                            <span>Export as Excel</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Distribution Chart -->
+            <div class="card-custom">
+                <div class="card-header-custom">
+                    <h5 class="card-title mb-0">Top Products Revenue</h5>
+                </div>
+                <div class="chart-container">
+                    <canvas id="productDistributionChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Mobile filter toggle
+    function toggleFilterVisibility() {
+        const filterSection = document.getElementById('filterSection');
+        filterSection.style.display = filterSection.style.display === 'none' ? 'block' : 'none';
+    }
+    
+    // Initialize mobile filters on load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Hide filter section on mobile by default
+        if (window.innerWidth < 768) {
+            const filterSection = document.getElementById('filterSection');
+            filterSection.style.display = 'block'; // Show by default on mobile
+        }
+        
+        // FIX: Properly parse JSON data from Django template
+        let dailyData = [];
+        let salesByTypeData = [];
+        let productData = [];
+        
+        try {
+            dailyData = JSON.parse('{{ daily_data_json|safe|escapejs }}');
+            salesByTypeData = JSON.parse('{{ sales_by_type_json|safe|escapejs }}');
+            productData = JSON.parse('{{ product_data_json|safe|escapejs }}');
+        } catch (e) {
+            console.error('Error parsing JSON data:', e);
+        }
+        
+        // Initialize charts if data exists
+        if (dailyData && dailyData.length > 0) {
+            initializeSalesTrendChart(dailyData);
+        } else {
+            showChartPlaceholder('salesTrendChart', 'No daily sales data available');
+        }
+        
+        if (salesByTypeData && salesByTypeData.length > 0) {
+            initializeSalesTypeChart(salesByTypeData);
+        } else {
+            showChartPlaceholder('salesTypeChart', 'No sales type data available');
+        }
+        
+        if (productData && productData.length > 0) {
+            initializeProductDistributionChart(productData);
+        } else {
+            showChartPlaceholder('productDistributionChart', 'No product data available');
+        }
+        
+        // Quick period selector functionality
+        const quickPeriodSelect = document.getElementById('quickPeriod');
+        if (quickPeriodSelect) {
+            quickPeriodSelect.addEventListener('change', function() {
+                const period = this.value;
+                if (!period) return;
+                
+                const today = new Date();
+                let startDate = new Date();
+                let endDate = new Date();
+                
+                switch(period) {
+                    case 'today':
+                        break;
+                    case 'yesterday':
+                        startDate.setDate(today.getDate() - 1);
+                        endDate.setDate(today.getDate() - 1);
+                        break;
+                    case 'week':
+                        startDate.setDate(today.getDate() - 7);
+                        break;
+                    case 'month':
+                        startDate.setMonth(today.getMonth() - 1);
+                        break;
+                    case 'last_month':
+                        startDate.setMonth(today.getMonth() - 1);
+                        startDate.setDate(1);
+                        endDate = new Date(today.getFullYear(), today.getMonth(), 0);
+                        break;
+                    case 'quarter':
+                        startDate.setMonth(today.getMonth() - 3);
+                        break;
+                    case 'year':
+                        startDate.setFullYear(today.getFullYear() - 1);
+                        break;
+                }
+                
+                // Format dates as YYYY-MM-DD
+                const formatDate = (date) => {
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    return `${year}-${month}-${day}`;
+                };
+                
+                document.getElementById('startDate').value = formatDate(startDate);
+                document.getElementById('endDate').value = formatDate(endDate);
+                
+                // Submit the form
+                document.getElementById('reportFilterForm').submit();
+            });
+        }
+        
+        // Chart type switcher
+        const trendChartType = document.getElementById('trendChartType');
+        if (trendChartType) {
+            trendChartType.addEventListener('change', function() {
+                if (window.salesTrendChart) {
+                    window.salesTrendChart.destroy();
+                }
+                if (dailyData && dailyData.length > 0) {
+                    initializeSalesTrendChart(dailyData, this.value);
+                }
+            });
+        }
+    });
+    
+    // Chart initialization functions remain the same as before...
+    // (Keep the chart initialization functions from the previous version)
+    
+    function showChartPlaceholder(chartId, message) {
+        const canvas = document.getElementById(chartId);
+        if (!canvas) return;
+        
+        const ctx = canvas.getContext('2d');
+        
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#f8f9fa';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        ctx.fillStyle = '#6c757d';
+        ctx.font = '14px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(message, canvas.width / 2, canvas.height / 2);
+    }
+    
+    // Chart initialization functions (same as before)
+    let salesTrendChart = null;
+    let salesTypeChart = null;
+    let productDistributionChart = null;
+    
+    function initializeSalesTrendChart(data, chartType = 'line') {
+        const ctx = document.getElementById('salesTrendChart').getContext('2d');
+        
+        const dates = data.map(item => {
+            const date = new Date(item.sale_date);
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        });
+        const amounts = data.map(item => item.total_amount || 0);
+        const saleCounts = data.map(item => item.total_sales || 0);
+        
+        if (salesTrendChart) {
+            salesTrendChart.destroy();
+        }
+        
+        salesTrendChart = new Chart(ctx, {
+            type: chartType,
+            data: {
+                labels: dates,
+                datasets: [
+                    {
+                        label: 'Daily Revenue (Tsh)',
+                        data: amounts,
+                        backgroundColor: chartType === 'bar' ? 'rgba(54, 162, 235, 0.5)' : 'rgba(54, 162, 235, 0.1)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 2,
+                        fill: chartType === 'line',
+                        tension: 0.1,
+                        yAxisID: 'y'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top' },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return 'Tsh ' + context.parsed.y.toLocaleString();
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return 'Tsh ' + value.toLocaleString();
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    function initializeSalesTypeChart(data) {
+        const ctx = document.getElementById('salesTypeChart').getContext('2d');
+        
+        const labels = data.map(item => {
+            const type = item.sale_type || 'Unknown';
+            return type.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
+        });
+        const amounts = data.map(item => item.amount || 0);
+        
+        if (salesTypeChart) {
+            salesTypeChart.destroy();
+        }
+        
+        salesTypeChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: amounts,
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.7)',
+                        'rgba(54, 162, 235, 0.7)',
+                        'rgba(255, 206, 86, 0.7)',
+                        'rgba(75, 192, 192, 0.7)',
+                        'rgba(153, 102, 255, 0.7)',
+                        'rgba(255, 159, 64, 0.7)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.parsed;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = Math.round((value / total) * 100);
+                                return `${context.label}: Tsh ${value.toLocaleString()} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    function initializeProductDistributionChart(data) {
+        const ctx = document.getElementById('productDistributionChart').getContext('2d');
+        
+        const topProducts = data.slice(0, 6);
+        const labels = topProducts.map(item => {
+            const name = item.item__name || 'Unknown';
+            return name.length > 12 ? name.substring(0, 12) + '...' : name;
+        });
+        const amounts = topProducts.map(item => item.total_amount || 0);
+        
+        if (productDistributionChart) {
+            productDistributionChart.destroy();
+        }
+        
+        productDistributionChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Revenue (Tsh)',
+                    data: amounts,
+                    backgroundColor: 'rgba(75, 192, 192, 0.7)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `Tsh ${context.parsed.x.toLocaleString()}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return 'Tsh ' + value.toLocaleString();
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    function downloadChart(chartId) {
+        const canvas = document.getElementById(chartId);
+        if (!canvas) {
+            alert('Chart not found!');
+            return;
+        }
+        
+        const link = document.createElement('a');
+        link.download = 'sales-chart-' + new Date().toISOString().split('T')[0] + '.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    }
+    
+    function exportReport(format) {
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        const url = `{% url 'sales:report' %}?start_date=${startDate}&end_date=${endDate}&format=${format}`;
+        window.open(url, '_blank');
+    }
+</script>
+{% endblock %}

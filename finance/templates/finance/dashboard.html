@@ -1,0 +1,412 @@
+{% extends 'finance/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Finance Dashboard{% endblock %}
+
+{% block page_title %}💰 Finance Dashboard - {{ current_month }} {{ current_year }}{% endblock %}
+
+{% block breadcrumb %}
+<a href="{% url 'finance:dashboard' %}">Dashboard</a>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'finance/css/dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+<!-- ========== FINANCIAL POSITION SECTION ========== -->
+<div class="dashboard-section-header finance">
+    <i class="fas fa-chart-line"></i>
+    <h2>Financial Position</h2>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card stat-card-cash">
+        <h3><i class="fas fa-wallet"></i> Available Cash</h3>
+        <div class="amount tsh-amount {% if available_cash >= 0 %}income{% else %}expense{% endif %}">
+           Tsh {{ available_cash|floatformat:0|intcomma|default:"0" }}
+        </div>
+        <div class="subtext">Actual cash on hand</div>
+    </div>
+    
+    <div class="stat-card stat-card-working">
+        <h3><i class="fas fa-building"></i> Working Capital</h3>
+        <div class="amount tsh-amount {% if working_capital >= 0 %}income{% else %}expense{% endif %}">
+            Tsh {{ working_capital|floatformat:0|default:"0" }}
+        </div>
+        <div class="subtext">Current Assets - Current Liabilities</div>
+    </div>
+    
+    <div class="stat-card stat-card-ratio">
+        <h3><i class="fas fa-percentage"></i> Current Ratio</h3>
+        <div class="ratio-display {% if current_ratio >= 2 %}ratio-good{% elif current_ratio >= 1 %}ratio-warning{% else %}ratio-danger{% endif %}">
+            {{ current_ratio|floatformat:2 }}:1
+        </div>
+        <div class="subtext">
+            {% if current_ratio >= 2 %}
+                <span class="health-indicator health-good">Strong Liquidity</span>
+            {% elif current_ratio >= 1 %}
+                <span class="health-indicator health-warning">Adequate Liquidity</span>
+            {% else %}
+                <span class="health-indicator health-danger">Liquidity Risk</span>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="stat-card stat-card-profit">
+        <h3><i class="fas fa-money-bill-trend-up"></i> Cash Profit/Loss</h3>
+        <div class="amount {% if cash_profit_loss >= 0 %}profit{% else %}loss{% endif %}">
+            {% if cash_profit_loss >= 0 %}+{% endif %}Tsh {{ cash_profit_loss|floatformat:0|intcomma|default:"0" }}
+        </div>
+        <div class="subtext">
+            Margin: {{ cash_profit_margin }}% 
+            <small class="text-muted">(Tsh {{ cash_profit_loss|floatformat:0|intcomma }})</small>
+        </div>
+    </div>
+</div>
+
+<!-- ========== QUICK ACTIONS ========== -->
+<div class="dashboard-quick-actions">
+    <a href="{% url 'finance:income_create' %}" class="btn btn-success">
+        <i class="fas fa-plus-circle"></i> New Income
+    </a>
+    <a href="{% url 'finance:expense_create' %}" class="btn btn-primary">
+        <i class="fas fa-plus-circle"></i> New Expense
+    </a>
+    <a href="{% url 'finance:payroll_create' %}" class="btn btn-primary">
+        <i class="fas fa-plus-circle"></i> New Payroll
+    </a>
+    <a href="{% url 'finance:reports' %}" class="btn btn-primary">
+        <i class="fas fa-chart-bar"></i> Reports
+    </a>
+    <a href="{% url 'finance:cash_flow' %}" class="btn btn-purple">
+        <i class="fas fa-money-check-alt"></i> Cash Flow
+    </a>
+    <a href="{% url 'finance:balance_sheet' %}" class="btn btn-dark-bg">
+        <i class="fas fa-balance-scale"></i> Balance Sheet
+    </a>
+</div>
+
+<!-- ========== BASIC STATS SECTION ========== -->
+<div class="dashboard-section-header">
+    <i class="fas fa-chart-bar"></i>
+    <h2>Basic Financial Metrics</h2>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card stat-card-income">
+        <h3><i class="fas fa-arrow-up"></i> Total Income</h3>
+        <div class="amount tsh-amount income">Tsh {{ total_income|floatformat:0|default:"0" }}</div>
+        <div class="subtext">This month: Tsh {{ monthly_income|floatformat:0|default:"0" }}</div>
+    </div>
+    
+    <div class="stat-card stat-card-expense">
+        <h3><i class="fas fa-arrow-down"></i> Total Expenses</h3>
+        <div class="amount tsh-amount expense">Tsh {{ total_expense|floatformat:0|default:"0" }}</div>
+        <div class="subtext">This month: Tsh {{ monthly_expense|floatformat:0|default:"0" }}</div>
+    </div>
+    
+    <div class="stat-card stat-card-payroll">
+        <h3><i class="fas fa-users"></i> Current Payroll</h3>
+        <div class="amount">Tsh {{ current_payroll|floatformat:0|default:"0" }}</div>
+        <div class="subtext">{{ payroll_count }} payroll records</div>
+    </div>
+    
+    <div class="stat-card {% if profit_loss >= 0 %}profit{% else %}loss{% endif %}">
+        <h3><i class="fas fa-chart-line"></i> Accrual Profit/Loss</h3>
+        <div class="amount {% if profit_loss >= 0 %}profit{% else %}loss{% endif %}">
+            {% if profit_loss >= 0 %}+{% endif %}Tsh {{ profit_loss|floatformat:0|default:"0" }}
+        </div>
+        <div class="subtext">Includes all income & expenses</div>
+    </div>
+</div>
+
+<!-- ========== PENDING PAYMENTS SECTION ========== -->
+{% if unpaid_expenses > 0 or unpaid_payroll > 0 %}
+<div class="alert alert-warning">
+    <div>
+        <i class="fas fa-exclamation-triangle"></i>
+        <strong>Attention:</strong> There are pending payments totaling 
+        <strong>Tsh {{ unpaid_expenses|add:unpaid_payroll|floatformat:0 }}</strong>
+    </div>
+    <div>
+        <a href="{% url 'finance:expense_list' %}?paid=false" class="btn btn-warning alert-btn-small">
+            View Unpaid Expenses
+        </a>
+        <a href="{% url 'finance:payroll_list' %}?paid=false" class="btn btn-warning alert-btn-small">
+            View Unpaid Payroll
+        </a>
+    </div>
+</div>
+{% endif %}
+
+<div class="dashboard-section-header payables">
+    <i class="fas fa-clock"></i>
+    <h2>Pending Payments</h2>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card stat-card-unpaid-expense">
+        <h3><i class="fas fa-receipt"></i> Unpaid Expenses</h3>
+        <div class="amount tsh-amount expense">Tsh {{ unpaid_expenses|floatformat:0|default:"0" }}</div>
+        <div class="subtext">{{ unpaid_expense_count }} pending bill{{ unpaid_expense_count|pluralize }}</div>
+    </div>
+    
+    <div class="stat-card stat-card-unpaid-payroll">
+        <h3><i class="fas fa-users"></i> Unpaid Payroll</h3>
+        <div class="amount tsh-amount expense">Tsh {{ unpaid_payroll|floatformat:0|default:"0" }}</div>
+        <div class="subtext">{{ unpaid_payroll_count }} pending payroll{{ unpaid_payroll_count|pluralize }}</div>
+    </div>
+    
+    <div class="stat-card stat-card-total-payables">
+        <h3><i class="fas fa-file-invoice-dollar"></i> Total Payables</h3>
+        <div class="amount tsh-amount expense">Tsh {{ unpaid_expenses|add:unpaid_payroll|floatformat:0|default:"0" }}</div>
+        <div class="subtext">Total due payments</div>
+    </div>
+    
+    <div class="stat-card stat-card-paid-out">
+        <h3><i class="fas fa-check-circle"></i> Paid Out</h3>
+        <div class="amount tsh-amount expense">Tsh {{ paid_expenses|add:paid_payroll|floatformat:0|default:"0" }}</div>
+        <div class="subtext">Already paid this period</div>
+    </div>
+</div>
+
+<!-- ========== RECENT TRANSACTIONS ========== -->
+<div class="recent-transactions-grid">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-money-bill-wave"></i> Recent Income
+            </h3>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Source</th>
+                        <th>Amount</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for income in recent_incomes %}
+                    <tr>
+                        <td>{{ income.source|truncatechars:20 }}</td>
+                        <td class="tsh-amount income">Tsh {{ income.amount|floatformat:0|default:"0" }}</td>
+                        <td>{{ income.date|date:"M d" }}</td>
+                        <td>
+                            {% if income.is_paid %}
+                            <span class="badge badge-success">✓ Received</span>
+                            {% else %}
+                            <span class="badge badge-warning">Pending</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center text-muted py-4">
+                            No recent income records
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer">
+            <a href="{% url 'finance:income_list' %}" class="btn btn-sm btn-outline">
+                View All Income <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-receipt"></i> Recent Expenses
+            </h3>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Amount</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for expense in recent_expenses %}
+                    <tr>
+                        <td>{{ expense.category|truncatechars:20 }}</td>
+                        <td class="tsh-amount expense">Tsh {{ expense.amount|floatformat:0|default:"0" }}</td>
+                        <td>{{ expense.date|date:"M d" }}</td>
+                        <td>
+                            {% if expense.is_paid %}
+                            <span class="badge badge-success">✓ Paid</span>
+                            {% else %}
+                            <span class="badge badge-warning">Pending</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center text-muted py-4">
+                            No recent expense records
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer">
+            <a href="{% url 'finance:expense_list' %}" class="btn btn-sm btn-outline">
+                View All Expenses <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- ========== FINANCIAL HEALTH SUMMARY ========== -->
+<div class="card mt-4">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="fas fa-heartbeat"></i> Financial Health Summary
+        </h3>
+    </div>
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Metric</th>
+                    <th>Value</th>
+                    <th>Status</th>
+                    <th>Recommendation</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Current Ratio</strong></td>
+                    <td class="tsh-amount neutral">{{ current_ratio|floatformat:2 }}:1</td>
+                    <td>
+                        {% if current_ratio >= 2 %}
+                            <span class="health-indicator health-good">Excellent</span>
+                        {% elif current_ratio >= 1.5 %}
+                            <span class="health-indicator health-good">Good</span>
+                        {% elif current_ratio >= 1 %}
+                            <span class="health-indicator health-warning">Adequate</span>
+                        {% else %}
+                            <span class="health-indicator health-danger">Risk</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if current_ratio < 1 %}
+                            Increase cash reserves or reduce short-term debt
+                        {% elif current_ratio < 1.5 %}
+                            Maintain current position
+                        {% else %}
+                            Consider investing excess cash
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Working Capital</strong></td>
+                    <td class="tsh-amount {% if working_capital >= 0 %}income{% else %}expense{% endif %}">
+                        Tsh {{ working_capital|floatformat:0 }}
+                    </td>
+                    <td>
+                        {% if working_capital >= 0 %}
+                            <span class="health-indicator health-good">Positive</span>
+                        {% else %}
+                            <span class="health-indicator health-danger">Negative</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if working_capital < 0 %}
+                            Urgent: Increase cash or reduce payables
+                        {% elif working_capital < current_payroll %}
+                            Monitor closely
+                        {% else %}
+                            Healthy position
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Cash Profit Margin</strong></td>
+                    <td>
+                        <span class="tsh-amount {% if cash_profit_margin >= 0 %}income{% else %}expense{% endif %}">
+                            {{ cash_profit_margin }}%
+                        </span>
+                        <br>
+                        <small class="text-muted">
+                            Actual: Tsh {{ cash_profit_loss|floatformat:0|intcomma }}
+                        </small>
+                    </td>
+                    <td>
+                        {% if cash_profit_loss >= 0 %}
+                            <span class="health-indicator health-good">Profitable</span>
+                        {% else %}
+                            <span class="health-indicator health-danger">Loss</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if cash_profit_loss < 0 %}
+                            Reduce expenses or increase income
+                        {% else %}
+                            Maintain profitability
+                        {% endif %}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% if pending_pos > 0 %}
+<div class="alert alert-info mt-4">
+    <div>
+        <i class="fas fa-shopping-cart"></i>
+        <strong>Procurement Alert:</strong> There are {{ pending_pos }} delivered Purchase Orders waiting to be converted to expenses.
+    </div>
+    <div>
+        <a href="{% url 'finance:procurement_expenses' %}" class="btn btn-info">
+            Process Now <i class="fas fa-arrow-right"></i>
+        </a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-format all currency amounts
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.tsh-amount').forEach(element => {
+            const text = element.textContent;
+            const amount = text.replace(/[^\d.-]/g, '');
+            if (amount && !isNaN(parseFloat(amount))) {
+                const num = parseFloat(amount);
+                element.textContent = 'Tsh ' + Math.abs(num).toLocaleString();
+                if (num < 0) {
+                    element.textContent = '-Tsh ' + Math.abs(num).toLocaleString();
+                }
+            }
+        });
+    });
+    
+    // Financial Statements Toggle (if you want to keep these functions)
+    function showBalanceSheet() {
+        alert('Balance Sheet: \nAssets: Tsh {{ available_cash|floatformat:0 }}\nLiabilities: Tsh {{ current_liabilities|floatformat:0 }}\nEquity: Tsh {{ profit_loss|floatformat:0 }}');
+    }
+    
+    function showCashFlow() {
+        alert('Cash Flow Statement: \nOperating Activities: Tsh {{ cash_profit_loss|floatformat:0 }}\nNet Cash Flow: Tsh {{ cash_profit_loss|floatformat:0 }}');
+    }
+    
+    function showIncomeStatement() {
+        alert('Income Statement: \nRevenue: Tsh {{ total_income|floatformat:0 }}\nExpenses: Tsh {{ total_expense|floatformat:0 }}\nNet Profit: Tsh {{ profit_loss|floatformat:0 }}');
+    }
+</script>
+{% endblock %}

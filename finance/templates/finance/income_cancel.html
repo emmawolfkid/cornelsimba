@@ -1,0 +1,237 @@
+{% extends 'finance/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Cancel Income Record - Finance{% endblock %}
+
+{% block page_title %}⚠️ Cancel Income Record{% endblock %}
+
+{% block breadcrumb %}
+<a href="{% url 'finance:dashboard' %}">Dashboard</a> / 
+<a href="{% url 'finance:income_list' %}">Income</a> / 
+Cancel Record
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'finance/css/income_cancel.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="income-cancel-container">
+    <!-- Page Header -->
+    <div class="income-cancel-header">
+        <h1><i class="fas fa-exclamation-triangle"></i> Cancel Income Record</h1>
+        <p class="income-cancel-subtitle">Financial Audit Trail - Secure Cancellation</p>
+    </div>
+    
+    <!-- Main Card -->
+    <div class="income-cancel-card">
+        <div class="income-cancel-card-header">
+            <h2><i class="fas fa-ban"></i> Confirm Income Cancellation</h2>
+        </div>
+        
+        <div class="income-cancel-card-body">
+            <!-- High Value Warning -->
+            {% if income.amount > 5000000 %}
+            <div class="high-value-warning">
+                <h4><i class="fas fa-lock"></i> High Value Transaction</h4>
+                <p>This income record (Tsh {{ income.amount|floatformat:0|intcomma }}) exceeds the Tsh 5,000,000 threshold and requires manager approval for cancellation.</p>
+            </div>
+            {% endif %}
+            
+            <!-- Warning Alert -->
+            <div class="warning-alert">
+                <h3><i class="fas fa-exclamation-circle"></i> Important Warning</h3>
+                <p>Cancelling an income record is a serious financial action that will:</p>
+                <ul>
+                    <li><strong>Mark as inactive</strong> - Record will be deactivated in the system</li>
+                    <li><strong>Create reversal transaction</strong> - Automatic accounting reversal entry</li>
+                    <li><strong>Audit trail</strong> - Detailed record in financial audit logs</li>
+                    <li><strong>Manager approval required</strong> - For amounts over Tsh 5,000,000</li>
+                    <li><strong>Irreversible</strong> - Cannot be undone without supervisor override</li>
+                </ul>
+            </div>
+            
+            <!-- Income Details -->
+            <div class="income-details-section">
+                <h4><i class="fas fa-receipt"></i> Record to be Cancelled:</h4>
+                <div class="details-grid">
+                    <div class="detail-item">
+                        <span class="detail-label">Source</span>
+                        <span class="detail-value">{{ income.source }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Amount</span>
+                        <span class="detail-value amount">
+                            {% if income.currency == 'Tsh' %}
+                                Tsh {{ income.amount|floatformat:0|intcomma }}
+                            {% elif income.currency == 'USD' %}
+                                ${{ income.amount|floatformat:2 }} (≈ Tsh {{ income.amount|floatformat:0|intcomma }})
+                            {% elif income.currency == 'EUR' %}
+                                €{{ income.amount|floatformat:2 }} (≈ Tsh {{ income.amount|floatformat:0|intcomma }})
+                            {% else %}
+                                {{ income.amount_display }}
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Date</span>
+                        <span class="detail-value">{{ income.date|date:"F d, Y" }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Type</span>
+                        <span class="detail-value">{{ income.get_income_type_display }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Reference</span>
+                        <span class="detail-value">{{ income.reference|default:"Not specified" }}</span>
+                    </div>
+                    {% if income.department %}
+                    <div class="detail-item">
+                        <span class="detail-label">Department</span>
+                        <span class="detail-value">{{ income.department }}</span>
+                    </div>
+                    {% endif %}
+                    {% if income.sale %}
+                    <div class="detail-item">
+                        <span class="detail-label">Linked Sale</span>
+                        <span class="detail-value">{{ income.sale.sale_number }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Cancellation Form -->
+            <form method="post" class="cancel-form" id="cancelForm">
+                {% csrf_token %}
+                
+                <!-- Confirmation Check for Large Amounts -->
+                {% if income.amount > 5000000 %}
+                <div class="confirmation-check">
+                    <input type="checkbox" id="manager_approval" name="manager_approval" required>
+                    <label for="manager_approval">
+                        <i class="fas fa-shield-alt"></i> I confirm that a manager has approved this cancellation (Amount exceeds Tsh 5,000,000)
+                    </label>
+                </div>
+                {% endif %}
+                
+                <!-- Reason Field -->
+                <div class="cancel-form-group">
+                    <label for="cancellation_reason" class="cancel-form-label required">
+                        <i class="fas fa-comment-dots"></i> Cancellation Reason
+                    </label>
+                    <textarea 
+                        name="cancellation_reason" 
+                        id="cancellation_reason" 
+                        class="cancel-form-textarea"
+                        rows="5" 
+                        required
+                        placeholder="Provide a detailed reason for cancelling this income record. This will be permanently recorded in the audit trail."
+                    ></textarea>
+                    <div class="form-help">
+                        Minimum 20 characters. Include specific details about why this income is being cancelled.
+                    </div>
+                    <div class="char-counter" id="charCounter">0 characters (minimum 20)</div>
+                </div>
+                
+                <!-- Final Confirmation -->
+                <div class="confirmation-check">
+                    <input type="checkbox" id="final_confirmation" name="final_confirmation" required>
+                    <label for="final_confirmation">
+                        <i class="fas fa-exclamation-triangle"></i> I understand that this action is permanent and will create a financial audit trail
+                    </label>
+                </div>
+                
+                <!-- Form Actions -->
+                <div class="cancel-form-actions">
+                    <a href="{% url 'finance:income_list' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Income List
+                    </a>
+                    <button type="submit" class="btn btn-cancel">
+                        <i class="fas fa-ban"></i> Confirm & Cancel Income
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Navigation -->
+    <div style="text-align: center; margin-top: 30px;">
+        <a href="{% url 'finance:dashboard' %}" class="income-cancel-back-link">
+            <i class="fas fa-tachometer-alt"></i> Back to Finance Dashboard
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Character counter for reason field
+const reasonField = document.getElementById('cancellation_reason');
+const charCounter = document.getElementById('charCounter');
+
+if (reasonField && charCounter) {
+    reasonField.addEventListener('input', function() {
+        const length = this.value.length;
+        charCounter.textContent = `${length} characters (minimum 20)`;
+        
+        if (length < 20) {
+            charCounter.className = 'char-counter low';
+            this.classList.add('error-input');
+        } else {
+            charCounter.className = 'char-counter good';
+            this.classList.remove('error-input');
+        }
+    });
+    
+    // Trigger initial count
+    reasonField.dispatchEvent(new Event('input'));
+}
+
+// Form validation
+const form = document.getElementById('cancelForm');
+if (form) {
+    form.addEventListener('submit', function(e) {
+        const reason = document.getElementById('cancellation_reason').value.trim();
+        const finalConfirm = document.getElementById('final_confirmation');
+        
+        if (reason.length < 20) {
+            e.preventDefault();
+            showNotification('Please provide a detailed reason (minimum 20 characters).', 'error');
+            reasonField.focus();
+            return false;
+        }
+        
+        if (!finalConfirm.checked) {
+            e.preventDefault();
+            showNotification('You must confirm that you understand this action is permanent.', 'error');
+            return false;
+        }
+        
+        // Manager approval check for large amounts
+        const managerApproval = document.getElementById('manager_approval');
+        if (managerApproval && !managerApproval.checked) {
+            e.preventDefault();
+            showNotification('Manager approval is required for amounts over Tsh 5,000,000.', 'error');
+            return false;
+        }
+        
+        // Final confirmation
+        if (!confirm('⚠️ FINAL CONFIRMATION REQUIRED\n\nAre you absolutely sure you want to cancel this income record?\n\nAmount: Tsh {{ income.amount|floatformat:0|intcomma }}\nSource: {{ income.source }}\n\nThis action cannot be undone.')) {
+            e.preventDefault();
+            return false;
+        }
+        
+        return true;
+    });
+}
+
+// Show confirmation modal before leaving page
+window.addEventListener('beforeunload', function(e) {
+    if (reasonField && reasonField.value.length > 0) {
+        e.preventDefault();
+        e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+    }
+});
+</script>
+{% endblock %}

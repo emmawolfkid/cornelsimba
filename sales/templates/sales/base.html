@@ -1,0 +1,142 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>{% block title %}CornelSimba ERP - Sales{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Custom Sales Styles -->
+    <link rel="stylesheet" href="{% static 'css/sales_styles.css' %}">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">CS</div>
+            <span class="sidebar-brand">CornelSimba ERP</span>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <div class="nav-section-title">Main Menu</div>
+            <ul class="list-unstyled">
+                <li class="nav-item">
+                    <a href="{% url 'sales:dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                        <i class="bi bi-grid-fill"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'sales:sale_list' %}" class="nav-link {% if 'sale_list' in request.resolver_match.url_name %}active{% endif %}">
+                        <i class="bi bi-cart3"></i>
+                        <span>Sales</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'sales:customer_list' %}" class="nav-link {% if 'customer' in request.resolver_match.url_name %}active{% endif %}">
+                        <i class="bi bi-people"></i>
+                        <span>Customers</span>
+                    </a>
+                </li>
+            </ul>
+            
+            <div class="nav-section-title">Analytics</div>
+            <ul class="list-unstyled">
+                <li class="nav-item">
+                    <a href="{% url 'sales:report' %}" class="nav-link {% if 'report' in request.resolver_match.url_name %}active{% endif %}">
+                        <i class="bi bi-graph-up-arrow"></i>
+                        <span>Reports</span>
+                    </a>
+                </li>
+            </ul>
+                   
+            <div class="nav-section-title">System</div>
+<ul class="menu-section-title">
+    <li class="nav-item">
+        <a href="/" class="menu-item">
+            <i class="bi bi-speedometer2"></i>
+            <span>Main Dashboard</span>
+        </a>
+    </li>
+</ul>
+
+        </nav>
+        
+        <div class="sidebar-footer">
+            <div class="user-profile">
+                <div class="user-avatar">AD</div>
+                <div class="user-info">
+                    <div class="user-name">Admin User</div>
+                    <div class="user-role">Administrator</div>
+                </div>
+            </div>
+        </div>
+    </aside>
+    
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+    
+    <main class="main-content">
+        <div class="top-navbar">
+            <div class="navbar-left">
+                <button class="sidebar-toggle" id="sidebarToggle">
+                    <i class="bi bi-list"></i>
+                </button>
+                <h2 class="page-title">{% block page_title %}Sales Dashboard{% endblock %}</h2>
+            </div>
+            
+            <div class="navbar-right">
+                <div class="search-box">
+                    <i class="bi bi-search"></i>
+                    <input type="text" placeholder="Search sales, customers...">
+                </div>
+                
+                <button class="notification-btn">
+                    <i class="bi bi-bell"></i>
+                    <span class="notification-badge">3</span>
+                </button>
+            </div>
+        </div>
+        
+        <div class="dashboard-container">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const mobileOverlay = document.getElementById('mobileOverlay');
+        
+        sidebarToggle.addEventListener('click', () => {
+            if (window.innerWidth <= 768) {
+                sidebar.classList.toggle('mobile-open');
+                mobileOverlay.classList.toggle('active');
+            } else {
+                sidebar.classList.toggle('collapsed');
+            }
+        });
+        
+        mobileOverlay.addEventListener('click', () => {
+            sidebar.classList.remove('mobile-open');
+            mobileOverlay.classList.remove('active');
+        });
+        
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 768) {
+                sidebar.classList.remove('mobile-open');
+                mobileOverlay.classList.remove('active');
+            }
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

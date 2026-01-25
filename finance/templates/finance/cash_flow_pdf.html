@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Cash Flow Statement - {{ start_date }} to {{ end_date }}</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            font-size: 12px; 
+            margin: 20px; 
+        }
+        h1 { 
+            color: #2c3e50; 
+            text-align: center; 
+            margin-bottom: 5px; 
+        }
+        h2 { 
+            color: #7f8c8d; 
+            text-align: center; 
+            margin-top: 0; 
+        }
+        h3 { 
+            color: #2c3e50; 
+            margin-top: 20px; 
+            margin-bottom: 10px; 
+            border-bottom: 1px solid #3498db; 
+            padding-bottom: 5px; 
+        }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin: 10px 0; 
+        }
+        th { 
+            background-color: #f8f9fa; 
+            border: 1px solid #dee2e6; 
+            padding: 8px; 
+            text-align: left; 
+        }
+        td { 
+            border: 1px solid #dee2e6; 
+            padding: 8px; 
+        }
+        .amount { 
+            text-align: right; 
+            font-weight: bold; 
+        }
+        .positive { 
+            color: #27ae60; 
+        }
+        .negative { 
+            color: #e74c3c; 
+        }
+        .total-row { 
+            background-color: #f8f9fa; 
+            font-weight: bold; 
+        }
+        .header { 
+            text-align: center; 
+            margin-bottom: 20px; 
+        }
+        .company { 
+            font-size: 18px; 
+            font-weight: bold; 
+            color: #2c3e50; 
+            margin-bottom: 5px; 
+        }
+        .footer { 
+            text-align: center; 
+            margin-top: 30px; 
+            font-size: 10px; 
+            color: #95a5a6; 
+            padding-top: 10px; 
+            border-top: 1px solid #dee2e6; 
+        }
+        .summary-box { 
+            margin-top: 20px; 
+            padding: 15px; 
+            background-color: #f8f9fa; 
+            border: 1px solid #dee2e6; 
+        }
+        .summary-title { 
+            font-weight: bold; 
+            margin-bottom: 10px; 
+            color: #2c3e50; 
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="company">Cornel Simba Mining Enterprise</div>
+        <h2>Cash Flow Statement</h2>
+        <div>Period: {{ start_date|date:"F j, Y" }} to {{ end_date|date:"F j, Y" }}</div>
+    </div>
+    
+    <h3>Cash Inflows</h3>
+    <table>
+        <tr>
+            <td>Income received in cash</td>
+            <td class="amount positive">Tsh {{ cash_inflows }}</td>
+        </tr>
+    </table>
+    
+    <h3>Cash Outflows</h3>
+    <table>
+        <tr>
+            <td>Expenses paid in cash</td>
+            <td class="amount negative">Tsh {{ cash_outflows }}</td>
+        </tr>
+        <tr>
+            <td>Payroll paid in cash</td>
+            <td class="amount negative">Tsh {{ payroll_outflows }}</td>
+        </tr>
+        <tr class="total-row">
+            <td><strong>Total Cash Outflows</strong></td>
+            <td class="amount negative"><strong>Tsh {{ total_outflows }}</strong></td>
+        </tr>
+    </table>
+    
+    <div class="summary-box">
+        <div class="summary-title">Net Cash Flow</div>
+        <p><strong>Cash Inflows:</strong> Tsh {{ cash_inflows }}</p>
+        <p><strong>Cash Outflows:</strong> Tsh {{ total_outflows }}</p>
+        <p><strong>Net Cash Flow:</strong> 
+            <span class="{% if net_cash_flow >= 0 %}positive{% else %}negative{% endif %}">
+                {% if net_cash_flow >= 0 %}+{% endif %}Tsh {{ net_cash_flow }}
+            </span>
+        </p>
+    </div>
+    
+    <div class="footer">
+        <p>Cornel Simba Mining Enterprise - Financial Reports</p>
+        <p>Generated automatically by the Finance System</p>
+    </div>
+</body>
+</html>

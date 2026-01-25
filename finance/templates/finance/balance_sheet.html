@@ -1,0 +1,251 @@
+{% extends 'finance/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Balance Sheet - Finance{% endblock %}
+
+{% block page_title %}📊 Balance Sheet{% endblock %}
+
+{% block breadcrumb %}
+<a href="{% url 'finance:dashboard' %}">Dashboard</a> / Balance Sheet
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'finance/css/balance_sheet.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="balance-sheet-container">
+    <!-- Page Header -->
+    <div class="balance-sheet-header">
+        <h1><i class="fas fa-balance-scale"></i> Balance Sheet</h1>
+        <p class="balance-sheet-date">As at {{ today|date:"F j, Y" }}</p>
+    </div>
+    
+    <!-- Main Content Grid -->
+    <div class="balance-sheet-grid">
+        <!-- Assets -->
+        <div class="balance-sheet-card assets">
+            <div class="balance-sheet-section-header">
+                <i class="fas fa-chart-line"></i> Assets
+            </div>
+            
+            <table class="balance-sheet-table">
+                <thead>
+                    <tr>
+                        <th>Account</th>
+                        <th>Balance (Tsh)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for asset in assets %}
+                    <tr>
+                        <td class="account-name">{{ asset.name }}</td>
+                        <td class="account-balance">{{ asset.balance|intcomma }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="2" style="text-align: center; padding: 20px; color: #666;">
+                            No asset accounts found
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    <tr class="total-row">
+                        <td><strong>Total Assets</strong></td>
+                        <td class="account-balance"><strong>{{ total_assets|intcomma }}</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Liabilities -->
+        <div class="balance-sheet-card liabilities">
+            <div class="balance-sheet-section-header">
+                <i class="fas fa-hand-holding-usd"></i> Liabilities
+            </div>
+            
+            <table class="balance-sheet-table">
+                <thead>
+                    <tr>
+                        <th>Account</th>
+                        <th>Balance (Tsh)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for liability in liabilities %}
+                    <tr>
+                        <td class="account-name">{{ liability.name }}</td>
+                        <td class="account-balance">{{ liability.balance|intcomma }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="2" style="text-align: center; padding: 20px; color: #666;">
+                            No liability accounts found
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    <tr class="total-row">
+                        <td><strong>Total Liabilities</strong></td>
+                        <td class="account-balance"><strong>{{ total_liabilities|intcomma }}</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Equity -->
+        <div class="balance-sheet-card equity">
+            <div class="balance-sheet-section-header">
+                <i class="fas fa-university"></i> Equity
+            </div>
+            
+            <table class="balance-sheet-table">
+                <thead>
+                    <tr>
+                        <th>Account</th>
+                        <th>Balance (Tsh)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for eq in equity %}
+                    <tr>
+                        <td class="account-name">{{ eq.name }}</td>
+                        <td class="account-balance">{{ eq.balance|intcomma }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="2" style="text-align: center; padding: 20px; color: #666;">
+                            No equity accounts found
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    <tr class="total-row">
+                        <td><strong>Total Equity</strong></td>
+                        <td class="account-balance"><strong>{{ total_equity|intcomma }}</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Summary Grid -->
+    <div class="balance-summary-grid">
+        <div class="balance-summary-card">
+            <h4><i class="fas fa-chart-line"></i> Total Assets</h4>
+            <div class="balance-summary-value balance-summary-assets">
+                Tsh {{ total_assets|intcomma }}
+            </div>
+        </div>
+        
+        <div class="balance-summary-card">
+            <h4><i class="fas fa-hand-holding-usd"></i> Total Liabilities</h4>
+            <div class="balance-summary-value balance-summary-liabilities">
+                Tsh {{ total_liabilities|intcomma }}
+            </div>
+        </div>
+        
+        <div class="balance-summary-card">
+            <h4><i class="fas fa-university"></i> Total Equity</h4>
+            <div class="balance-summary-value balance-summary-equity">
+                Tsh {{ total_equity|intcomma }}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Balance Equation -->
+    <div class="balance-equation">
+        Assets ({{ total_assets|intcomma }}) = Liabilities ({{ total_liabilities|intcomma }}) + Equity ({{ total_equity|intcomma }})
+    </div>
+    
+    <!-- Status Section -->
+    <div class="balance-sheet-status">
+        <div class="balance-status-header">
+            <i class="fas fa-check-circle"></i> Balance Sheet Status
+        </div>
+        
+        <div class="balance-status-value {% if is_balanced %}balanced{% else %}not-balanced{% endif %}">
+            {% if is_balanced %}
+                <i class="fas fa-check-circle"></i> Balanced
+            {% else %}
+                <i class="fas fa-times-circle"></i> Not Balanced
+            {% endif %}
+            <span>{{ difference|intcomma|default:"0" }}</span>
+        </div>
+        
+        <p style="color: #666; margin-top: 15px;">
+            {% if is_balanced %}
+                ✅ The balance sheet is properly balanced. Assets equal Liabilities plus Equity.
+            {% else %}
+                ⚠️ The balance sheet is not balanced. Difference: Tsh {{ difference|intcomma|default:"0" }}
+            {% endif %}
+        </p>
+        
+        {% if not is_balanced %}
+        <div style="margin-top: 20px; padding: 15px; background: #fff3cd; border-radius: 8px; border-left: 4px solid #f39c12;">
+            <h4 style="margin: 0 0 10px 0; color: #856404;">
+                <i class="fas fa-exclamation-triangle"></i> Action Required
+            </h4>
+            <p style="margin: 0; color: #856404;">
+                The balance sheet is not balanced. Please review your transactions and ensure all entries are properly recorded.
+            </p>
+        </div>
+        {% endif %}
+    </div>
+    <!-- Download Section -->
+<div class="download-section" style="text-align: center; margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 10px;">
+    <h4 style="margin-bottom: 15px;">
+        <i class="fas fa-download"></i> Download Options
+    </h4>
+    <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+        <a href="{% url 'finance:download_balance_sheet_pdf' %}" 
+           class="btn btn-danger" 
+           style="background: #dc3545; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none;">
+            <i class="fas fa-file-pdf"></i> Download PDF
+        </a>
+        <button onclick="window.print()" 
+                class="btn btn-secondary" 
+                style="background: #6c757d; color: white; padding: 10px 20px; border-radius: 5px; border: none; cursor: pointer;">
+            <i class="fas fa-print"></i> Print
+        </button>
+        <a href="{% url 'finance:reports' %}" 
+           class="btn btn-primary" 
+           style="background: #007bff; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none;">
+            <i class="fas fa-chart-bar"></i> View Reports
+        </a>
+    </div>
+</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Add currency formatting
+document.addEventListener('DOMContentLoaded', function() {
+    // Format all balance amounts
+    document.querySelectorAll('.account-balance').forEach(element => {
+        const text = element.textContent;
+        const amount = text.replace(/[^\d.]/g, '');
+        
+        if (amount && !isNaN(parseFloat(amount))) {
+            const num = parseFloat(amount);
+            element.textContent = 'Tsh ' + num.toLocaleString('en-US');
+        }
+    });
+    
+    // Format summary values
+    document.querySelectorAll('.balance-summary-value').forEach(element => {
+        const text = element.textContent;
+        const amount = text.replace(/[^\d.]/g, '');
+        
+        if (amount && !isNaN(parseFloat(amount))) {
+            const num = parseFloat(amount);
+            element.textContent = 'Tsh ' + num.toLocaleString('en-US');
+        }
+    });
+});
+
+// Auto-refresh every 5 minutes for real-time updates
+setTimeout(function() {
+    location.reload();
+}, 300000); // 5 minutes
+</script>
+{% endblock %}

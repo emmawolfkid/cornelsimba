@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} - HR System</title>
+    <style>
+        * { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #f5f7fa; color: #333; line-height: 1.6; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        
+        h1 { 
+            color: #2c3e50; 
+            margin-bottom: 30px; 
+            padding-bottom: 10px; 
+            border-bottom: 3px solid #e74c3c;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .form-card {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+        
+        .form-group input[type="text"],
+        .form-group input[type="date"],
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1em;
+        }
+        
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .form-row .form-group {
+            flex: 1;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+        
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #c0392b;
+        }
+        
+        .btn-secondary {
+            background: #7f8c8d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #6c7b7d;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-info {
+            background: #cce5ff;
+            color: #004085;
+            border-left: 4px solid #3498db;
+        }
+        
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border-left: 4px solid #f39c12;
+        }
+        
+        .back-link {
+            color: #3498db;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 20px;
+        }
+        
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        
+        .error {
+            color: #e74c3c;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>
+            <i class="fas fa-user-times"></i>
+            {{ title }}
+        </h1>
+        
+        {% if messages %}
+        <div class="alert alert-info">
+            {% for message in messages %}
+            <p>{{ message }}</p>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <div class="alert alert-warning">
+            <p><strong><i class="fas fa-info-circle"></i> HR Special Access</strong></p>
+            <p>You can add absence records for any employee. This is useful for:</p>
+            <ul style="margin-left: 20px; margin-top: 10px;">
+                <li>Recording sick days when employee couldn't request</li>
+                <li>Adding emergency leave retroactively</li>
+                <li>Managing unauthorized absences</li>
+                <li>Updating leave records for payroll</li>
+            </ul>
+        </div>
+        
+        <div class="form-card">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="id_employee">Employee *</label>
+                        {{ form.employee }}
+                        {% if form.employee.errors %}
+                        <div class="error">{{ form.employee.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_leave_type">Leave Type *</label>
+                        {{ form.leave_type }}
+                        {% if form.leave_type.errors %}
+                        <div class="error">{{ form.leave_type.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="id_start_date">Start Date *</label>
+                        {{ form.start_date }}
+                        {% if form.start_date.errors %}
+                        <div class="error">{{ form.start_date.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_end_date">End Date *</label>
+                        {{ form.end_date }}
+                        {% if form.end_date.errors %}
+                        <div class="error">{{ form.end_date.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="id_status">Status *</label>
+                        {{ form.status }}
+                        {% if form.status.errors %}
+                        <div class="error">{{ form.status.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_is_paid_leave">Paid Leave</label>
+                        <div class="checkbox-group">
+                            {{ form.is_paid_leave }}
+                            <span>Mark as paid leave</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="id_reason">Reason *</label>
+                    {{ form.reason }}
+                    {% if form.reason.errors %}
+                    <div class="error">{{ form.reason.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="id_emergency_contact">Emergency Contact</label>
+                        {{ form.emergency_contact }}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_emergency_phone">Emergency Phone</label>
+                        {{ form.emergency_phone }}
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="id_payroll_remarks">Payroll Remarks</label>
+                    {{ form.payroll_remarks }}
+                </div>
+                
+                <div class="form-group">
+                    <label for="id_attachment">Supporting Document</label>
+                    {{ form.attachment }}
+                    <small style="color: #7f8c8d; display: block; margin-top: 5px;">
+                        Upload medical certificate or other supporting documents
+                    </small>
+                </div>
+                
+                <div class="btn-group">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Save Absence Record
+                    </button>
+                    <a href="{% url 'hr:hr_leave_management' %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+        
+        <a href="{% url 'hr:hr_dashboard' %}" class="back-link">
+            <i class="fas fa-arrow-left"></i> Back to HR Dashboard
+        </a>
+    </div>
+</body>
+</html>

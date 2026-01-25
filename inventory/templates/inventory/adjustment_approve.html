@@ -1,0 +1,337 @@
+{% extends 'inventory/base.html' %}
+
+{% block title %}Review Stock Adjustment{% endblock %}
+
+{% block extra_css %}
+{% load static %} 
+<link rel="stylesheet" href="{% static 'inventory/css/adjustments.css' %}">
+<link rel="stylesheet" href="{% static 'inventory/css/forms.css' %}">
+<style>
+    /* Approval page specific styles */
+    .container { 
+        max-width: 800px; 
+        margin: 0 auto; 
+    }
+    
+    .page-header {
+        margin-bottom: 30px;
+    }
+    
+    .page-title {
+        color: #2c3e50;
+        margin: 0 0 10px 0;
+        font-size: 28px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .page-subtitle {
+        color: #666;
+        font-size: 16px;
+    }
+    
+    /* Card header styles */
+    .card-header h2 {
+        margin: 0;
+        color: white;
+        font-size: 22px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    /* Stock change styling */
+    .stock-change {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 5px;
+    }
+    
+    .stock-arrow {
+        font-size: 20px;
+        color: #666;
+    }
+    
+    /* Warning section */
+    .warning-section {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px 0;
+        border-left: 4px solid #f39c12;
+    }
+    
+    .warning-title {
+        color: #e67e22;
+        font-weight: 600;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    /* Form actions */
+    .form-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 30px;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+    
+    /* Hidden field */
+    .hidden { 
+        display: none; 
+    }
+    
+    /* Back link */
+    .back-link { 
+        display: inline-block; 
+        margin-top: 20px; 
+        color: #3498db; 
+        text-decoration: none; 
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .back-link:hover { 
+        text-decoration: underline; 
+    }
+    
+    /* Alert styling for approval */
+    .alert { 
+        padding: 20px; 
+        border-radius: 8px; 
+        margin-bottom: 30px; 
+        border-left: 4px solid #ffc107;
+        background: #fff9e6;
+    }
+    
+    .alert h3 {
+        margin: 0 0 10px 0;
+        color: #856404;
+        font-size: 18px;
+    }
+    
+    .alert ul {
+        margin: 10px 0 0 20px;
+        padding: 0;
+    }
+    
+    .alert li {
+        margin-bottom: 8px;
+        color: #856404;
+    }
+    
+    /* Badge styling */
+    .badge-success { 
+        background: #d4edda; 
+        color: #155724; 
+    }
+    
+    .badge-danger { 
+        background: #ffeaea; 
+        color: #e74c3c; 
+    }
+    
+    /* Button styling */
+    .btn { 
+        padding: 12px 24px; 
+        font-size: 16px; 
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+    
+    .btn:hover { 
+        transform: translateY(-2px); 
+    }
+    
+    /* Form control focus */
+    .form-control:focus, .form-select:focus, textarea.form-control:focus { 
+        border-color: #3498db; 
+        box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header">
+    <h1 class="page-title">✓ Review Stock Adjustment</h1>
+    <p class="page-subtitle">Approve or reject pending stock adjustment request</p>
+</div>
+
+<!-- Adjustment Details Card -->
+<div class="card">
+    <div class="card-header">
+        <h2>📋 Adjustment Details</h2>
+    </div>
+    <div class="card-body">
+        <table class="details-table">
+            <tr>
+                <th>Item:</th>
+                <td>{{ adjustment.item.name }}</td>
+            </tr>
+            <tr>
+                <th>Current Stock:</th>
+                <td>
+                    <span style="font-weight: 700; font-size: 18px;">
+                        {{ adjustment.item.quantity|floatformat:3 }} {{ adjustment.item.unit_of_measure }}
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <th>Adjustment:</th>
+                <td>
+                    <span class="badge {% if adjustment.adjustment_quantity > 0 %}badge-success{% else %}badge-danger{% endif %}">
+                        {% if adjustment.adjustment_quantity > 0 %}+{% endif %}{{ adjustment.adjustment_quantity|floatformat:3 }} {{ adjustment.item.unit_of_measure }}
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <th>New Stock After:</th>
+                <td>
+                    <div class="stock-change">
+                        <span style="font-weight: 700; font-size: 18px;">
+                            {{ adjustment.item.quantity|add:adjustment.adjustment_quantity|floatformat:3 }} {{ adjustment.item.unit_of_measure }}
+                        </span>
+                        <span class="stock-arrow">→</span>
+                        {% if adjustment.adjustment_quantity > 0 %}
+                        <span style="color: #27ae60; font-weight: 600;">Increase</span>
+                        {% else %}
+                        <span style="color: #e74c3c; font-weight: 600;">Decrease</span>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <th>Type:</th>
+                <td>{{ adjustment.get_adjustment_type_display }}</td>
+            </tr>
+            <tr>
+                <th>Reason:</th>
+                <td style="white-space: pre-line;">{{ adjustment.reason }}</td>
+            </tr>
+            <tr>
+                <th>Requested By:</th>
+                <td>{{ adjustment.requested_by.get_full_name|default:adjustment.requested_by.username }}</td>
+            </tr>
+            <tr>
+                <th>Requested At:</th>
+                <td>{{ adjustment.requested_at|date:"F d, Y H:i" }}</td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<!-- Approval Form Card -->
+<div class="card">
+    <div class="card-header" style="background: #f8f9fa;">
+        <h2>📝 Manager Decision</h2>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label class="form-label">Action *</label>
+                {{ form.action }}
+            </div>
+            
+            <div class="form-group hidden" id="rejection-reason">
+                <label class="form-label">Rejection Reason *</label>
+                {{ form.rejection_reason }}
+                <div style="font-size: 14px; color: #666; margin-top: 5px;">
+                    Please provide a clear reason for rejecting this adjustment request.
+                </div>
+            </div>
+            
+            <div class="warning-section">
+                <div class="warning-title">
+                    ⚠️ Manager Responsibility
+                </div>
+                <p style="margin: 0; color: #666;">By approving this adjustment, you confirm that:</p>
+                <ul style="margin: 10px 0 0 20px; color: #666;">
+                    <li>The physical stock has been verified</li>
+                    <li>The reason for adjustment is valid</li>
+                    <li>This correction is necessary and accurate</li>
+                    <li>You have reviewed all supporting documentation</li>
+                </ul>
+            </div>
+            
+            <div class="form-actions">
+                <a href="{% url 'inventory:adjustment_list' %}" class="btn btn-secondary">
+                    ← Back to List
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    ✓ Submit Decision
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Navigation Links -->
+<div style="margin-top: 30px;">
+    <a href="{% url 'inventory:adjustment_list' %}" class="back-link">
+        ← Back to Adjustments List
+    </a>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Show/hide rejection reason based on action
+    const actionSelect = document.getElementById('id_action');
+    const rejectionReason = document.getElementById('rejection-reason');
+    
+    if (actionSelect) {
+        actionSelect.addEventListener('change', function() {
+            if (this.value === 'reject') {
+                rejectionReason.classList.remove('hidden');
+            } else {
+                rejectionReason.classList.add('hidden');
+            }
+        });
+        
+        // Initialize on page load
+        if (actionSelect.value === 'reject') {
+            rejectionReason.classList.remove('hidden');
+        }
+    }
+    
+    // Form submission confirmation
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const action = document.getElementById('id_action')?.value;
+            const rejectionText = document.getElementById('id_rejection_reason')?.value;
+            
+            if (action === 'reject' && (!rejectionText || rejectionText.trim() === '')) {
+                e.preventDefault();
+                alert('Please provide a reason for rejecting this adjustment.');
+                document.getElementById('id_rejection_reason').focus();
+                return false;
+            }
+            
+            const message = action === 'approve' 
+                ? 'Are you sure you want to APPROVE this stock adjustment?'
+                : 'Are you sure you want to REJECT this stock adjustment?';
+            
+            if (!confirm(message)) {
+                e.preventDefault();
+                return false;
+            }
+        });
+    }
+</script>
+{% endblock %}

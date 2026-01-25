@@ -1,0 +1,39 @@
+<!-- cornelsimba/finance/templates/finance/includes/notifications.html -->
+{% if messages %}
+<div id="notification-container" class="position-fixed top-0 end-0 p-3" style="z-index: 1050;">
+    {% for message in messages %}
+    <div class="toast show fade notification-toast" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
+        <div class="toast-header {% if message.tags == 'success' %}bg-success text-white{% elif message.tags == 'error' %}bg-danger text-white{% elif message.tags == 'warning' %}bg-warning text-dark{% else %}bg-info text-white{% endif %}">
+            <strong class="me-auto">
+                {% if message.tags == 'success' %}
+                    <i class="fas fa-check-circle"></i> Success
+                {% elif message.tags == 'error' %}
+                    <i class="fas fa-times-circle"></i> Error
+                {% elif message.tags == 'warning' %}
+                    <i class="fas fa-exclamation-triangle"></i> Warning
+                {% else %}
+                    <i class="fas fa-info-circle"></i> Info
+                {% endif %}
+            </strong>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+            {{ message }}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-hide notifications after 5 seconds
+    setTimeout(function() {
+        const toasts = document.querySelectorAll('.notification-toast');
+        toasts.forEach(toast => {
+            const bsToast = new bootstrap.Toast(toast);
+            bsToast.hide();
+        });
+    }, 5000);
+});
+</script>
+{% endif %}

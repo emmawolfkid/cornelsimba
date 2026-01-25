@@ -1,0 +1,361 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Leave Requests - HR System</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Our HR CSS Files -->
+    <link rel="stylesheet" href="{% static 'css/hr-main.css' %}">
+    <link rel="stylesheet" href="{% static 'css/hr-components.css' %}">
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <i class="fas fa-building"></i>
+            <span>HR Portal</span>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-title">Main Menu</div>
+            <a href="{% url 'hr:leave_dashboard' %}" class="nav-item">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="{% url 'hr:my_leave_requests' %}" class="nav-item active">
+                <i class="fas fa-history"></i>
+                <span>My Leaves</span>
+                {% if leaves %}
+                <span class="nav-badge">{{ leaves|length }}</span>
+                {% endif %}
+            </a>
+            <a href="{% url 'hr:leave_request_create' %}" class="nav-item">
+                <i class="fas fa-calendar-plus"></i>
+                <span>Request Leave</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <div class="header">
+            <h1>
+                <i class="fas fa-history"></i>
+                My Leave Requests
+            </h1>
+            <div style="display: flex; gap: 10px;">
+                <a href="{% url 'hr:leave_request_create' %}" class="btn btn-success">
+                    <i class="fas fa-plus-circle"></i> New Request
+                </a>
+                <button onclick="downloadLeaveHistory()" class="btn btn-info">
+                    <i class="fas fa-download"></i> Download
+                </button>
+            </div>
+        </div>
+
+        <!-- Statistics -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div>
+                        <h3>Total Requests</h3>
+                        <p class="stat-number">{{ leaves|length }}</p>
+                        <small class="stat-description">All time</small>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-list"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card green">
+                <div class="stat-header">
+                    <div>
+                        <h3>Approved</h3>
+                        <p class="stat-number">
+                            {% with approved=leaves|dictsort:"status"|join:""|safe %}
+                                {{ leaves|filter_by_status:"approved"|length|default:"0" }}
+                            {% endwith %}
+                        </p>
+                        <small class="stat-description">Successfully approved</small>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card orange">
+                <div class="stat-header">
+                    <div>
+                        <h3>Pending</h3>
+                        <p class="stat-number">
+                            {% with pending=leaves|dictsort:"status"|join:""|safe %}
+                                {{ leaves|filter_by_status:"pending"|length|default:"0" }}
+                            {% endwith %}
+                        </p>
+                        <small class="stat-description">Awaiting approval</small>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card red">
+                <div class="stat-header">
+                    <div>
+                        <h3>Rejected</h3>
+                        <p class="stat-number">
+                            {% with rejected=leaves|dictsort:"status"|join:""|safe %}
+                                {{ leaves|filter_by_status:"rejected"|length|default:"0" }}
+                            {% endwith %}
+                        </p>
+                        <small class="stat-description">Not approved</small>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-times-circle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Leave Requests Table -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <i class="fas fa-calendar-alt"></i>
+                    Leave History
+                </h2>
+                <div style="display: flex; gap: 10px;">
+                    <select class="form-control" style="width: 150px;" onchange="filterByStatus(this.value)">
+                        <option value="">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table id="leaveTable">
+                    <thead>
+                        <tr>
+                            <th>Leave Type</th>
+                            <th>Dates</th>
+                            <th>Days</th>
+                            <th>Status</th>
+                            <th>Submitted</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for leave in leaves %}
+                        <tr data-status="{{ leave.status }}">
+                            <td>
+                                <span class="badge badge-info">{{ leave.leave_type.name }}</span>
+                                {% if not leave.is_paid_leave %}
+                                <span class="badge badge-warning" style="margin-left: 5px;">Unpaid</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {{ leave.start_date|date:"M d" }} - {{ leave.end_date|date:"M d, Y" }}
+                            </td>
+                            <td>
+                                <strong>{{ leave.days_requested }}</strong> days
+                            </td>
+                            <td>
+                                {% if leave.status == 'approved' %}
+                                <span class="badge badge-success">
+                                    <i class="fas fa-check-circle"></i> Approved
+                                </span>
+                                {% elif leave.status == 'pending' %}
+                                <span class="badge badge-warning">
+                                    <i class="fas fa-clock"></i> Pending
+                                </span>
+                                {% elif leave.status == 'rejected' %}
+                                <span class="badge badge-danger">
+                                    <i class="fas fa-times-circle"></i> Rejected
+                                </span>
+                                {% elif leave.status == 'cancelled' %}
+                                <span class="badge badge-secondary">
+                                    <i class="fas fa-ban"></i> Cancelled
+                                </span>
+                                {% endif %}
+                                
+                                {% if leave.payroll_processed %}
+                                <span class="badge badge-success" style="margin-left: 5px;">
+                                    <i class="fas fa-check-double"></i> Paid
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {{ leave.submitted_date|date:"M d, Y" }}
+                                <div class="text-muted" style="font-size: 0.85em;">
+                                    {{ leave.submitted_date|time }}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="action-links">
+                                    <a href="{% url 'hr:leave_detail' leave.id %}" class="action-link">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                    {% if leave.status == 'pending' %}
+                                    <a href="{% url 'hr:leave_cancel' leave.id %}" class="action-link danger">
+                                        <i class="fas fa-times"></i> Cancel
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center p-4">
+                                <div class="empty-state">
+                                    <i class="fas fa-calendar-times fa-3x" style="color: var(--gray-light); margin-bottom: 20px;"></i>
+                                    <h3>No Leave Requests</h3>
+                                    <p class="text-muted mb-3">You haven't submitted any leave requests yet.</p>
+                                    <a href="{% url 'hr:leave_request_create' %}" class="btn btn-success">
+                                        <i class="fas fa-plus-circle"></i> Submit First Request
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Leave Balance Summary -->
+        <div class="card info" style="margin-top: 30px;">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <i class="fas fa-chart-pie"></i>
+                    Leave Balance Summary
+                </h2>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; padding: 25px;">
+                <div>
+                    <h3 style="color: var(--dark); margin-bottom: 20px;">Balance Overview</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px;">
+                        <div style="background: var(--white); padding: 15px; border-radius: var(--border-radius); text-align: center;">
+                            <div style="font-size: 1.8em; font-weight: 700; color: var(--primary);">
+                                {% if employee %}
+                                    {{ employee.get_annual_leave_balance|default:"0" }}
+                                {% else %}
+                                    0
+                                {% endif %}
+                            </div>
+                            <div style="font-size: 0.9em; color: var(--gray);">Annual Leave</div>
+                        </div>
+                        <div style="background: var(--white); padding: 15px; border-radius: var(--border-radius); text-align: center;">
+                            <div style="font-size: 1.8em; font-weight: 700; color: var(--success);">
+                                {% if employee %}
+                                    {{ employee.get_sick_leave_balance|default:"0" }}
+                                {% else %}
+                                    0
+                                {% endif %}
+                            </div>
+                            <div style="font-size: 0.9em; color: var(--gray);">Sick Leave</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 style="color: var(--dark); margin-bottom: 20px;">Quick Actions</h3>
+                    <div class="action-buttons">
+                        <a href="{% url 'hr:leave_request_create' %}" class="btn btn-success">
+                            <i class="fas fa-plus-circle"></i> New Request
+                        </a>
+                        <button onclick="downloadLeaveHistory()" class="btn btn-info">
+                            <i class="fas fa-download"></i> Download History
+                        </button>
+                        <a href="{% url 'hr:leave_dashboard' %}" class="btn">
+                            <i class="fas fa-arrow-left"></i> Back to Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{% static 'js/hr-main.js' %}"></script>
+    
+    <script>
+        // Filter by status
+        function filterByStatus(status) {
+            const rows = document.querySelectorAll('#leaveTable tbody tr');
+            
+            rows.forEach(row => {
+                if (!status || row.getAttribute('data-status') === status) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+        
+        // Download leave history as CSV
+        function downloadLeaveHistory() {
+            // Create CSV content
+            let csv = 'Leave Type,Dates,Start Date,End Date,Days,Status,Submitted Date,Reason\n';
+            
+            document.querySelectorAll('#leaveTable tbody tr').forEach(row => {
+                if (row.style.display !== 'none') {
+                    const cells = row.querySelectorAll('td');
+                    if (cells.length >= 5) {
+                        const leaveType = cells[0].querySelector('.badge')?.textContent?.trim() || '';
+                        const dates = cells[1].textContent?.trim() || '';
+                        const days = cells[2].querySelector('strong')?.textContent?.trim() || '';
+                        const status = cells[3].querySelector('.badge')?.textContent?.trim() || '';
+                        const submitted = cells[4].textContent?.trim() || '';
+                        
+                        // Extract dates
+                        const dateRange = dates.split(' - ');
+                        const startDate = dateRange[0] || '';
+                        const endDate = dateRange[1] || '';
+                        
+                        csv += `"${leaveType}","${dates}","${startDate}","${endDate}","${days}","${status}","${submitted}",""\n`;
+                    }
+                }
+            });
+            
+            // Create download link
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `leave_history_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            
+            HRSystem.showNotification('Leave history downloaded successfully!', 'success');
+        }
+        
+        // Initialize
+        $(document).ready(function() {
+            // Update stats from current filter
+            function updateStats() {
+                const visibleRows = document.querySelectorAll('#leaveTable tbody tr[style=""]').length;
+                // Could add more detailed stats here
+            }
+        });
+    </script>
+</body>
+</html>

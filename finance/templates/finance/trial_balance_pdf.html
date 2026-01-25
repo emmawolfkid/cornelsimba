@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Trial Balance - {{ date }}</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            font-size: 12px; 
+            margin: 20px; 
+        }
+        h1 { 
+            color: #2c3e50; 
+            text-align: center; 
+            margin-bottom: 5px; 
+        }
+        h2 { 
+            color: #7f8c8d; 
+            text-align: center; 
+            margin-top: 0; 
+        }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin: 15px 0; 
+        }
+        th { 
+            background-color: #f8f9fa; 
+            border: 1px solid #dee2e6; 
+            padding: 8px; 
+            text-align: left; 
+        }
+        td { 
+            border: 1px solid #dee2e6; 
+            padding: 8px; 
+        }
+        .debit { 
+            color: #e74c3c; 
+            text-align: right; 
+        }
+        .credit { 
+            color: #27ae60; 
+            text-align: right; 
+        }
+        .total-row { 
+            background-color: #f8f9fa; 
+            font-weight: bold; 
+        }
+        .header { 
+            text-align: center; 
+            margin-bottom: 20px; 
+        }
+        .company { 
+            font-size: 18px; 
+            font-weight: bold; 
+            color: #2c3e50; 
+            margin-bottom: 5px; 
+        }
+        .footer { 
+            text-align: center; 
+            margin-top: 30px; 
+            font-size: 10px; 
+            color: #95a5a6; 
+            padding-top: 10px; 
+            border-top: 1px solid #dee2e6; 
+        }
+        .status-box { 
+            margin-top: 20px; 
+            padding: 10px; 
+            border: 2px solid; 
+            text-align: center; 
+        }
+        .balanced { 
+            border-color: #27ae60; 
+            color: #27ae60; 
+        }
+        .not-balanced { 
+            border-color: #e74c3c; 
+            color: #e74c3c; 
+        }
+    </style>
+</head>
+<body>
+    <!-- ADD THIS LINE: Load the humanize filters -->
+    {% load humanize %}
+    
+    <div class="header">
+        <div class="company">Cornel Simba Mining Enterprise</div>
+        <h2>Trial Balance</h2>
+        <div>As at: {{ date|date:"F j, Y" }}</div>
+    </div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Account Code</th>
+                <th>Account Name</th>
+                <th>Account Type</th>
+                <th>Debit (Tsh)</th>
+                <th>Credit (Tsh)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for account in accounts %}
+            <tr>
+                <td>{{ account.code }}</td>
+                <td>{{ account.name }}</td>
+                <td>{{ account.account_type }}</td>
+                <td class="debit">
+                    {% if account.is_debit %}
+                    {{ account.debit_balance|floatformat:2|intcomma }}
+                    {% else %}
+                    -
+                    {% endif %}
+                </td>
+                <td class="credit">
+                    {% if not account.is_debit %}
+                    {{ account.credit_balance|floatformat:2|intcomma }}
+                    {% else %}
+                    -
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" style="text-align: center;">No accounts found</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot class="total-row">
+            <tr>
+                <td colspan="3"><strong>TOTALS</strong></td>
+                <td class="debit"><strong>{{ total_debits|floatformat:2|intcomma }}</strong></td>
+                <td class="credit"><strong>{{ total_credits|floatformat:2|intcomma }}</strong></td>
+            </tr>
+        </tfoot>
+    </table>
+    
+    <div class="status-box {% if is_balanced %}balanced{% else %}not-balanced{% endif %}">
+        <h3>Trial Balance Status</h3>
+        {% if is_balanced %}
+            <p><strong>✓ BALANCED</strong></p>
+            <p>Total Debits: {{ total_debits|floatformat:2|intcomma }} = Total Credits: {{ total_credits|floatformat:2|intcomma }}</p>
+        {% else %}
+            <p><strong>✗ NOT BALANCED</strong></p>
+            <p>Difference: Tsh {{ abs_difference|floatformat:2|intcomma }}</p>
+        {% endif %}
+    </div>
+    
+    <div class="footer">
+        <p>Cornel Simba Mining Enterprise - Financial Reports</p>
+        <p>Generated automatically by the Finance System</p>
+    </div>
+</body>
+</html>

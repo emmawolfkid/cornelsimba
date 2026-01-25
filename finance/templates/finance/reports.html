@@ -1,0 +1,291 @@
+{% extends 'finance/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Financial Reports - Finance{% endblock %}
+
+{% block page_title %}📊 Financial Reports - {{ current_year }}{% endblock %}
+
+{% block breadcrumb %}
+<a href="{% url 'finance:dashboard' %}">Dashboard</a> / Reports
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'finance/css/reports.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="reports-container">
+ <!-- Header -->
+    <div class="reports-header">
+        <h1><i class="fas fa-chart-bar"></i> Financial Reports</h1>
+        <div class="report-meta">
+            <div>
+                <strong><i class="fas fa-calendar"></i> Generated:</strong> {% now "F d, Y H:i" %}
+            </div>
+            <div>
+                <strong><i class="fas fa-clock"></i> Period:</strong> January {{ current_year }} - December {{ current_year }}
+            </div>
+            <!-- Add PDF Download Button here -->
+            <a href="{% url 'finance:download_financial_report_pdf' %}" 
+               class="reports-download-btn" 
+               style="background: #dc3545; color: white; padding: 10px 15px; border-radius: 5px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; margin-left: 10px;">
+                <i class="fas fa-file-pdf"></i> Download PDF
+            </a>
+            <button onclick="window.print()" class="reports-print-btn">
+                <i class="fas fa-print"></i> Print Report
+            </button>
+        </div>
+    </div>
+    
+    <!-- Summary Cards -->
+    <div class="reports-summary-grid">
+        <div class="reports-summary-card income">
+            <h3><i class="fas fa-arrow-up"></i> Total Income</h3>
+            <div class="reports-summary-value">
+                Tsh {{ total_income|floatformat:0|default:"0"|intcomma }}
+            </div>
+            <div class="reports-summary-detail">Year {{ current_year }}</div>
+        </div>
+        
+        <div class="reports-summary-card expense">
+            <h3><i class="fas fa-arrow-down"></i> Total Expenses</h3>
+            <div class="reports-summary-value">
+                Tsh {{ total_expense|floatformat:0|default:"0"|intcomma }}
+            </div>
+            <div class="reports-summary-detail">Year {{ current_year }}</div>
+        </div>
+        
+        <div class="reports-summary-card profit {% if profit_loss >= 0 %}positive{% else %}negative{% endif %}">
+            <h3><i class="fas fa-chart-line"></i> Net Profit/Loss</h3>
+            <div class="reports-summary-value">
+                {% if profit_loss >= 0 %}+{% endif %}Tsh {{ profit_loss|floatformat:0|default:"0"|intcomma }}
+            </div>
+            <div class="reports-summary-detail">Income - Expenses</div>
+        </div>
+        
+        <div class="reports-summary-card">
+            <h3><i class="fas fa-percentage"></i> Profit Margin</h3>
+            <div class="reports-summary-value {% if profit_margin >= 0 %}reports-positive{% else %}reports-negative{% endif %}">
+                {% if total_income > 0 %}
+                    {{ profit_margin|floatformat:1 }}%
+                {% else %}
+                    0%
+                {% endif %}
+            </div>
+            <div class="reports-summary-detail">Net Profit / Total Income</div>
+        </div>
+    </div>
+    
+    <!-- Charts Grid -->
+    <div class="reports-charts-grid">
+        <!-- Monthly Income Chart -->
+        <div class="reports-chart-card">
+            <h2><i class="fas fa-chart-line"></i> Monthly Income - {{ current_year }}</h2>
+            <div class="reports-bar-chart">
+                {% for item in monthly_income %}
+                <div class="reports-bar reports-bar-income">
+                    <div class="reports-bar-label">{{ item.month|slice:":3" }}</div>
+                    <div class="reports-bar-container">
+                        <div class="reports-bar-fill" 
+                             data-percentage="{% widthratio item.amount max_income 100 %}" 
+                             data-amount="{{ item.amount }}">
+                        </div>
+                    </div>
+                    <div class="reports-bar-value">Tsh {{ item.amount|floatformat:0|default:"0"|intcomma }}</div>
+                </div>
+                {% empty %}
+                <div style="text-align: center; padding: 30px; color: #666;">
+                    <i class="fas fa-chart-line fa-2x mb-3"></i>
+                    <p>No income data available</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Monthly Expense Chart -->
+        <div class="reports-chart-card">
+            <h2><i class="fas fa-chart-line"></i> Monthly Expenses - {{ current_year }}</h2>
+            <div class="reports-bar-chart">
+                {% for item in monthly_expense %}
+                <div class="reports-bar reports-bar-expense">
+                    <div class="reports-bar-label">{{ item.month|slice:":3" }}</div>
+                    <div class="reports-bar-container">
+                        <div class="reports-bar-fill" 
+                             data-percentage="{% widthratio item.amount max_expense 100 %}" 
+                             data-amount="{{ item.amount }}">
+                        </div>
+                    </div>
+                    <div class="reports-bar-value">Tsh {{ item.amount|floatformat:0|default:"0"|intcomma }}</div>
+                </div>
+                {% empty %}
+                <div style="text-align: center; padding: 30px; color: #666;">
+                    <i class="fas fa-chart-line fa-2x mb-3"></i>
+                    <p>No expense data available</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tables Grid -->
+    <div class="reports-tables-grid">
+        <!-- Income by Type -->
+        <div class="reports-table-card">
+            <h2><i class="fas fa-money-bill-wave"></i> Income by Type</h2>
+            <table class="reports-table">
+                <thead>
+                    <tr>
+                        <th>Income Type</th>
+                        <th>Amount (Tsh)</th>
+                        <th>Percentage</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in income_by_type %}
+                    <tr>
+                        <td>{{ item.income_type }}</td>
+                        <td class="reports-amount-cell">Tsh {{ item.total|floatformat:0|default:"0"|intcomma }}</td>
+                        <td class="reports-percentage-cell">{{ item.percentage|floatformat:1|default:"0" }}%</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" style="text-align: center; padding: 30px; color: #666;">
+                            <i class="fas fa-info-circle"></i> No income data by type
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Expenses by Category -->
+        <div class="reports-table-card">
+            <h2><i class="fas fa-receipt"></i> Expenses by Category</h2>
+            <table class="reports-table">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Amount (Tsh)</th>
+                        <th>Percentage</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in expense_by_category %}
+                    <tr>
+                        <td>{{ item.expense_type }}</td>
+                        <td class="reports-amount-cell">Tsh {{ item.total|floatformat:0|default:"0"|intcomma }}</td>
+                        <td class="reports-percentage-cell">{{ item.percentage|floatformat:1|default:"0" }}%</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" style="text-align: center; padding: 30px; color: #666;">
+                            <i class="fas fa-info-circle"></i> No expense data by category
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Report Summary -->
+    <div class="reports-summary-section">
+        <h2><i class="fas fa-file-alt"></i> Report Summary</h2>
+        <div class="reports-summary-details-grid">
+            <div class="reports-summary-detail-item">
+                <div class="reports-summary-label">Generated Date</div>
+                <div class="reports-summary-data">{% now "F d, Y H:i" %}</div>
+            </div>
+            
+            <div class="reports-summary-detail-item">
+                <div class="reports-summary-label">Report Period</div>
+                <div class="reports-summary-data">Jan {{ current_year }} - Dec {{ current_year }}</div>
+            </div>
+            
+            <div class="reports-summary-detail-item">
+                <div class="reports-summary-label">Profit Margin</div>
+                <div class="reports-summary-data {% if profit_margin >= 0 %}reports-positive{% else %}reports-negative{% endif %}">
+                    {% if total_income > 0 %}
+                        {{ profit_margin|floatformat:1 }}%
+                    {% else %}
+                        0%
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="reports-summary-detail-item">
+                <div class="reports-summary-label">Largest Income Source</div>
+                <div class="reports-summary-data">
+                    {% if income_by_type %}
+                        {{ income_by_type.0.income_type }}<br>
+                        <small style="color: var(--success-color);">Tsh {{ income_by_type.0.total|floatformat:0|intcomma }}</small>
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="reports-summary-detail-item">
+                <div class="reports-summary-label">Largest Expense Category</div>
+                <div class="reports-summary-data">
+                    {% if expense_by_category %}
+                        {{ expense_by_category.0.expense_type }}<br>
+                        <small style="color: var(--danger-color);">Tsh {{ expense_by_category.0.total|floatformat:0|intcomma }}</small>
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="reports-summary-detail-item">
+                <div class="reports-summary-label">Sales vs Other Income</div>
+                <div class="reports-summary-data">
+                    Sales: Tsh {{ sales_income|floatformat:0|intcomma }}<br>
+                    Other: Tsh {{ other_income|floatformat:0|intcomma }}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Navigation -->
+    <div class="reports-back-links">
+        <a href="{% url 'finance:dashboard' %}" class="reports-back-link">
+            <i class="fas fa-arrow-left"></i> Back to Finance Dashboard
+        </a>
+        <a href="{% url 'finance:income_list' %}" class="reports-back-link">
+            <i class="fas fa-chart-line"></i> View Income Details
+        </a>
+        <a href="{% url 'finance:expense_list' %}" class="reports-back-link">
+            <i class="fas fa-chart-bar"></i> View Expense Details
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Animate bar charts on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Animate bar fills
+    document.querySelectorAll('.reports-bar-fill').forEach(bar => {
+        const percentage = bar.getAttribute('data-percentage') || '0';
+        bar.style.width = '0%';
+        
+        setTimeout(() => {
+            bar.style.width = Math.min(percentage, 100) + '%';
+        }, 100);
+    });
+    
+    // Format currency in tables
+    document.querySelectorAll('.reports-amount-cell, .reports-bar-value').forEach(cell => {
+        const text = cell.textContent;
+        const amount = text.replace(/[^\d.]/g, '');
+        if (amount) {
+            const formatted = parseInt(amount).toLocaleString();
+            cell.textContent = cell.textContent.replace(amount, formatted);
+        }
+    });
+});
+</script>
+{% endblock %}

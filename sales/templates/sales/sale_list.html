@@ -1,0 +1,545 @@
+{% extends 'sales/base.html' %}
+{% load static %}
+
+{% block title %}Sales List - CornelSimba ERP{% endblock %}
+{% block page_title %}Sales List{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/sale_list.css' %}">
+{% endblock %}
+
+{% block content %}
+    <!-- Sale Header -->
+    <div class="sale-header">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+            <div>
+                <h1 class="sale-title">Sales List</h1>
+                <p class="sale-subtitle">Manage and track all sales transactions</p>
+            </div>
+            <a href="{% url 'sales:sale_create' %}" class="btn-custom btn-primary-custom">
+                <i class="bi bi-plus-lg"></i>
+                New Sale
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters Card -->
+    <div class="card-custom filters-card">
+        <div class="card-header-custom">
+            <h5 class="card-title mb-0">Filters</h5>
+        </div>
+        <div class="card-body-custom">
+            <form method="get" id="filtersForm">
+                <div class="filters-grid">
+                    <!-- Status Filter -->
+                    <div class="filter-group">
+                        <label for="statusFilter" class="filter-label">Status</label>
+                        <select name="status" id="statusFilter" class="filter-input filter-select">
+                            <option value="">All Status</option>
+                            {% for status_code, status_name in status_choices %}
+                            <option value="{{ status_code }}" {% if request.GET.status == status_code %}selected{% endif %}>
+                                {{ status_name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- Customer Filter -->
+                    <div class="filter-group">
+                        <label for="customerFilter" class="filter-label">Customer</label>
+                        <select name="customer" id="customerFilter" class="filter-input filter-select">
+                            <option value="">All Customers</option>
+                            {% for customer in customers %}
+                            <option value="{{ customer.id }}" {% if request.GET.customer == customer.id|stringformat:"i" %}selected{% endif %}>
+                                {{ customer.name|truncatechars:25 }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- From Date -->
+                    <div class="filter-group">
+                        <label for="dateFromFilter" class="filter-label">From Date</label>
+                        <input type="date" name="date_from" id="dateFromFilter" class="filter-input" value="{{ request.GET.date_from }}">
+                    </div>
+                    
+                    <!-- To Date -->
+                    <div class="filter-group">
+                        <label for="dateToFilter" class="filter-label">To Date</label>
+                        <input type="date" name="date_to" id="dateToFilter" class="filter-input" value="{{ request.GET.date_to }}">
+                    </div>
+                    
+                    <!-- Filter Actions -->
+                    <div class="filter-actions">
+                        <button type="submit" class="btn-custom btn-primary-custom">
+                            <i class="bi bi-funnel"></i>
+                            Apply Filters
+                        </button>
+                        {% if request.GET %}
+                        <a href="{% url 'sales:sale_list' %}" class="btn-custom btn-outline-custom" title="Clear all filters">
+                            <i class="bi bi-x-lg"></i>
+                            Clear
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="quick-stats-bar">
+        <div class="quick-stat-item">
+            <div class="quick-stat-icon total">
+                <i class="bi bi-cart-check"></i>
+            </div>
+            <div class="quick-stat-info">
+                <div class="quick-stat-value">{{ sales.count }}</div>
+                <div class="quick-stat-label">Total Sales</div>
+            </div>
+        </div>
+        
+        <div class="quick-stat-item">
+            <div class="quick-stat-icon amount">
+                <i class="bi bi-cash-stack"></i>
+            </div>
+            <div class="quick-stat-info">
+                <div class="quick-stat-value">Tsh {{ sales_total|floatformat:0|default:"0" }}</div>
+                <div class="quick-stat-label">Total Amount</div>
+            </div>
+        </div>
+        
+        <div class="quick-stat-item">
+            <div class="quick-stat-icon paid">
+                <i class="bi bi-cash-coin"></i>
+            </div>
+            <div class="quick-stat-info">
+                <div class="quick-stat-value">Tsh {{ paid_total|floatformat:0|default:"0" }}</div>
+                <div class="quick-stat-label">Total Paid</div>
+            </div>
+        </div>
+        
+        <div class="quick-stat-item">
+            <div class="quick-stat-icon balance">
+                <i class="bi bi-clock-history"></i>
+            </div>
+            <div class="quick-stat-info">
+                <div class="quick-stat-value">Tsh {{ balance_total|floatformat:0|default:"0" }}</div>
+                <div class="quick-stat-label">Total Balance</div>
+            </div>
+        </div>
+    </div>
+<!-- Simple Download Button -->
+<div class="download-section mb-4">
+    <a href="{% url 'sales:download_sales_pdf' %}?{{ request.GET.urlencode }}" 
+       class="btn-custom btn-primary-custom">
+        <i class="bi bi-file-earmark-pdf-fill"></i>
+        Download Full Sales Report (PDF)
+    </a>
+    <small class="text-muted d-block mt-1">
+        Downloads all filtered sales with complete details
+    </small>
+</div>
+
+    <!-- Sales Table Card -->
+    <div class="card-custom">
+        <div class="card-header-custom">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">All Sales</h5>
+                <span class="badge-custom badge-primary">{{ sales.count }}</span>
+            </div>
+        </div>
+        
+        <div class="sales-table-container">
+            {% if sales %}
+            <table class="sales-table">
+                <thead>
+                    <tr>
+                        <th>Sale #</th>
+                        <th>Date</th>
+                        <th>Customer</th>
+                        <th>Type</th>
+                        <th>Amount</th>
+                        <th>Paid</th>
+                        <th>Balance</th>
+                        <th>Status</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sale in sales %}
+                    <tr class="{% if request.GET %}filtered-row{% endif %}">
+                        <td>
+                            <div class="sale-number">{{ sale.sale_number }}</div>
+                            {% if sale.status == 'DRAFT' %}
+                            <div class="sale-draft-badge">Draft</div>
+                            {% endif %}
+                        </td>
+                        <td>{{ sale.sale_date|date:"Y-m-d" }}</td>
+                        <td class="customer-cell">
+                            <div class="customer-name">{{ sale.customer.name|truncatechars:20 }}</div>
+                        </td>
+                        <td>{{ sale.get_sale_type_display }}</td>
+                        <td class="currency-display">{{ sale.net_amount|floatformat:0|default:"0" }}</td>
+                        <td class="currency-display">{{ sale.amount_paid|floatformat:0|default:"0" }}</td>
+                        <td class="currency-display">{{ sale.balance_due|floatformat:0|default:"0" }}</td>
+                        <td>
+                            {% if sale.status == 'COMPLETED' %}
+                            <span class="sale-status-badge completed">Completed</span>
+                            {% elif sale.status == 'PENDING' %}
+                            <span class="sale-status-badge pending">Pending</span>
+                            {% elif sale.status == 'CANCELLED' %}
+                            <span class="sale-status-badge cancelled">Cancelled</span>
+                            {% elif sale.status == 'APPROVED' %}
+                            <span class="sale-status-badge approved">Approved</span>
+                            {% elif sale.status == 'DRAFT' %}
+                            <span class="sale-status-badge draft">Draft</span>
+                            {% else %}
+                            <span class="sale-status-badge">{{ sale.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <div class="action-buttons-sale">
+                                <a href="{% url 'sales:sale_detail' sale.pk %}" 
+                                   class="action-btn-sale view"
+                                   title="View sale details">
+                                    <i class="bi bi-eye"></i>
+                                    View
+                                </a>
+                                {% if sale.status == 'DRAFT' %}
+                                <a href="#" 
+                                   class="action-btn-sale edit"
+                                   title="Edit draft sale">
+                                    <i class="bi bi-pencil"></i>
+                                    Edit
+                                </a>
+                                {% endif %}
+                                {% if sale.status == 'COMPLETED' and sale.balance_due > 0 %}
+                                <a href="{% url 'sales:sale_add_payment' sale.pk %}" 
+                                   class="action-btn-sale pay"
+                                   title="Add payment">
+                                    <i class="bi bi-cash"></i>
+                                    Pay
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state-sales">
+                <i class="bi bi-cart-x"></i>
+                <h5>No sales found</h5>
+                <p>{% if request.GET %}Try adjusting your filters{% else %}Create your first sale to get started{% endif %}</p>
+                <div class="empty-state-actions">
+                    <a href="{% url 'sales:sale_create' %}" class="btn-custom btn-primary-custom">
+                        Create First Sale
+                    </a>
+                    {% if request.GET %}
+                    <a href="{% url 'sales:sale_list' %}" class="btn-custom btn-outline-custom">
+                        Clear Filters
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <div class="pagination-sales">
+            {% if page_obj.has_previous %}
+            <a href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="page-link-sales">
+                <i class="bi bi-chevron-double-left"></i>
+            </a>
+            <a href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="page-link-sales">
+                <i class="bi bi-chevron-left"></i>
+            </a>
+            {% else %}
+            <span class="page-link-sales disabled">
+                <i class="bi bi-chevron-double-left"></i>
+            </span>
+            <span class="page-link-sales disabled">
+                <i class="bi bi-chevron-left"></i>
+            </span>
+            {% endif %}
+            
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                <a href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="page-link-sales active">
+                    {{ num }}
+                </a>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <a href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="page-link-sales">
+                    {{ num }}
+                </a>
+                {% endif %}
+            {% endfor %}
+            
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="page-link-sales">
+                <i class="bi bi-chevron-right"></i>
+            </a>
+            <a href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="page-link-sales">
+                <i class="bi bi-chevron-double-right"></i>
+            </a>
+            {% else %}
+            <span class="page-link-sales disabled">
+                <i class="bi bi-chevron-right"></i>
+            </span>
+            <span class="page-link-sales disabled">
+                <i class="bi bi-chevron-double-right"></i>
+            </span>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Toast notification system
+    function showToast(message, type = 'success') {
+        const toast = document.createElement('div');
+        toast.className = `toast-notification toast-${type}`;
+        toast.innerHTML = `
+            <div class="toast-icon">
+                <i class="bi ${type === 'success' ? 'bi-check-circle' : type === 'error' ? 'bi-x-circle' : 'bi-exclamation-circle'}"></i>
+            </div>
+            <div class="toast-content">
+                ${message}
+            </div>
+        `;
+        
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 3000);
+    }
+    
+    // Check for messages from Django
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check for URL parameters for success messages
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('success')) {
+            showToast(urlParams.get('success'), 'success');
+            
+            // Clean URL
+            const cleanUrl = window.location.pathname;
+            window.history.replaceState({}, document.title, cleanUrl);
+        }
+        
+        // Check for Django messages
+        const messages = document.querySelector('.alert');
+        if (messages) {
+            const messageText = messages.textContent.trim();
+            const messageType = messages.classList.contains('alert-success') ? 'success' : 
+                              messages.classList.contains('alert-error') ? 'error' : 'warning';
+            showToast(messageText, messageType);
+            messages.remove();
+        }
+        
+        // Export dropdown
+        const exportBtn = document.getElementById('exportBtn');
+        const exportMenu = document.getElementById('exportMenu');
+        
+        if (exportBtn && exportMenu) {
+            exportBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                exportMenu.classList.toggle('show');
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!exportBtn.contains(e.target) && !exportMenu.contains(e.target)) {
+                    exportMenu.classList.remove('show');
+                }
+            });
+        }
+        
+        // Form validation for date range
+        const form = document.getElementById('filtersForm');
+        const dateFrom = document.getElementById('dateFromFilter');
+        const dateTo = document.getElementById('dateToFilter');
+        
+        if (form && dateFrom && dateTo) {
+            form.addEventListener('submit', function(e) {
+                // Reset any previous errors
+                dateFrom.classList.remove('date-error');
+                dateTo.classList.remove('date-error');
+                const errorMessage = document.querySelector('.date-error-message');
+                if (errorMessage) {
+                    errorMessage.remove();
+                }
+                
+                // Validate date range
+                if (dateFrom.value && dateTo.value) {
+                    const fromDate = new Date(dateFrom.value);
+                    const toDate = new Date(dateTo.value);
+                    
+                    if (fromDate > toDate) {
+                        e.preventDefault();
+                        
+                        // Add error styling
+                        dateFrom.classList.add('date-error');
+                        dateTo.classList.add('date-error');
+                        
+                        // Create error message
+                        const errorDiv = document.createElement('div');
+                        errorDiv.className = 'date-error-message show';
+                        errorDiv.textContent = '"From Date" cannot be later than "To Date"';
+                        
+                        // Insert after date inputs
+                        if (dateTo.nextSibling) {
+                            dateTo.parentNode.insertBefore(errorDiv, dateTo.nextSibling);
+                        } else {
+                            dateTo.parentNode.appendChild(errorDiv);
+                        }
+                        
+                        // Focus on the problematic field
+                        dateFrom.focus();
+                        
+                        showToast('Please fix the date range error', 'error');
+                        return false;
+                    }
+                }
+                
+                // Show loading state
+                const submitBtn = form.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = `
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        Filtering...
+                    `;
+                }
+            });
+        }
+        
+        // Auto-submit on filter change (with debounce)
+        let filterTimeout;
+        const autoSubmitFilters = document.querySelectorAll('#statusFilter, #customerFilter');
+        autoSubmitFilters.forEach(filter => {
+            filter.addEventListener('change', function() {
+                if (filterTimeout) {
+                    clearTimeout(filterTimeout);
+                }
+                
+                filterTimeout = setTimeout(() => {
+                    if (this.value) {
+                        form.submit();
+                    }
+                }, 500);
+            });
+        });
+        
+        // Mobile optimizations
+        if ('ontouchstart' in window) {
+            // Increase touch target size
+            const touchElements = document.querySelectorAll('.action-btn-sale, .export-btn, .export-option');
+            touchElements.forEach(el => {
+                el.style.minHeight = '44px';
+                el.style.minWidth = '44px';
+            });
+            
+            // Prevent zoom on date inputs
+            const dateInputs = document.querySelectorAll('input[type="date"]');
+            dateInputs.forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.style.fontSize = '16px';
+                });
+                
+                input.addEventListener('blur', function() {
+                    this.style.fontSize = '';
+                });
+            });
+            
+            // Touch feedback
+            const interactiveElements = document.querySelectorAll('.action-btn-sale, .export-btn, .page-link-sales');
+            interactiveElements.forEach(el => {
+                el.addEventListener('touchstart', function() {
+                    this.style.opacity = '0.7';
+                });
+                
+                el.addEventListener('touchend', function() {
+                    this.style.opacity = '1';
+                });
+            });
+            
+            // Make table rows more touch-friendly
+            const tableRows = document.querySelectorAll('.sales-table tbody tr');
+            tableRows.forEach(row => {
+                row.style.cursor = 'pointer';
+                row.addEventListener('click', function(e) {
+                    if (!e.target.closest('a')) {
+                        const viewLink = this.querySelector('a.view');
+                        if (viewLink) {
+                            window.location.href = viewLink.href;
+                        }
+                    }
+                });
+            });
+        }
+        
+        // Print functionality
+        const printBtn = document.querySelector('[onclick*="print"]');
+        if (printBtn) {
+            printBtn.addEventListener('click', function() {
+                window.print();
+            });
+        }
+        
+        // Quick filter shortcuts
+        const quickFilterButtons = document.querySelectorAll('.quick-filter');
+        quickFilterButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const filterType = this.dataset.filter;
+                const filterValue = this.dataset.value;
+                
+                if (filterType === 'status') {
+                    document.getElementById('statusFilter').value = filterValue;
+                } else if (filterType === 'customer') {
+                    document.getElementById('customerFilter').value = filterValue;
+                } else if (filterType === 'date') {
+                    if (filterValue === 'today') {
+                        const today = new Date().toISOString().split('T')[0];
+                        document.getElementById('dateFromFilter').value = today;
+                        document.getElementById('dateToFilter').value = today;
+                    } else if (filterValue === 'this_month') {
+                        const now = new Date();
+                        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+                        const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+                        document.getElementById('dateFromFilter').value = firstDay;
+                        document.getElementById('dateToFilter').value = lastDay;
+                    }
+                }
+                
+                form.submit();
+            });
+        });
+        
+        // Highlight today's date in table
+        const today = new Date().toISOString().split('T')[0];
+        const todayCells = document.querySelectorAll(`.sales-table td:contains("${today}")`);
+        todayCells.forEach(cell => {
+            cell.style.backgroundColor = '#fffbeb';
+            cell.style.fontWeight = '600';
+        });
+        
+        // Animate filtered rows
+        if (window.location.search.includes('?')) {
+            const rows = document.querySelectorAll('.sales-table tbody tr');
+            rows.forEach((row, index) => {
+                setTimeout(() => {
+                    row.classList.add('animate-in');
+                }, index * 50);
+            });
+        }
+    });
+</script>
+{% endblock %}

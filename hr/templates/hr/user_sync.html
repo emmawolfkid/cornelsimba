@@ -1,0 +1,244 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Synchronization - HR Management System</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Our HR CSS Files -->
+    <link rel="stylesheet" href="{% static 'css/hr-main.css' %}">
+    <link rel="stylesheet" href="{% static 'css/hr-components.css' %}">
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <i class="fas fa-building"></i>
+            <span>HR Portal</span>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-title">Main Menu</div>
+            <a href="{% url 'hr:hr_dashboard' %}" class="nav-item">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="{% url 'hr:employee_list' %}" class="nav-item">
+                <i class="fas fa-user-friends"></i>
+                <span>All Employees</span>
+            </a>
+            <a href="{% url 'hr:user_sync' %}" class="nav-item active">
+                <i class="fas fa-sync-alt"></i>
+                <span>User Sync</span>
+                {% if users_without_employees %}
+                <span class="nav-badge">{{ users_without_employees.count }}</span>
+                {% endif %}
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <div class="header">
+            <h1>
+                <i class="fas fa-sync-alt"></i>
+                User Synchronization
+            </h1>
+            <a href="{% url 'hr:employee_list' %}" class="btn">
+                <i class="fas fa-user-plus"></i> Add Employee
+            </a>
+        </div>
+
+        <!-- Info Alert -->
+        {% if users_without_employees %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i>
+            <strong>{{ users_without_employees.count }}</strong> system users need employee records created.
+        </div>
+        {% else %}
+        <div class="alert alert-success">
+            <i class="fas fa-check-circle"></i>
+            All system users have employee records!
+        </div>
+        {% endif %}
+
+        <!-- Users Needing Records -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <i class="fas fa-user-clock"></i>
+                    Users Without Employee Records
+                </h2>
+                <span class="badge {% if users_without_employees %}badge-warning{% else %}badge-success{% endif %}">
+                    {{ users_without_employees.count }} users
+                </span>
+            </div>
+            
+            {% if users_without_employees %}
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Full Name</th>
+                            <th>Email</th>
+                            <th>Groups</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users_without_employees %}
+                        <tr>
+                            <td>
+                                <strong>{{ user.username }}</strong>
+                                <div style="font-size: 0.8em; color: var(--gray);">
+                                    Joined: {{ user.date_joined|date:"M d, Y" }}
+                                </div>
+                            </td>
+                            <td>
+                                {{ user.get_full_name|default:"Not set" }}
+                            </td>
+                            <td>{{ user.email|default:"No email" }}</td>
+                            <td>
+                                {% for group in user.groups.all %}
+                                <span class="badge badge-info" style="margin: 2px;">{{ group.name }}</span>
+                                {% endfor %}
+                            </td>
+                            <td>
+                                <a href="{% url 'hr:create_from_user' user.id %}" class="btn btn-success btn-sm">
+                                    <i class="fas fa-plus"></i> Create Record
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div style="text-align: center; padding: 40px;">
+                <i class="fas fa-check-circle fa-3x text-success" style="margin-bottom: 20px;"></i>
+                <h3 style="color: var(--dark); margin-bottom: 10px;">All Users Synced!</h3>
+                <p style="color: var(--gray);">All system users have employee records.</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Users With Records -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <i class="fas fa-user-check"></i>
+                    Users With Employee Records
+                </h2>
+                <span class="badge badge-primary">
+                    {{ users_with_employees.count }} users
+                </span>
+            </div>
+            
+            {% if users_with_employees %}
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Employee</th>
+                            <th>Department</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users_with_employees %}
+                        <tr>
+                            <td>
+                                <strong>{{ user.username }}</strong>
+                                <div style="font-size: 0.8em; color: var(--gray);">
+                                    {{ user.email|default:"No email" }}
+                                </div>
+                            </td>
+                            <td>
+                                <strong>{{ user.employee.full_name }}</strong>
+                                <div style="font-size: 0.8em; color: var(--gray);">
+                                    ID: {{ user.employee.employee_id|default:"N/A" }}
+                                </div>
+                            </td>
+                            <td>
+                                {% if user.employee.department %}
+                                <span class="badge badge-info">{{ user.employee.department }}</span>
+                                {% else %}
+                                <span class="text-muted">Not assigned</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if user.employee.is_active %}
+                                <span class="badge badge-success">
+                                    <i class="fas fa-check-circle"></i> Active
+                                </span>
+                                {% else %}
+                                <span class="badge badge-danger">
+                                    <i class="fas fa-times-circle"></i> Inactive
+                                </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div style="text-align: center; padding: 40px;">
+                <i class="fas fa-users fa-3x text-muted" style="margin-bottom: 20px;"></i>
+                <h3 style="color: var(--dark); margin-bottom: 10px;">No Users Synced Yet</h3>
+                <p style="color: var(--gray);">Create employee records for system users above.</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Summary -->
+        <div class="card info" style="margin-top: 30px;">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <i class="fas fa-chart-pie"></i>
+                    Sync Summary
+                </h2>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; padding: 20px;">
+                <div class="stat-box">
+                    <div class="number">{{ all_users.count }}</div>
+                    <div class="label">Total Users</div>
+                </div>
+                <div class="stat-box">
+                    <div class="number">{{ users_with_employees.count }}</div>
+                    <div class="label">Synced</div>
+                </div>
+                <div class="stat-box">
+                    <div class="number">{{ users_without_employees.count }}</div>
+                    <div class="label">Pending Sync</div>
+                </div>
+                <div class="stat-box">
+                    <div class="number">
+                        {% if all_users.count > 0 %}
+                        {{ users_with_employees.count|floatformat:0 }}%
+                        {% else %}
+                        0%
+                        {% endif %}
+                    </div>
+                    <div class="label">Sync Rate</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{% static 'js/hr-main.js' %}"></script>
+</body>
+</html>

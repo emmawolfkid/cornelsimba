@@ -1,0 +1,198 @@
+/* ===== INCOME SPECIFIC STYLES ===== */
+
+/* Header Actions */
+.income-header-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.income-header-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* Filter Form */
+.income-filter-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.income-filter-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    padding-top: 15px;
+    border-top: 1px solid var(--border-color);
+}
+
+/* Summary Card */
+.income-summary-card {
+    background: linear-gradient(135deg, #27ae60, #2ecc71);
+    color: white;
+    padding: 25px;
+    border-radius: var(--border-radius);
+    margin-bottom: 25px;
+    box-shadow: var(--shadow-md);
+}
+
+.income-summary-content {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.income-summary-icon {
+    font-size: 3rem;
+    opacity: 0.9;
+}
+
+.income-summary-details {
+    flex: 1;
+}
+
+.income-summary-value {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin: 10px 0;
+    font-family: 'Consolas', monospace;
+}
+
+.income-summary-count {
+    opacity: 0.9;
+    font-size: 0.95rem;
+}
+
+/* Income Source */
+.income-source strong {
+    display: block;
+    margin-bottom: 5px;
+}
+
+/* Action Buttons */
+.income-action-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.income-btn-action {
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--border-radius);
+    text-decoration: none;
+    color: white;
+    transition: all 0.2s;
+}
+
+.income-btn-action:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+.income-btn-edit {
+    background: var(--warning-color);
+}
+
+.income-btn-success {
+    background: var(--success-color);
+}
+
+.income-btn-danger {
+    background: var(--danger-color);
+}
+
+/* Quick Stats */
+.income-quick-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-top: 25px;
+}
+
+.income-stat-card {
+    padding: 15px;
+    text-align: center;
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+}
+
+.income-stat-card h4 {
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+    color: var(--secondary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+/* Empty State */
+.income-empty-state {
+    padding: 40px 20px;
+    text-align: center;
+}
+
+.income-empty-state h4 {
+    margin: 15px 0 10px;
+    color: var(--secondary-color);
+}
+
+/* Card Actions */
+.income-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Income Row */
+.income-row {
+    transition: background-color 0.2s;
+}
+
+.income-row:hover {
+    background-color: #f8f9fa;
+}
+
+/* Mobile Responsive for Income */
+@media (max-width: 768px) {
+    .income-header-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .income-header-buttons {
+        flex-direction: column;
+    }
+    
+    .income-filter-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .income-filter-actions {
+        flex-direction: column;
+    }
+    
+    .income-quick-stats {
+        grid-template-columns: 1fr;
+    }
+    
+    .income-summary-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 15px;
+    }
+    
+    .income-summary-value {
+        font-size: 2rem;
+    }
+}

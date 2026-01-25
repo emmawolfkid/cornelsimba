@@ -1,0 +1,441 @@
+/* detail.css - Styles for item detail and similar detail pages */
+
+/* ======= PAGE HEADER ======= */
+.page-header {
+    margin-bottom: 30px;
+}
+
+.page-title {
+    color: #2c3e50;
+    margin: 0 0 10px 0;
+    font-size: 28px;
+    font-weight: 600;
+}
+
+.page-subtitle {
+    color: #666;
+    font-size: 16px;
+    margin-bottom: 20px;
+}
+
+/* ======= CARDS ======= */
+.card {
+    background: white;
+    border-radius: 10px;
+    padding: 30px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    margin-bottom: 30px;
+    border: 1px solid #eef1f5;
+}
+
+.card-title {
+    color: #f39c12;
+    margin: 0 0 25px 0;
+    font-size: 22px;
+    font-weight: 600;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f0f0f0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* ======= INFO GRID ======= */
+.info-grid { 
+    display: grid; 
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px; 
+    margin-bottom: 30px;
+}
+
+.info-item {
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #3498db;
+}
+
+.info-item label { 
+    font-weight: 600; 
+    color: #555; 
+    display: block; 
+    margin-bottom: 8px;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.info-item p { 
+    margin: 0; 
+    font-size: 16px;
+    color: #2c3e50;
+}
+
+.info-item .value-large {
+    font-size: 24px;
+    font-weight: 700;
+    margin-top: 5px;
+}
+
+/* ======= STATUS BADGES ======= */
+.status-badge { 
+    padding: 8px 16px; 
+    border-radius: 20px; 
+    font-weight: 600; 
+    display: inline-block;
+    font-size: 14px;
+}
+
+.status-good { 
+    background: #d4edda; 
+    color: #155724; 
+}
+
+.status-low { 
+    background: #fff3cd; 
+    color: #856404; 
+}
+
+.status-critical { 
+    background: #ffeaea; 
+    color: #e74c3c; 
+}
+
+.status-inactive { 
+    background: #f8f9fa; 
+    color: #6c757d; 
+}
+
+/* ======= STOCK SUMMARY ======= */
+.stock-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.summary-card {
+    background: white;
+    border-radius: 10px;
+    padding: 25px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border: 1px solid #eef1f5;
+    transition: transform 0.3s ease;
+}
+
+.summary-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+}
+
+.summary-card h3 {
+    margin: 0 0 15px 0;
+    color: #555;
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.summary-card p {
+    margin: 0;
+    font-size: 32px;
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+.summary-card .sub-text {
+    font-size: 14px;
+    color: #666;
+    margin-top: 10px;
+}
+
+/* ======= ACTION BUTTONS ======= */
+.action-buttons {
+    display: flex;
+    gap: 15px;
+    margin-top: 30px;
+    flex-wrap: wrap;
+}
+
+.btn { 
+    padding: 12px 24px; 
+    background: #3498db; 
+    color: white; 
+    text-decoration: none; 
+    border-radius: 6px; 
+    font-weight: 500; 
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.3s;
+    border: none;
+    cursor: pointer;
+    font-size: 15px;
+}
+
+.btn:hover { 
+    background: #2980b9; 
+    text-decoration: none;
+    transform: translateY(-2px);
+}
+
+.btn-success { 
+    background: #27ae60; 
+}
+
+.btn-success:hover { 
+    background: #219653; 
+}
+
+.btn-warning { 
+    background: #f39c12; 
+}
+
+.btn-warning:hover { 
+    background: #e67e22; 
+}
+
+.btn-secondary { 
+    background: #6c757d; 
+}
+
+.btn-secondary:hover { 
+    background: #5a6268; 
+}
+
+.btn-outline {
+    background: transparent;
+    border: 1px solid #3498db;
+    color: #3498db;
+}
+
+.btn-outline:hover {
+    background: #3498db;
+    color: white;
+}
+
+/* ======= TABS ======= */
+.tabs-container {
+    margin-top: 20px;
+}
+
+.tabs { 
+    display: flex; 
+    border-bottom: 2px solid #e9ecef; 
+    margin-bottom: 0;
+}
+
+.tab { 
+    padding: 15px 25px; 
+    cursor: pointer; 
+    border-bottom: 3px solid transparent; 
+    margin-bottom: -2px; 
+    font-weight: 500;
+    color: #666;
+    transition: all 0.3s;
+}
+
+.tab:hover {
+    color: #3498db;
+}
+
+.tab.active { 
+    border-bottom-color: #f39c12; 
+    font-weight: 600; 
+    color: #f39c12; 
+}
+
+.tab-content { 
+    display: none; 
+    padding: 25px 0 0 0;
+}
+
+.tab-content.active { 
+    display: block; 
+}
+
+/* ======= TABLES ======= */
+.table-responsive {
+    overflow-x: auto;
+    margin-top: 20px;
+}
+
+table { 
+    width: 100%; 
+    border-collapse: collapse; 
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+th { 
+    background: #f8f9fa; 
+    padding: 15px; 
+    text-align: left; 
+    border-bottom: 2px solid #e9ecef;
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+td { 
+    padding: 12px 15px; 
+    border-bottom: 1px solid #eee; 
+    vertical-align: top;
+}
+
+tr:hover { 
+    background: #f8f9fa; 
+}
+
+/* ======= HISTORY TABLE ======= */
+.history-table th { 
+    background: #3498db; 
+    color: white; 
+}
+
+/* ======= DECIMAL FORMATTING ======= */
+.decimal { 
+    font-family: 'Consolas', 'Monaco', monospace; 
+    font-weight: 600;
+}
+
+/* ======= EMPTY STATE ======= */
+.empty-state {
+    text-align: center;
+    padding: 40px;
+    color: #95a5a6;
+    font-style: italic;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin: 20px 0;
+}
+
+/* ======= BACK LINK ======= */
+.back-link { 
+    display: inline-block; 
+    margin-top: 20px; 
+    color: #3498db; 
+    text-decoration: none; 
+    font-weight: 500;
+}
+
+.back-link:hover { 
+    text-decoration: underline; 
+}
+
+/* ======= SECTION TITLE ======= */
+.section-title {
+    color: #2c3e50;
+    margin: 0 0 20px 0;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+/* ======= ICON STYLES ======= */
+.icon {
+    font-size: 1.2em;
+}
+
+/* ======= RESPONSIVE STYLES ======= */
+@media (max-width: 768px) {
+    /* Mobile adjustments */
+    .info-grid {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .stock-summary-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+    }
+    
+    .table-responsive {
+        overflow-x: auto;
+    }
+    
+    table {
+        min-width: 800px;
+    }
+}
+
+@media (max-width: 480px) {
+    .stock-summary-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+/* ======= DESCRIPTION ITEM ======= */
+.description-item {
+    margin-top: 20px; 
+    padding: 20px; 
+    background: #f8f9fa; 
+    border-radius: 8px; 
+    border-left: 4px solid #17a2b8;
+}
+
+.description-text {
+    white-space: pre-line; 
+    color: #333; 
+    line-height: 1.6; 
+    margin-top: 8px;
+}
+
+/* ======= TRANSACTION TYPE COLORS ======= */
+.transaction-type {
+    font-weight: 500;
+}
+
+.transaction-type:contains("📥 Stock In") {
+    color: #27ae60;
+}
+
+.transaction-type:contains("📤 Stock Out") {
+    color: #e74c3c;
+}
+
+.transaction-type:contains("🔄 Adjustment") {
+    color: #f39c12;
+}
+
+/* Additional styles for stock_out_detail */
+
+.sale-link {
+    color: #3498db; 
+    text-decoration: none;
+}
+
+.sale-link:hover {
+    text-decoration: underline;
+}
+
+.notes-text {
+    white-space: pre-line;
+}
+
+.sufficient-text {
+    color: #27ae60; 
+    font-weight: 600;
+}
+
+.insufficient-text {
+    color: #e74c3c; 
+    font-weight: 600;
+}
+
+/* Page title section */
+.page-title-section {
+    margin-bottom: 20px;
+}
+
+/* Badge status colors */
+.badge-pending { background: #fff3cd; color: #856404; }
+.badge-approved { background: #d4edda; color: #155724; }
+.badge-rejected { background: #ffeaea; color: #e74c3c; }

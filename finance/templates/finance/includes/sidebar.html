@@ -1,0 +1,114 @@
+<aside class="sidebar">
+    <div class="sidebar-header">
+        <div class="logo">
+            <i class="fas fa-chart-line"></i>
+            <h2>Finance</h2>
+        </div>
+        <button class="sidebar-toggle" id="sidebarToggle">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
+    
+    <div class="sidebar-content">
+        <div class="user-info">
+            <div class="user-avatar">
+                <i class="fas fa-user-circle"></i>
+            </div>
+            <div class="user-details">
+                <h4>{{ request.user.get_full_name|default:request.user.username }}</h4>
+                <span class="user-role">Finance Department</span>
+            </div>
+        </div>
+        
+        <nav class="sidebar-menu">
+            <ul>
+                <li class="menu-item {% if request.path == '/finance/' %}active{% endif %}">
+                    <a href="{% url 'finance:dashboard' %}">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                
+                <li class="menu-header">Income Management</li>
+                <li class="menu-item {% if 'income' in request.path %}active{% endif %}">
+                    <a href="{% url 'finance:income_list' %}">
+                        <i class="fas fa-money-bill-wave"></i>
+                        <span>Income</span>
+                        {% if unpaid_income_count %}
+                        <span class="badge badge-warning">{{ unpaid_income_count }}</span>
+                        {% endif %}
+                    </a>
+                </li>
+                
+                <li class="menu-header">Expense Management</li>
+                <li class="menu-item {% if 'expenses' in request.path %}active{% endif %}">
+                    <a href="{% url 'finance:expense_list' %}">
+                        <i class="fas fa-receipt"></i>
+                        <span>Expenses</span>
+                        {% if unpaid_expense_count %}
+                        <span class="badge badge-danger">{{ unpaid_expense_count }}</span>
+                        {% endif %}
+                    </a>
+                </li>
+                
+                <li class="menu-header">Payroll</li>
+                <li class="menu-item {% if 'payroll' in request.path %}active{% endif %}">
+                    <a href="{% url 'finance:payroll_list' %}">
+                        <i class="fas fa-users"></i>
+                        <span>Payroll</span>
+                        {% if unpaid_payroll_count %}
+                        <span class="badge badge-warning">{{ unpaid_payroll_count }}</span>
+                        {% endif %}
+                    </a>
+                </li>
+                
+                <li class="menu-header">Reports</li>
+                <li class="menu-item">
+                    <a href="{% url 'finance:reports' %}">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>Financial Reports</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="{% url 'finance:cash_flow' %}">
+                        <i class="fas fa-money-check-alt"></i>
+                        <span>Cash Flow</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="{% url 'finance:balance_sheet' %}">
+                        <i class="fas fa-balance-scale"></i>
+                        <span>Balance Sheet</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="{% url 'finance:general_ledger' %}">
+                        <i class="fas fa-book"></i>
+                        <span>General Ledger</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="{% url 'finance:trial_balance' %}">
+                        <i class="fas fa-scale-balanced"></i>
+                        <span>Trial Balance</span>
+                    </a>
+                </li>
+                
+               
+                <li class="menu-item">
+                    <a href="{% url 'finance:process_payroll_with_leaves' %}">
+                        <i class="fas fa-calendar-check"></i>
+                        <span>Process Payroll</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <a href="/" class="btn-logout">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Back to Main</span>
+            </a>
+        </div>
+    </div>
+</aside>

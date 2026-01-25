@@ -1,0 +1,605 @@
+{% extends 'sales/base.html' %}
+{% load static %}
+
+{% block title %}{% if form.instance.pk %}Edit Customer -{% else %}Add Customer -{% endif %} CornelSimba ERP{% endblock %}
+{% block page_title %}{% if form.instance.pk %}Edit Customer{% else %}Add New Customer{% endif %}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/customer_form.css' %}">
+{% endblock %}
+
+{% block content %}
+    <div class="form-container">
+        <!-- Breadcrumb -->
+        <nav class="breadcrumb-form">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'sales:customer_list' %}" class="text-decoration-none">Customers</a></li>
+                <li class="breadcrumb-item active" aria-current="page">
+                    {% if form.instance.pk %}Edit Customer{% else %}Add New Customer{% endif %}
+                </li>
+            </ol>
+        </nav>
+
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+            <div>
+                <h1 class="h2 mb-1">{% if form.instance.pk %}Edit Customer{% else %}Add New Customer{% endif %}</h1>
+                <p class="text-muted mb-0">Fill in the customer details below</p>
+            </div>
+            <a href="{% url 'sales:customer_list' %}" class="btn-form btn-form-back">
+                <i class="bi bi-arrow-left"></i>
+                Back to List
+            </a>
+        </div>
+
+        <!-- Form Card -->
+        <div class="card-custom">
+            <div class="card-body-custom">
+                {% if form.errors %}
+                <div class="form-alert form-alert-error">
+                    <h6>Please fix the following errors:</h6>
+                    <ul>
+                        {% for field in form %}
+                            {% for error in field.errors %}
+                            <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                            {% endfor %}
+                        {% endfor %}
+                        {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+                
+                <form method="post" id="customerForm" novalidate>
+                    {% csrf_token %}
+                    
+                    <!-- Basic Information -->
+                    <div class="form-section">
+                        <h5 class="form-section-title">Basic Information</h5>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="{{ form.name.id_for_label }}" class="form-label required">
+                                    Customer Name
+                                </label>
+                                <input type="text" 
+                                       name="{{ form.name.name }}" 
+                                       id="{{ form.name.id_for_label }}" 
+                                       class="form-input {% if form.name.errors %}error{% endif %}" 
+                                       value="{{ form.name.value|default:'' }}"
+                                       placeholder="Enter customer name"
+                                       required>
+                                {% if form.name.errors %}
+                                <div class="error-message">
+                                    {{ form.name.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="{{ form.customer_type.id_for_label }}" class="form-label">
+                                    Customer Type
+                                </label>
+                                <select name="{{ form.customer_type.name }}" 
+                                        id="{{ form.customer_type.id_for_label }}" 
+                                        class="form-select">
+                                    {% for value, text in form.customer_type.field.choices %}
+                                    <option value="{{ value }}" 
+                                            {% if form.customer_type.value|stringformat:"s" == value|stringformat:"s" %}selected{% endif %}>
+                                        {{ text }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Contact Information -->
+                    <div class="form-section">
+                        <h5 class="form-section-title">Contact Information</h5>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="{{ form.contact_person.id_for_label }}" class="form-label">
+                                    Contact Person
+                                </label>
+                                <input type="text" 
+                                       name="{{ form.contact_person.name }}" 
+                                       id="{{ form.contact_person.id_for_label }}" 
+                                       class="form-input" 
+                                       value="{{ form.contact_person.value|default:'' }}"
+                                       placeholder="Contact person name">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="{{ form.phone.id_for_label }}" class="form-label">
+                                    Phone Number
+                                </label>
+                                <input type="tel" 
+                                       name="{{ form.phone.name }}" 
+                                       id="{{ form.phone.id_for_label }}" 
+                                       class="form-input phone-input {% if form.phone.errors %}error{% endif %}" 
+                                       value="{{ form.phone.value|default:'' }}"
+                                       placeholder="+255 XXX XXX XXX"
+                                       inputmode="tel">
+                                {% if form.phone.errors %}
+                                <div class="error-message">
+                                    {{ form.phone.errors.0 }}
+                                </div>
+                                {% endif %}
+                                <span class="help-text">Format: +255 XXX XXX XXX</span>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="{{ form.email.id_for_label }}" class="form-label">
+                                    Email Address
+                                </label>
+                                <input type="email" 
+                                       name="{{ form.email.name }}" 
+                                       id="{{ form.email.id_for_label }}" 
+                                       class="form-input {% if form.email.errors %}error{% endif %}" 
+                                       value="{{ form.email.value|default:'' }}"
+                                       placeholder="customer@example.com"
+                                       inputmode="email">
+                                {% if form.email.errors %}
+                                <div class="error-message">
+                                    {{ form.email.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="{{ form.tax_id.id_for_label }}" class="form-label">
+                                    Tax ID (TIN/VAT)
+                                </label>
+                                <input type="text" 
+                                       name="{{ form.tax_id.name }}" 
+                                       id="{{ form.tax_id.id_for_label }}" 
+                                       class="form-input" 
+                                       value="{{ form.tax_id.value|default:'' }}"
+                                       placeholder="Tax identification number">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Address -->
+                    <div class="form-section">
+                        <h5 class="form-section-title">Address</h5>
+                        <div class="form-group">
+                            <label for="{{ form.address.id_for_label }}" class="form-label">
+                                Full Address
+                            </label>
+                            <textarea name="{{ form.address.name }}" 
+                                      id="{{ form.address.id_for_label }}" 
+                                      class="form-textarea" 
+                                      placeholder="Enter complete address including street, city, region..."
+                                      rows="3">{{ form.address.value|default:'' }}</textarea>
+                        </div>
+                    </div>
+                    
+                    <!-- Financial Information -->
+                    <div class="form-section">
+                        <h5 class="form-section-title">Financial Information</h5>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="{{ form.credit_limit.id_for_label }}" class="form-label">
+                                    Credit Limit
+                                </label>
+                                <div class="currency-input-group">
+                                    <span class="currency-prefix">Tsh</span>
+                                    <input type="number" 
+                                           name="{{ form.credit_limit.name }}" 
+                                           id="{{ form.credit_limit.id_for_label }}" 
+                                           class="form-input {% if form.credit_limit.errors %}error{% endif %}" 
+                                           value="{{ form.credit_limit.value|default:'' }}"
+                                           placeholder="0"
+                                           min="0"
+                                           step="1">
+                                </div>
+                                {% if form.credit_limit.errors %}
+                                <div class="error-message">
+                                    {{ form.credit_limit.errors.0 }}
+                                </div>
+                                {% endif %}
+                                <span class="help-text">Amount in Tanzanian Shillings (Tsh)</span>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="{{ form.payment_terms.id_for_label }}" class="form-label">
+                                    Payment Terms
+                                </label>
+                                <input type="text" 
+                                       name="{{ form.payment_terms.name }}" 
+                                       id="{{ form.payment_terms.id_for_label }}" 
+                                       class="form-input" 
+                                       value="{{ form.payment_terms.value|default:'' }}"
+                                       placeholder="e.g., Net 30, Cash on Delivery">
+                                <span class="help-text">e.g., Net 30, Cash on Delivery</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Additional Information -->
+                    <div class="form-section">
+                        <h5 class="form-section-title">Additional Information</h5>
+                        <div class="form-group">
+                            <label for="{{ form.notes.id_for_label }}" class="form-label">
+                                Notes
+                            </label>
+                            <textarea name="{{ form.notes.name }}" 
+                                      id="{{ form.notes.id_for_label }}" 
+                                      class="form-textarea" 
+                                      placeholder="Any additional information about this customer..."
+                                      rows="4">{{ form.notes.value|default:'' }}</textarea>
+                            <span class="help-text">Any additional information about this customer</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Status -->
+                    <div class="form-section">
+                        <div class="form-check-group">
+                            <input type="checkbox" 
+                                   name="{{ form.is_active.name }}" 
+                                   id="{{ form.is_active.id_for_label }}" 
+                                   class="form-check-input"
+                                   {% if form.is_active.value %}checked{% endif %}>
+                            <label for="{{ form.is_active.id_for_label }}" class="form-check-label">
+                                Active Customer
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Form Actions -->
+                    <div class="form-actions">
+                        <a href="{% url 'sales:customer_list' %}" class="btn-form btn-form-cancel">
+                            Cancel
+                        </a>
+                        <div class="form-action-buttons">
+                            <button type="submit" class="btn-form btn-form-submit" id="submitBtn">
+                                <i class="bi bi-check-lg"></i>
+                                {% if form.instance.pk %}Update Customer{% else %}Save Customer{% endif %}
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+    </div>
+    
+    <!-- Auto-save Indicator -->
+    <div class="auto-save-indicator" id="autoSaveIndicator">
+        <i class="bi bi-check-circle"></i>
+        <span>Changes saved</span>
+    </div>
+{% endblock %}
+{% block extra_js %}
+<script>
+    // Form validation and submission handling
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('customerForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const autoSaveIndicator = document.getElementById('autoSaveIndicator');
+        
+        // Initialize phone input
+        const phoneInput = document.getElementById('id_phone');
+        if (phoneInput) {
+            // Format phone number as user types
+            phoneInput.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                
+                if (value.startsWith('255')) {
+                    value = '+' + value;
+                } else if (value.startsWith('0')) {
+                    value = '+255' + value.substring(1);
+                } else if (value.length > 0 && !value.startsWith('+')) {
+                    value = '+255' + value;
+                }
+                
+                // Format: +255 XXX XXX XXX
+                if (value.length > 4) {
+                    value = value.replace(/(\+\d{3})(\d{3})(\d{3})(\d{3})/, '$1 $2 $3 $4');
+                    value = value.replace(/(\+\d{3})(\d{3})(\d{3})/, '$1 $2 $3');
+                    value = value.replace(/(\+\d{3})(\d{3})/, '$1 $2');
+                }
+                
+                e.target.value = value.substring(0, 16); // Limit to +255 XXX XXX XXX
+            });
+        }
+        
+        // Character counter for notes textarea
+        const notesTextarea = document.getElementById('id_notes');
+        if (notesTextarea) {
+            const counter = document.createElement('div');
+            counter.className = 'textarea-counter';
+            notesTextarea.parentNode.appendChild(counter);
+            
+            function updateCounter() {
+                const length = notesTextarea.value.length;
+                counter.textContent = `${length}/500`;
+                
+                if (length > 450) {
+                    counter.classList.add('warning');
+                    counter.classList.remove('error');
+                } else if (length > 500) {
+                    counter.classList.remove('warning');
+                    counter.classList.add('error');
+                } else {
+                    counter.classList.remove('warning', 'error');
+                }
+            }
+            
+            notesTextarea.addEventListener('input', updateCounter);
+            updateCounter(); // Initial count
+        }
+        
+        // Real-time validation
+        const requiredInputs = form.querySelectorAll('[required]');
+        requiredInputs.forEach(input => {
+            input.addEventListener('blur', function() {
+                validateField(this);
+            });
+            
+            input.addEventListener('input', function() {
+                if (this.classList.contains('error')) {
+                    this.classList.remove('error');
+                    const errorMsg = this.parentNode.querySelector('.error-message');
+                    if (errorMsg) {
+                        errorMsg.remove();
+                    }
+                }
+            });
+        });
+        
+        function validateField(field) {
+            if (field.hasAttribute('required') && !field.value.trim()) {
+                field.classList.add('error');
+                if (!field.parentNode.querySelector('.error-message')) {
+                    const errorMsg = document.createElement('div');
+                    errorMsg.className = 'error-message';
+                    errorMsg.textContent = 'This field is required';
+                    field.parentNode.appendChild(errorMsg);
+                }
+                return false;
+            }
+            
+            // Email validation
+            if (field.type === 'email' && field.value.trim()) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(field.value)) {
+                    field.classList.add('error');
+                    if (!field.parentNode.querySelector('.error-message')) {
+                        const errorMsg = document.createElement('div');
+                        errorMsg.className = 'error-message';
+                        errorMsg.textContent = 'Please enter a valid email address';
+                        field.parentNode.appendChild(errorMsg);
+                    }
+                    return false;
+                }
+            }
+            
+            // Phone validation
+            if (field.type === 'tel' && field.value.trim()) {
+                const phoneRegex = /^\+255\s\d{3}\s\d{3}\s\d{3}$/;
+                if (!phoneRegex.test(field.value)) {
+                    field.classList.add('error');
+                    if (!field.parentNode.querySelector('.error-message')) {
+                        const errorMsg = document.createElement('div');
+                        errorMsg.className = 'error-message';
+                        errorMsg.textContent = 'Please enter a valid phone number (e.g., +255 XXX XXX XXX)';
+                        field.parentNode.appendChild(errorMsg);
+                    }
+                    return false;
+                }
+            }
+            
+            return true;
+        }
+        
+        // Form submission
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Validate all required fields
+            let isValid = true;
+            requiredInputs.forEach(input => {
+                if (!validateField(input)) {
+                    isValid = false;
+                }
+            });
+            
+            if (!isValid) {
+                showToast('Please fix the errors in the form', 'error');
+                return;
+            }
+            
+            // Show loading state
+            if (loadingOverlay) {
+                loadingOverlay.style.display = 'flex';
+            }
+            
+            // Disable submit button
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = `
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    Saving...
+                `;
+            }
+            
+            // Submit form
+            this.submit();
+        });
+        
+        // Auto-save functionality (for edit mode)
+        let autoSaveTimeout;
+        let hasUnsavedChanges = false;
+        
+        // Check if we're in edit mode by looking for customer ID in URL
+        const isEditMode = window.location.pathname.includes('/edit/');
+        
+        if (isEditMode) {  // Only for edit mode
+            const autoSaveFields = form.querySelectorAll('input, select, textarea');
+            autoSaveFields.forEach(field => {
+                field.addEventListener('change', function() {
+                    hasUnsavedChanges = true;
+                    
+                    // Clear existing timeout
+                    if (autoSaveTimeout) {
+                        clearTimeout(autoSaveTimeout);
+                    }
+                    
+                    // Show saving indicator
+                    autoSaveIndicator.innerHTML = '<i class="bi bi-hourglass-split"></i><span>Saving changes...</span>';
+                    autoSaveIndicator.classList.add('show', 'saving');
+                    
+                    // Debounce auto-save
+                    autoSaveTimeout = setTimeout(() => {
+                        autoSave();
+                    }, 2000);
+                });
+            });
+            
+            function autoSave() {
+                const formData = new FormData(form);
+                formData.append('auto_save', 'true');
+                
+                fetch('', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        autoSaveIndicator.innerHTML = '<i class="bi bi-check-circle"></i><span>Changes saved</span>';
+                        autoSaveIndicator.classList.remove('saving');
+                        autoSaveIndicator.classList.add('saved');
+                        hasUnsavedChanges = false;
+                        
+                        // Hide indicator after 3 seconds
+                        setTimeout(() => {
+                            autoSaveIndicator.classList.remove('show');
+                        }, 3000);
+                    }
+                })
+                .catch(error => {
+                    autoSaveIndicator.innerHTML = '<i class="bi bi-x-circle"></i><span>Save failed</span>';
+                    autoSaveIndicator.classList.remove('saving');
+                    autoSaveIndicator.classList.add('error');
+                });
+            }
+            
+            // Warn before leaving with unsaved changes
+            window.addEventListener('beforeunload', function(e) {
+                if (hasUnsavedChanges) {
+                    e.preventDefault();
+                    e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+                    return 'You have unsaved changes. Are you sure you want to leave?';
+                }
+            });
+        }
+        
+        // Toast notification system
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast-notification toast-${type}`;
+            toast.innerHTML = `
+                <div class="toast-icon">
+                    <i class="bi ${type === 'success' ? 'bi-check-circle' : type === 'error' ? 'bi-x-circle' : 'bi-exclamation-circle'}"></i>
+                </div>
+                <div class="toast-content">
+                    ${message}
+                </div>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            }, 3000);
+        }
+        
+        // Check for success messages in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('success')) {
+            showToast(urlParams.get('success'), 'success');
+            
+            // Clean URL
+            const cleanUrl = window.location.pathname;
+            window.history.replaceState({}, document.title, cleanUrl);
+        }
+        
+        // Check for Django messages from data attribute
+        const messagesContainer = document.getElementById('django-messages');
+        if (messagesContainer) {
+            try {
+                const messages = JSON.parse(messagesContainer.getAttribute('data-messages'));
+                messages.forEach(msg => {
+                    showToast(msg.message, msg.tags);
+                });
+            } catch (e) {
+                console.log('No messages or error parsing messages');
+            }
+        }
+        
+        // Mobile optimizations
+        if ('ontouchstart' in window) {
+            // Increase touch target size
+            const formControls = form.querySelectorAll('input, select, textarea, button');
+            formControls.forEach(control => {
+                control.style.minHeight = '44px';
+            });
+            
+            // Prevent zoom on input focus
+            const textInputs = form.querySelectorAll('input[type="text"], input[type="email"], input[type="tel"], input[type="number"]');
+            textInputs.forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.style.fontSize = '16px';
+                });
+                
+                input.addEventListener('blur', function() {
+                    this.style.fontSize = '';
+                });
+            });
+            
+            // Touch feedback
+            const buttons = form.querySelectorAll('button, .btn-form');
+            buttons.forEach(btn => {
+                btn.addEventListener('touchstart', function() {
+                    this.style.opacity = '0.7';
+                });
+                
+                btn.addEventListener('touchend', function() {
+                    this.style.opacity = '1';
+                });
+            });
+        }
+        
+        // Credit limit formatting
+        const creditLimitInput = document.getElementById('id_credit_limit');
+        if (creditLimitInput) {
+            creditLimitInput.addEventListener('blur', function() {
+                if (this.value) {
+                    const formatted = new Intl.NumberFormat('en-TZ').format(this.value);
+                    this.value = formatted.replace(/,/g, '');
+                }
+            });
+            
+            creditLimitInput.addEventListener('focus', function() {
+                this.value = this.value.replace(/,/g, '');
+            });
+        }
+    });
+</script>
+{% endblock %}

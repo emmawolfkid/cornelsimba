@@ -1,0 +1,338 @@
+{% extends 'inventory/base.html' %}
+{% load static %}
+
+{% block title %}Stock Report - Inventory{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'inventory/css/reports.css' %}">
+<link rel="stylesheet" href="{% static 'inventory/css/list.css' %}">
+<style>
+    /* Ensure categories display properly */
+    .category-summary {
+        margin-bottom: 30px;
+    }
+    
+    .category-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 20px;
+        margin-top: 20px;
+    }
+    
+    .category-card {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        border-left: 4px solid #3498db;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    .category-card h4 {
+        color: #2c3e50;
+        margin: 0 0 15px 0;
+        font-size: 1.1em;
+        font-weight: 600;
+    }
+    
+    .category-card p {
+        margin: 8px 0;
+        font-size: 0.95em;
+        line-height: 1.4;
+    }
+    
+    .category-stat {
+        font-weight: 600;
+        color: #3498db;
+    }
+    
+    /* Make sure summary cards display properly */
+    .summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    
+    @media (max-width: 768px) {
+        .summary {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .category-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .summary {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="header-actions">
+    <h1 class="report-title">📊 Stock Report</h1>
+    <div class="no-print">
+        <button onclick="window.print()" class="btn btn-print">🖨️ Print Report</button>
+        <a href="{% url 'inventory:dashboard' %}" class="btn btn-secondary">← Dashboard</a>
+    </div>
+</div>
+
+<div class="report-period">
+    <p><strong>Report Period:</strong> {{ start_date }} to {{ end_date }}</p>
+    <p><strong>Exchange Rate:</strong> 1 USD = {{ usd_to_tsh }} TSH</p>
+    <p><strong>Generated on:</strong> {% now "F d, Y H:i" %}</p>
+</div>
+
+<!-- Summary Stats -->
+<div class="summary">
+    <div class="summary-card">
+        <h3>Total Items</h3>
+        <p>{{ total_items }}</p>
+        <div class="subtext">All inventory items</div>
+    </div>
+    <div class="summary-card">
+        <h3>Low Stock Items</h3>
+        <p>{{ items_low_stock }}</p>
+        <div class="subtext">Below reorder level</div>
+    </div>
+    <div class="summary-card">
+        <h3>Critical Items</h3>
+        <p>{{ items_critical }}</p>
+        <div class="subtext">Below minimum stock</div>
+    </div>
+    <div class="summary-card">
+        <h3>Exchange Rate</h3>
+        <p>1 USD = {{ usd_to_tsh }} TSH</p>
+        <div class="subtext">Current conversion</div>
+    </div>
+</div>
+
+<!-- Category Summary -->
+{% if category_summary %}
+<div class="category-summary">
+    <h2 class="report-section">📂 Stock by Category</h2>
+    <div class="category-grid">
+        {% for category, data in category_summary.items %}
+        <div class="category-card">
+            <h4>{{ category }}</h4>
+            <p><strong>Items:</strong> <span class="category-stat">{{ data.count }}</span></p>
+            <p><strong>Total Quantity:</strong> <span class="category-stat">{{ data.total_quantity|floatformat:3 }}</span></p>
+            <p><strong>Sample Items:</strong>
+                {% if data.items and data.items|length > 0 %}
+                    {% with data.items|slice:":3" as sample_items %}
+                        {% for item in sample_items %}
+                            {% if item.name %}
+                                {{ item.name }}
+                            {% else %}
+                                {{ item|default:"N/A" }}
+                            {% endif %}{% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                        {% if data.items|length > 3 %}
+                            ... ({{ data.items|length|add:"-3" }} more)
+                        {% endif %}
+                    {% endwith %}
+                {% else %}
+                    No items
+                {% endif %}
+            </p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Daily Summary -->
+{% if daily_summary %}
+<div class="daily-summary">
+    <h2 class="report-section">📅 Daily Stock Movements (Last 30 Days)</h2>
+    <div class="table-container">
+        <table class="report-table daily-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Transaction Type</th>
+                    <th>Total Quantity</th>
+                    <th>Count</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for day in daily_summary %}
+                <tr>
+                    <td>{{ day.day }}</td>
+                    <td>
+                        <span class="transaction-type {% if day.transaction_type == 'STOCK_IN' %}transaction-in{% elif day.transaction_type == 'STOCK_OUT' %}transaction-out{% endif %}">
+                            {% if day.transaction_type == 'STOCK_IN' %}
+                            📥 Stock In
+                            {% elif day.transaction_type == 'STOCK_OUT' %}
+                            📤 Stock Out
+                            {% else %}
+                            {{ day.transaction_type }}
+                            {% endif %}
+                        </span>
+                    </td>
+                    <td class="decimal">{{ day.total_quantity|floatformat:3 }}</td>
+                    <td>{{ day.count }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="report-empty">
+                        No stock movements in the last 30 days.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<!-- Detailed Item Listing -->
+<h2 class="report-section">📋 Detailed Item Listing</h2>
+<div class="table-container">
+    <table class="report-table">
+        <thead>
+            <tr>
+                <th>Item</th>
+                <th>Category</th>
+                <th>Quantity</th>
+                <th>Unit</th>
+                <th>Status</th>
+                <th>Reorder Level</th>
+                <th>Min Stock</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr class="item-row {% if item.quantity <= item.minimum_stock %}critical-row{% elif item.quantity <= item.reorder_level %}low-row{% endif %}">
+                <td>
+                    <div class="item-with-sku">
+                        <span class="stock-indicator 
+                            {% if item.quantity <= item.minimum_stock %}stock-critical
+                            {% elif item.quantity <= item.reorder_level %}stock-low
+                            {% else %}stock-good{% endif %}"></span>
+                        <span class="item-name">{{ item.name }}</span>
+                        <span class="item-sku">{{ item.sku|default:"No SKU" }}</span>
+                    </div>
+                </td>
+                <td>{{ item.get_category_display }}</td>
+                <td>
+                    <span class="decimal">{{ item.quantity|floatformat:3 }}</span>
+                    <div class="item-sku">
+                        {{ item.unit_of_measure }}
+                    </div>
+                </td>
+                <td>{{ item.unit_of_measure }}</td>
+                <td>
+                    {% if item.quantity <= item.minimum_stock %}
+                    <span class="status-badge status-critical">Critical</span>
+                    {% elif item.quantity <= item.reorder_level %}
+                    <span class="status-badge status-low">Low</span>
+                    {% else %}
+                    <span class="status-badge status-good">Good</span>
+                    {% endif %}
+                </td>
+                <td class="decimal">{{ item.reorder_level|floatformat:3 }}</td>
+                <td class="decimal">{{ item.minimum_stock|floatformat:3 }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" class="report-empty">
+                    No items found.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Recent Stock History -->
+{% if recent_history %}
+<div>
+    <h2 class="report-section">🕐 Recent Stock History (Last 100 Transactions)</h2>
+    <div class="table-container">
+        <table class="report-table">
+            <thead>
+                <tr>
+                    <th>Date/Time</th>
+                    <th>Item</th>
+                    <th>Transaction</th>
+                    <th>Quantity</th>
+                    <th>Previous</th>
+                    <th>New</th>
+                    <th>Reference</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for history in recent_history %}
+                <tr>
+                    <td>{{ history.created_at|date:"M d, H:i" }}</td>
+                    <td>{{ history.item.name }}</td>
+                    <td>
+                        <span class="transaction-type {% if history.transaction_type == 'STOCK_IN' %}transaction-in{% elif history.transaction_type == 'STOCK_OUT' %}transaction-out{% endif %}">
+                            {% if history.transaction_type == 'STOCK_IN' %}
+                            📥 Stock In
+                            {% elif history.transaction_type == 'STOCK_OUT' %}
+                            📤 Stock Out
+                            {% else %}
+                            {{ history.transaction_type }}
+                            {% endif %}
+                        </span>
+                    </td>
+                    <td class="decimal">{{ history.quantity|floatformat:3 }}</td>
+                    <td class="decimal">{{ history.previous_quantity|floatformat:3 }}</td>
+                    <td class="decimal">{{ history.new_quantity|floatformat:3 }}</td>
+                    <td>{{ history.reference|default:"-" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<!-- Report Summary -->
+<div class="report-summary">
+    <h3>📝 Report Summary</h3>
+    <p><strong>Report Period:</strong> {{ start_date }} to {{ end_date }}</p>
+    <p><strong>Total Items:</strong> {{ total_items }}</p>
+    <p><strong>Items Requiring Attention:</strong> {{ items_critical }} critical, {{ items_low_stock }} low stock</p>
+    <p><strong>Exchange Rate:</strong> 1 USD = {{ usd_to_tsh }} TSH</p>
+    <p><strong>Generated on:</strong> {% now "F d, Y H:i" %}</p>
+</div>
+
+<div class="navigation-links no-print">
+    <a href="{% url 'inventory:dashboard' %}" class="btn btn-secondary">← Back to Inventory Dashboard</a>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Print report function
+    document.querySelector('.btn-print').addEventListener('click', function() {
+        const originalTitle = document.title;
+        document.title = 'Stock Report - ' + new Date().toLocaleDateString();
+        window.print();
+        document.title = originalTitle;
+    });
+    
+    // Highlight critical and low stock rows
+    document.addEventListener('DOMContentLoaded', function() {
+        const criticalRows = document.querySelectorAll('.critical-row');
+        const lowRows = document.querySelectorAll('.low-row');
+        
+        criticalRows.forEach(row => {
+            row.style.backgroundColor = '#fff8f8';
+            row.style.borderLeft = '3px solid #dc3545';
+        });
+        
+        lowRows.forEach(row => {
+            row.style.backgroundColor = '#fffdf0';
+            row.style.borderLeft = '3px solid #ffc107';
+        });
+    });
+</script>
+{% endblock %}

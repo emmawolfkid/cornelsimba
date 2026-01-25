@@ -1,0 +1,241 @@
+/* ============================================
+   RESPONSIVE STYLES
+   Mobile & Tablet Adaptations
+   ============================================ */
+
+/* Large Desktop (≥ 1200px) */
+@media (min-width: 1200px) {
+    .sidebar {
+        width: 300px;
+    }
+    
+    .main-content {
+        margin-left: 300px;
+        width: calc(100% - 300px);
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+/* Tablet (768px - 1199px) */
+@media (max-width: 1199px) and (min-width: 768px) {
+    .sidebar {
+        width: 250px;
+    }
+    
+    .main-content {
+        margin-left: 250px;
+        width: calc(100% - 250px);
+        padding: 20px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .header {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+    
+    .header-right {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Mobile (≤ 767px) */
+@media (max-width: 767px) {
+    /* Sidebar for mobile */
+    .sidebar {
+        position: fixed;
+        left: -100%;
+        top: 0;
+        width: 280px;
+        transition: var(--transition-normal);
+        z-index: var(--z-sidebar);
+    }
+    
+    .sidebar.mobile-open {
+        left: 0;
+    }
+    
+    /* Main content */
+    .main-content {
+        margin-left: 0;
+        width: 100%;
+        padding: 15px;
+    }
+    
+    /* Header */
+    .header {
+        flex-direction: column;
+        gap: 15px;
+        padding: 20px;
+        border-radius: var(--border-radius);
+    }
+    
+    .header h1 {
+        font-size: 1.5em;
+        justify-content: center;
+    }
+    
+    .header-right {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    /* Stats grid */
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    /* Cards */
+    .card, .stat-card {
+        padding: 20px;
+    }
+    
+    /* Tables */
+    .table-responsive {
+        margin: 0 -15px;
+        border-radius: 0;
+    }
+    
+    table {
+        min-width: 700px;
+    }
+    
+    th, td {
+        padding: 12px 10px;
+        font-size: 0.9em;
+    }
+    
+    /* Buttons */
+    .action-buttons {
+        flex-direction: column;
+    }
+    
+    .btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    /* Forms */
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .form-actions .btn {
+        width: 100%;
+    }
+    
+    /* Mobile menu toggle */
+    .mobile-menu-toggle {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        color: white;
+        border: none;
+        border-radius: 50%;
+        font-size: 1.5em;
+        cursor: pointer;
+        z-index: var(--z-modal);
+        box-shadow: 0 10px 30px rgba(79, 70, 229, 0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: var(--transition-normal);
+    }
+    
+    .mobile-menu-toggle:hover {
+        transform: scale(1.1);
+    }
+    
+    /* Overlay for mobile sidebar */
+    .sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: calc(var(--z-sidebar) - 1);
+        display: none;
+    }
+    
+    .sidebar-overlay.active {
+        display: block;
+    }
+}
+
+/* Small Mobile (≤ 480px) */
+@media (max-width: 480px) {
+    .main-content {
+        padding: 10px;
+    }
+    
+    .header {
+        padding: 15px;
+    }
+    
+    .header h1 {
+        font-size: 1.3em;
+    }
+    
+    .stat-card .stat-number {
+        font-size: 2em;
+    }
+    
+    .card-title {
+        font-size: 1.3em;
+    }
+    
+    .user-info {
+        padding: 8px 15px;
+    }
+    
+    .user-avatar {
+        width: 35px;
+        height: 35px;
+        font-size: 1em;
+    }
+    
+    .badge {
+        padding: 4px 10px;
+        font-size: 0.75em;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .sidebar,
+    .header,
+    .mobile-menu-toggle,
+    .btn {
+        display: none !important;
+    }
+    
+    .main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+        padding: 0 !important;
+    }
+    
+    .card,
+    .table-container {
+        box-shadow: none !important;
+        border: 1px solid #ddd !important;
+    }
+    
+    a {
+        color: black !important;
+        text-decoration: none !important;
+    }
+}

@@ -1,0 +1,304 @@
+/* ===== GENERAL LEDGER STYLES ===== */
+
+/* Container */
+.general-ledger-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 15px;
+}
+
+/* Page Header */
+.general-ledger-header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 3px solid var(--primary-color);
+}
+
+.general-ledger-header h1 {
+    color: var(--secondary-color);
+    font-size: 2rem;
+    margin-bottom: 5px;
+}
+
+.general-ledger-header h2 {
+    color: var(--primary-color);
+    font-size: 1.3rem;
+    margin-bottom: 10px;
+}
+
+/* Period Display */
+.ledger-period-display {
+    text-align: center;
+    margin-bottom: 30px;
+    padding: 15px;
+    background: #e8f4fc;
+    border-radius: 8px;
+    border-left: 4px solid var(--primary-color);
+    font-size: 1.1rem;
+}
+
+.ledger-period-display strong {
+    color: var(--secondary-color);
+}
+
+/* Section Headers */
+.ledger-section-header {
+    font-size: 1.4rem;
+    color: var(--secondary-color);
+    margin: 30px 0 20px 0;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--primary-color);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Tables */
+.ledger-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 30px;
+    background: white;
+    box-shadow: var(--shadow-md);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.ledger-table th {
+    background: var(--primary-color);
+    color: white;
+    padding: 15px 20px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.ledger-table td {
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.ledger-table tr:hover td {
+    background: #f8f9fa;
+}
+
+/* Transaction Table */
+.transaction-table th:nth-child(1) { width: 15%; } /* Date */
+.transaction-table th:nth-child(2) { width: 25%; } /* Debit Account */
+.transaction-table th:nth-child(3) { width: 15%; } /* Debit Amount */
+.transaction-table th:nth-child(4) { width: 25%; } /* Credit Account */
+.transaction-table th:nth-child(5) { width: 15%; } /* Credit Amount */
+
+/* Summary Table */
+.summary-table th:nth-child(1) { width: 40%; } /* Account */
+.summary-table th:nth-child(2) { width: 15%; } /* Debits */
+.summary-table th:nth-child(3) { width: 15%; } /* Credits */
+.summary-table th:nth-child(4) { width: 15%; } /* Balance */
+
+/* Table Cells */
+.account-name-cell {
+    text-align: left !important;
+    font-weight: 500;
+    color: var(--secondary-color);
+}
+
+.amount-cell {
+    text-align: right;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-weight: 600;
+}
+
+.date-cell {
+    font-weight: 500;
+    color: #666;
+}
+
+/* Totals Row */
+.totals-row {
+    background: #f8f9fa !important;
+    border-top: 2px solid var(--border-color);
+}
+
+.totals-row td {
+    font-weight: 700;
+    font-size: 1.1rem;
+    padding-top: 18px;
+    padding-bottom: 18px;
+}
+
+.debit-total {
+    color: var(--danger-color);
+}
+
+.credit-total {
+    color: var(--success-color);
+}
+
+/* Balance Status */
+.balance-status {
+    background: white;
+    border-radius: 12px;
+    padding: 30px;
+    margin-top: 30px;
+    text-align: center;
+    box-shadow: var(--shadow-md);
+}
+
+.balance-status-header {
+    font-size: 1.5rem;
+    color: var(--secondary-color);
+    margin-bottom: 20px;
+}
+
+.balance-status-value {
+    font-size: 2rem;
+    font-weight: bold;
+    margin: 20px 0;
+    padding: 20px;
+    border-radius: 8px;
+    display: inline-block;
+}
+
+.balance-status-value.balanced {
+    background: #d4edda;
+    color: var(--success-color);
+    border-left: 5px solid var(--success-color);
+}
+
+.balance-status-value.not-balanced {
+    background: #f8d7da;
+    color: var(--danger-color);
+    border-left: 5px solid var(--danger-color);
+}
+
+.balance-difference {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-top: 10px;
+}
+
+/* Filters Section */
+.ledger-filters {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 30px;
+    box-shadow: var(--shadow-sm);
+}
+
+.filter-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    align-items: end;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.filter-label {
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: var(--secondary-color);
+    font-size: 0.9rem;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 50px 20px;
+    color: #666;
+}
+
+.empty-state-icon {
+    font-size: 3rem;
+    color: #ccc;
+    margin-bottom: 15px;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .general-ledger-container {
+        padding: 12px;
+    }
+    
+    .ledger-table {
+        display: block;
+        overflow-x: auto;
+    }
+    
+    .ledger-table th,
+    .ledger-table td {
+        padding: 12px 15px;
+        font-size: 0.9rem;
+    }
+    
+    .filter-form {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    
+    .balance-status-value {
+        font-size: 1.5rem;
+        padding: 15px;
+    }
+    
+    .ledger-period-display {
+        font-size: 1rem;
+        padding: 12px;
+    }
+    
+    /* Hide some columns on mobile for transaction table */
+    .transaction-table th:nth-child(4),
+    .transaction-table td:nth-child(4),
+    .transaction-table th:nth-child(5),
+    .transaction-table td:nth-child(5) {
+        display: none;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .ledger-table,
+    .balance-status {
+        background: #2c3e50;
+        color: #ecf0f1;
+    }
+    
+    .ledger-table th {
+        background: #1a252f;
+    }
+    
+    .ledger-table td {
+        border-color: #34495e;
+    }
+    
+    .ledger-table tr:hover td {
+        background: #34495e;
+    }
+    
+    .totals-row {
+        background: #34495e !important;
+    }
+    
+    .ledger-filters {
+        background: #2c3e50;
+    }
+    
+    .account-name-cell {
+        color: #ecf0f1;
+    }
+    
+    .balance-status-value.balanced {
+        background: #155724;
+        color: #d4edda;
+    }
+    
+    .balance-status-value.not-balanced {
+        background: #721c24;
+        color: #f8d7da;
+    }
+}

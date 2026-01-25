@@ -1,0 +1,258 @@
+/* ===== EXPENSE FORM STYLES ===== */
+
+/* Form Container */
+.expense-form-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 15px;
+}
+
+.expense-form-title {
+    color: var(--secondary-color);
+    margin-bottom: 25px;
+    padding-bottom: 10px;
+    border-bottom: 3px solid var(--danger-color);
+    font-size: 1.8rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.expense-form-title i {
+    color: var(--danger-color);
+}
+
+/* Form Card */
+.expense-form-card {
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: var(--shadow-md);
+    margin-bottom: 25px;
+}
+
+/* Form Groups */
+.expense-form-group {
+    margin-bottom: 25px;
+}
+
+.expense-form-label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 600;
+    color: var(--secondary-color);
+    font-size: 0.95rem;
+}
+
+.expense-form-label.required::after {
+    content: " *";
+    color: var(--danger-color);
+}
+
+.help-text {
+    font-size: 0.85em;
+    color: #666;
+    margin-top: 8px;
+    line-height: 1.4;
+}
+
+/* Form Row */
+.expense-form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+/* Amount Field */
+.amount-wrapper {
+    position: relative;
+}
+
+.currency-prefix {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #666;
+    font-weight: 500;
+    pointer-events: none;
+}
+
+.currency-input {
+    padding-left: 60px !important;
+}
+
+/* Errors */
+.errorlist {
+    list-style: none;
+    padding: 0;
+    margin: 8px 0;
+    color: var(--danger-color);
+    background: #ffeaea;
+    padding: 10px;
+    border-radius: 6px;
+    border-left: 4px solid var(--danger-color);
+}
+
+.error-input {
+    border-color: var(--danger-color) !important;
+    background: #fffafa;
+}
+
+/* Manager Approval Notice */
+.approval-notice {
+    background: #fff3cd;
+    border-left: 4px solid var(--warning-color);
+    padding: 15px;
+    margin: 20px 0;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    animation: slideIn 0.3s ease;
+}
+
+.approval-notice h4 {
+    margin: 0 0 8px 0;
+    color: #856404;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Checkbox Group */
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.checkbox-group input[type="checkbox"] {
+    width: auto;
+    transform: scale(1.2);
+}
+
+.checkbox-group label {
+    margin-bottom: 0;
+    color: var(--danger-color);
+    font-weight: 500;
+}
+
+/* Form Actions */
+.expense-form-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 35px;
+    padding-top: 25px;
+    border-top: 1px solid var(--border-color);
+    flex-wrap: wrap;
+}
+
+/* Back Link */
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 20px;
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    padding: 10px 0;
+    transition: color 0.2s;
+}
+
+.back-link:hover {
+    text-decoration: underline;
+    color: var(--secondary-color);
+}
+
+/* Amount Display */
+.amount-display {
+    margin-top: 8px;
+    font-size: 0.9rem;
+    color: #666;
+    font-weight: 500;
+}
+
+/* Animations */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .expense-form-container {
+        padding: 12px;
+    }
+    
+    .expense-form-title {
+        font-size: 1.5rem;
+    }
+    
+    .expense-form-card {
+        padding: 20px;
+        margin: 0 -12px;
+        width: calc(100% + 24px);
+        border-radius: 0;
+        box-shadow: none;
+        border: 1px solid var(--border-color);
+    }
+    
+    .expense-form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .expense-form-actions {
+        flex-direction: column;
+    }
+    
+    .expense-form-actions .btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    input, select, textarea {
+        padding: 10px;
+    }
+    
+    .currency-prefix {
+        left: 10px;
+    }
+    
+    .currency-input {
+        padding-left: 50px !important;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .expense-form-card {
+        background: #2c3e50;
+        color: #ecf0f1;
+    }
+    
+    .expense-form-label {
+        color: #ecf0f1;
+    }
+    
+    .help-text {
+        color: #bdc3c7;
+    }
+    
+    .approval-notice {
+        background: #34495e;
+        color: #ecf0f1;
+    }
+    
+    .errorlist {
+        background: #c0392b;
+        color: white;
+    }
+}

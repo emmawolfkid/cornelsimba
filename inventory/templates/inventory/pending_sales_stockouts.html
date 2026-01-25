@@ -1,0 +1,191 @@
+{% extends 'inventory/base.html' %}
+{% load static %}
+
+{% block title %}Pending Sales Stockouts - Inventory{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'inventory/css/sales.css' %}">
+<link rel="stylesheet" href="{% static 'inventory/css/list.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">📋 Pending Sales Stock Out Requests</h1>
+    <div class="page-actions">
+        <a href="{% url 'inventory:dashboard' %}" class="btn btn-secondary">
+            ← Dashboard
+        </a>
+    </div>
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} sales-alert">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+
+{% if pending_stockouts %}
+    <div class="alert alert-warning sales-alert">
+        <strong>⚠️ Action Required:</strong> You have {{ pending_stockouts.count }} pending stock out request(s) from sales. 
+        Review each request and approve if stock is available.
+    </div>
+    
+    <div class="table-responsive">
+        <table class="sales-table">
+            <thead>
+                <tr>
+                    <th>Stock Out ID</th>
+                    <th>Sale #</th>
+                    <th>Customer</th>
+                    <th>Item</th>
+                    <th>Quantity</th>
+                    <th>Available Stock</th>
+                    <th>Request Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for stockout in pending_stockouts %}
+                <tr>
+                    <td><strong>#{{ stockout.id }}</strong></td>
+                    <td>
+                        {% if stockout.linked_sale %}
+                        <a href="{% url 'sales:sale_detail' stockout.linked_sale.pk %}" target="_blank" class="sale-link">
+                            {{ stockout.linked_sale.sale_number }}
+                        </a>
+                        {% else %}
+                        {{ stockout.sale_reference|default:"-" }}
+                        {% endif %}
+                    </td>
+                    <td>{{ stockout.issued_to|default:"-" }}</td>
+                    <td>
+                        <div class="item-info">
+                            <span class="item-name">{{ stockout.item.name }}</span>
+                            <span class="item-sku">{{ stockout.item.sku|default:"No SKU" }}</span>
+                        </div>
+                    </td>
+                    <td class="quantity-display">{{ stockout.quantity }} {{ stockout.item.unit_of_measure }}</td>
+                    <td>
+                        <span class="stock-available {% if stockout.item.quantity >= stockout.quantity %}stock-sufficient{% else %}stock-insufficient{% endif %}">
+                            {{ stockout.item.quantity }} {{ stockout.item.unit_of_measure }}
+                        </span>
+                        {% if stockout.item.quantity < stockout.quantity %}
+                        <div class="stock-shortage">
+                            Short: {{ stockout.quantity|add:"-"|add:stockout.item.quantity|floatformat:3 }}
+                        </div>
+                        {% endif %}
+                    </td>
+                    <td>{{ stockout.date|date:"Y-m-d H:i" }}</td>
+                    <td>
+                        <span class="sales-status status-pending">⏳ Pending</span>
+                    </td>
+                    <td>
+                        <div class="actions">
+                            <form method="post" action=".">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="approve">
+                                <input type="hidden" name="stockout_id" value="{{ stockout.id }}">
+                                <button type="submit" class="btn btn-success btn-sm" 
+                                        onclick="return confirm('Approve stock out for {{ stockout.quantity }} {{ stockout.item.unit_of_measure }} of {{ stockout.item.name }}?');">
+                                    Approve
+                                </button>
+                            </form>
+                            
+                            <form method="post" action=".">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="reject">
+                                <input type="hidden" name="stockout_id" value="{{ stockout.id }}">
+                                <button type="submit" class="btn btn-danger btn-sm" 
+                                        onclick="return confirm('Reject this stock out request?');">
+                                    Reject
+                                </button>
+                            </form>
+                            
+                            <a href="{% url 'inventory:stock_out_detail' stockout.pk %}" class="btn btn-info btn-sm">
+                                View
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="alert alert-success sales-alert">
+        <strong>✅ All caught up!</strong> No pending sales stockouts found.
+    </div>
+{% endif %}
+
+<!-- Approved sales without stock out requests -->
+{% if sales_without_stockout %}
+<h2 class="section-header">Approved Sales Waiting for Stock Out</h2>
+<div class="alert alert-info sales-alert">
+    <strong>ℹ️ Information:</strong> These {{ sales_without_stockout.count }} sales are approved but don't have stock out requests yet. 
+    The sales team needs to request stock out from the sale details page.
+</div>
+
+<div class="table-responsive">
+    <table class="sales-table">
+        <thead>
+            <tr>
+                <th>Sale #</th>
+                <th>Customer</th>
+                <th>Amount (Tsh)</th>
+                <th>Created Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for sale in sales_without_stockout %}
+            <tr>
+                <td>{{ sale.sale_number }}</td>
+                <td>{{ sale.customer.name }}</td>
+                <td class="amount">Tsh {{ sale.net_amount|floatformat:0 }}</td>
+                <td>{{ sale.created_at|date:"Y-m-d" }}</td>
+                <td>
+                    <a href="{% url 'sales:sale_detail' sale.pk %}" class="btn btn-sm sale-link" target="_blank">
+                        View Sale
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<div class="navigation-buttons">
+    <a href="{% url 'inventory:dashboard' %}" class="btn btn-secondary">
+        ← Back to Inventory Dashboard
+    </a>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-refresh every 60 seconds to check for new requests
+    setTimeout(function() {
+        window.location.reload();
+    }, 60000);
+    
+    // Confirm before approving/rejecting
+    document.querySelectorAll('form button[type="submit"]').forEach(button => {
+        button.addEventListener('click', function(e) {
+            const form = this.closest('form');
+            const action = form.querySelector('input[name="action"]').value;
+            const isApproving = action === 'approve';
+            const message = isApproving 
+                ? 'Are you sure you want to approve this stock out request?'
+                : 'Are you sure you want to reject this stock out request?';
+            
+            if (!confirm(message)) {
+                e.preventDefault();
+            }
+        });
+    });
+</script>
+{% endblock %}

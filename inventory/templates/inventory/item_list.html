@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Items</title>
+    {% load static %}
+    <!-- Load external CSS files -->
+    <link rel="stylesheet" href="{% static 'inventory/css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'inventory/css/components.css' %}">
+    <link rel="stylesheet" href="{% static 'inventory/css/items.css' %}">
+    <!-- Add inline styles for items.css specific styles -->
+    <style>
+        /* This is items.css content - you can move it to items.css file */
+        /* Items list specific styles */
+        
+        /* Header Actions */
+        .header-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        /* Filters */
+        .filters { 
+            background: white; 
+            padding: 20px; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05); 
+            margin-bottom: 30px; 
+        }
+        .filter-row { 
+            display: flex; 
+            gap: 15px; 
+            align-items: flex-end; 
+            flex-wrap: wrap; 
+        }
+        .filter-group { flex: 1; min-width: 200px; }
+        .filter-group label { display: block; margin-bottom: 5px; color: #2c3e50; font-weight: 500; }
+        .filter-group select { 
+            width: 100%; 
+            padding: 10px; 
+            border: 1px solid #ddd; 
+            border-radius: 4px; 
+            background: white;
+            font-size: 0.95em;
+        }
+        .filter-group button { 
+            padding: 10px 20px; 
+            background: #f39c12; 
+            color: white; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            font-weight: 500;
+        }
+        .filter-group button:hover { background: #e67e22; }
+        
+        /* Table */
+        .table-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+        
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+        }
+        th { 
+            background: #f8f9fa; 
+            color: #2c3e50; 
+            padding: 15px; 
+            text-align: left; 
+            font-weight: 600;
+            border-bottom: 2px solid #eee;
+        }
+        td { 
+            padding: 12px 15px; 
+            border-bottom: 1px solid #eee; 
+        }
+        tr:hover { background: #f8f9fa; }
+        
+        /* Summary stats */
+        .summary-stats {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .summary-stat {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            flex: 1;
+            min-width: 150px;
+            text-align: center;
+        }
+        
+        .summary-stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .summary-stat-label {
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        /* Mobile table adjustments */
+        @media (max-width: 1024px) {
+            table th:nth-child(6),
+            table td:nth-child(6),
+            table th:nth-child(7),
+            table td:nth-child(7) {
+                display: none;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .table-container {
+                overflow-x: auto;
+            }
+            table th:nth-child(2),
+            table td:nth-child(2),
+            table th:nth-child(3),
+            table td:nth-child(3) {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Menu Toggle -->
+    <button class="menu-toggle" id="menuToggle">☰</button>
+    
+    <!-- Overlay for mobile -->
+    <div class="overlay" id="overlay"></div>
+    
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2>📦 Inventory System</h2>
+        </div>
+        
+        <div class="sidebar-menu">
+            <!-- Dashboard -->
+            <div class="menu-section">
+                <div class="menu-section-title">Main</div>
+                <a href="{% url 'inventory:dashboard' %}" class="menu-item">
+                    📊 Dashboard
+                </a>
+            </div>
+            
+            <!-- Items Management -->
+            <div class="menu-section">
+                <div class="menu-section-title">Items Management</div>
+                <a href="{% url 'inventory:item_list' %}" class="menu-item active">
+                    📦 All Items
+                </a>
+                <a href="{% url 'inventory:item_create' %}" class="menu-item">
+                    ➕ Add New Item
+                </a>
+                <a href="{% url 'inventory:stock_report' %}" class="menu-item">
+                    📊 Stock Report
+                </a>
+            </div>
+            
+            <!-- Stock Movements -->
+            <div class="menu-section">
+                <div class="menu-section-title">Stock Movements</div>
+                <a href="{% url 'inventory:stock_in_create' %}" class="menu-item">
+                    📥 Stock In
+                </a>
+                <a href="{% url 'inventory:stock_in_list' %}" class="menu-item">
+                    📋 Stock In History
+                </a>
+                <a href="{% url 'inventory:stock_out_create' %}" class="menu-item">
+                    📤 Stock Out
+                </a>
+                <a href="{% url 'inventory:stock_out_list' %}" class="menu-item">
+                    📋 Stock Out History
+                </a>
+            </div>
+            
+            <!-- Adjustments -->
+            <div class="menu-section">
+                <div class="menu-section-title">Adjustments</div>
+                <a href="{% url 'inventory:adjustment_create' %}" class="menu-item">
+                    🔄 Request Adjustment
+                </a>
+                <a href="{% url 'inventory:adjustment_list' %}" class="menu-item">
+                    📋 All Adjustments
+                </a>
+                <a href="{% url 'inventory:adjustment_list' %}?status=pending" class="menu-item">
+                    ⏳ Pending Approvals
+                </a>
+            </div>
+            
+            <!-- Sales Integration -->
+            <div class="menu-section">
+                <div class="menu-section-title">Sales Integration</div>
+                <a href="{% url 'inventory:pending_sales_stockouts' %}" class="menu-item">
+                    📈 Pending Stock Outs
+                </a>
+                <a href="{% url 'inventory:procurement_stock' %}" class="menu-item">
+                    🛒 From Procurement
+                </a>
+            </div>
+            
+            <!-- System -->
+            <div class="menu-section">
+                <div class="menu-section-title">System</div>
+                <a href="/" class="menu-item">
+                    🏠 Main Dashboard
+                </a>
+                <a href="{% url 'logout' %}" class="menu-item" onclick="return confirm('Are you sure you want to logout?')">
+                    🔒 Logout
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <div class="container">
+            <!-- Header -->
+            <div class="header-actions">
+                <h1>📦 Inventory Items</h1>
+                <div>
+                    <a href="{% url 'inventory:item_create' %}" class="btn">➕ Add New Item</a>
+                    <a href="{% url 'inventory:dashboard' %}" class="btn btn-secondary">← Dashboard</a>
+                </div>
+            </div>
+            
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            <!-- Summary Stats (using template logic) -->
+            <div class="summary-stats">
+                <div class="summary-stat">
+                    <div class="summary-stat-value">{{ items|length }}</div>
+                    <div class="summary-stat-label">Total Items</div>
+                </div>
+                <div class="summary-stat">
+                    <div class="summary-stat-value">
+                        {% with low_count=0 %}
+                        {% for item in items %}
+                            {% if item.quantity <= item.reorder_level and item.quantity > item.minimum_stock %}
+                                {% with low_count=low_count|add:1 %}{% endwith %}
+                            {% endif %}
+                        {% endfor %}
+                        {{ low_count }}
+                        {% endwith %}
+                    </div>
+                    <div class="summary-stat-label">Low Stock</div>
+                </div>
+                <div class="summary-stat">
+                    <div class="summary-stat-value">
+                        {% with critical_count=0 %}
+                        {% for item in items %}
+                            {% if item.quantity <= item.minimum_stock %}
+                                {% with critical_count=critical_count|add:1 %}{% endwith %}
+                            {% endif %}
+                        {% endfor %}
+                        {{ critical_count }}
+                        {% endwith %}
+                    </div>
+                    <div class="summary-stat-label">Critical</div>
+                </div>
+                <div class="summary-stat">
+                    <div class="summary-stat-value">
+                        {% with inactive_count=0 %}
+                        {% for item in items %}
+                            {% if not item.is_active %}
+                                {% with inactive_count=inactive_count|add:1 %}{% endwith %}
+                            {% endif %}
+                        {% endfor %}
+                        {{ inactive_count }}
+                        {% endwith %}
+                    </div>
+                    <div class="summary-stat-label">Inactive</div>
+                </div>
+            </div>
+            
+            <!-- Filters -->
+            <div class="filters">
+                <form method="GET" class="filter-row">
+                    <div class="filter-group">
+                        <label for="category">Category</label>
+                        <select name="category" id="category">
+                            <option value="">All Categories</option>
+                            {% for value, label in category_choices %}
+                            <option value="{{ value }}" {% if request.GET.category == value|stringformat:"s" %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="status">Stock Status</label>
+                        <select name="status" id="status">
+                            <option value="">All Status</option>
+                            <option value="low" {% if request.GET.status == 'low' %}selected{% endif %}>Low Stock</option>
+                            <option value="critical" {% if request.GET.status == 'critical' %}selected{% endif %}>Critical Stock</option>
+                            <option value="out_of_stock" {% if request.GET.status == 'out_of_stock' %}selected{% endif %}>Out of Stock</option>
+                            <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>Inactive</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <button type="submit">Apply Filters</button>
+                        {% if request.GET.category or request.GET.status %}
+                        <a href="{% url 'inventory:item_list' %}" style="margin-left: 10px; color: #666; font-size: 0.9em;">Clear filters</a>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Table -->
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Category</th>
+                            <th>Quantity</th>
+                            <th>Unit</th>
+                            <th>Status</th>
+                            <th>Reorder Level</th>
+                            <th>Min Stock</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in items %}
+                        <tr>
+                            <td>
+                                <span class="stock-indicator 
+                                    {% if not item.is_active %}stock-inactive
+                                    {% elif item.quantity <= item.minimum_stock %}stock-critical
+                                    {% elif item.quantity <= item.reorder_level %}stock-low
+                                    {% else %}stock-good{% endif %}"></span>
+                                
+                                <span class="item-name">{{ item.name }}</span>
+                                <span class="item-sku">{{ item.sku|default:"No SKU" }}</span>
+                                
+                                {% if not item.is_active %}
+                                <small style="color: #e74c3c; font-size: 0.85em;">(Inactive)</small>
+                                {% endif %}
+                            </td>
+                            <td>{{ item.get_category_display }}</td>
+                            <td>
+                                <span class="decimal">{{ item.quantity|floatformat:3 }}</span>
+                                <div style="font-size: 0.85em; color: #666;">
+                                    {{ item.unit_of_measure }}
+                                </div>
+                            </td>
+                            <td>{{ item.unit_of_measure }}</td>
+                            <td>
+                                {% if not item.is_active %}
+                                <span class="status-badge status-inactive">Inactive</span>
+                                {% elif item.quantity <= item.minimum_stock %}
+                                <span class="status-badge status-critical">Critical</span>
+                                {% elif item.quantity <= item.reorder_level %}
+                                <span class="status-badge status-low">Low</span>
+                                {% else %}
+                                <span class="status-badge status-good">Good</span>
+                                {% endif %}
+                            </td>
+                            <td class="decimal">{{ item.reorder_level|floatformat:3 }}</td>
+                            <td class="decimal">{{ item.minimum_stock|floatformat:3 }}</td>
+                            <td>
+                                <div class="action-links">
+                                    <a href="{% url 'inventory:item_detail' item.pk %}" title="View Details">👁️</a>
+                                    <a href="{% url 'inventory:item_update' item.pk %}" title="Edit Item">✏️</a>
+                                    <a href="{% url 'inventory:stock_in_create' %}?item={{ item.pk }}" title="Stock In">📥</a>
+                                    {% if item.quantity > 0 %}
+                                    <a href="{% url 'inventory:stock_out_create' %}?item={{ item.pk }}" title="Stock Out">📤</a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="empty-state">
+                                <p>No items found.</p>
+                                {% if request.GET.category or request.GET.status %}
+                                <a href="{% url 'inventory:item_list' %}">Clear filters</a> or 
+                                {% endif %}
+                                <a href="{% url 'inventory:item_create' %}">Add your first inventory item</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- If you have pagination, add it here -->
+            {% if items.has_other_pages %}
+            <div style="text-align: center; margin-top: 20px;">
+                {% if items.has_previous %}
+                <a href="?page={{ items.previous_page_number }}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}" class="btn btn-secondary">← Previous</a>
+                {% endif %}
+                
+                <span style="margin: 0 15px;">
+                    Page {{ items.number }} of {{ items.paginator.num_pages }}
+                </span>
+                
+                {% if items.has_next %}
+                <a href="?page={{ items.next_page_number }}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}" class="btn btn-secondary">Next →</a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <script>
+        // Mobile menu toggle functionality
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+        const mainContent = document.getElementById('mainContent');
+        
+        // Toggle sidebar
+        menuToggle.addEventListener('click', function() {
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        });
+        
+        // Close sidebar when clicking overlay
+        overlay.addEventListener('click', function() {
+            sidebar.classList.remove('active');
+            overlay.classList.remove('active');
+        });
+        
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(event) {
+            if (window.innerWidth <= 768) {
+                const isClickInsideSidebar = sidebar.contains(event.target);
+                const isClickOnToggle = menuToggle.contains(event.target);
+                
+                if (!isClickInsideSidebar && !isClickOnToggle && sidebar.classList.contains('active')) {
+                    sidebar.classList.remove('active');
+                    overlay.classList.remove('active');
+                }
+            }
+        });
+        
+        // Highlight current page in sidebar
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentPath = window.location.pathname;
+            const menuItems = document.querySelectorAll('.menu-item');
+            
+            menuItems.forEach(item => {
+                // Remove active class from all items first
+                item.classList.remove('active');
+                
+                // Check if this menu item links to current page
+                if (item.href && currentPath.includes(new URL(item.href).pathname)) {
+                    item.classList.add('active');
+                }
+            });
+        });
+        
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 768) {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+            }
+        });
+        
+        // Auto-submit filter form when selections change (optional)
+        document.getElementById('category').addEventListener('change', function() {
+            this.form.submit();
+        });
+        
+        document.getElementById('status').addEventListener('change', function() {
+            this.form.submit();
+        });
+    </script>
+</body>
+</html>

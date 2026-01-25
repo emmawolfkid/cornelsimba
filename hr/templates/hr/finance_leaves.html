@@ -1,0 +1,792 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finance Leave Processing - HR System</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Our HR CSS Files -->
+    <link rel="stylesheet" href="{% static 'css/hr-main.css' %}">
+    <link rel="stylesheet" href="{% static 'css/hr-components.css' %}">
+    <link rel="stylesheet" href="{% static 'css/hr-responsive.css' %}">
+    <link rel="stylesheet" href="{% static 'css/hr-notifications.css' %}">
+    
+    <style>
+        /* Page-specific styles */
+        .payroll-card {
+            border: 2px solid transparent;
+            transition: var(--transition-normal);
+            margin-bottom: 15px;
+            border-radius: var(--border-radius);
+            background: var(--white);
+            padding: 20px;
+            box-shadow: var(--box-shadow-sm);
+        }
+        
+        .payroll-card:hover {
+            box-shadow: var(--box-shadow);
+            transform: translateY(-2px);
+        }
+        
+        .payroll-card.processed {
+            border-left: 5px solid var(--success);
+            background: linear-gradient(to right, #f0fdf4 0%, var(--white) 100%);
+        }
+        
+        .payroll-card.pending {
+            border-left: 5px solid var(--warning);
+            background: linear-gradient(to right, #fffbeb 0%, var(--white) 100%);
+        }
+        
+        .amount-badge {
+            font-size: 1.1em;
+            padding: 8px 16px;
+            border-radius: var(--border-radius-sm);
+        }
+        
+        .mobile-view {
+            display: none;
+        }
+        
+        .process-modal-form {
+            padding: 20px;
+        }
+        
+        .process-modal-form textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--gray-light);
+            border-radius: var(--border-radius);
+            margin-bottom: 15px;
+            resize: vertical;
+        }
+        
+        .navigation-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .navigation-card {
+            background: var(--white);
+            padding: 20px;
+            border-radius: var(--border-radius);
+            text-align: center;
+            box-shadow: var(--box-shadow-sm);
+            transition: var(--transition-normal);
+            text-decoration: none;
+            color: var(--dark);
+        }
+        
+        .navigation-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--box-shadow);
+            color: var(--primary);
+        }
+        
+        .navigation-card i {
+            font-size: 2em;
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <!-- Notification Container -->
+    <div id="notification-container"></div>
+    
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <i class="fas fa-building"></i>
+            <span>HR Portal</span>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-title">Main Menu</div>
+            <a href="{% url 'hr:hr_dashboard' %}" class="nav-item">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="{% url 'hr:employee_list' %}" class="nav-item">
+                <i class="fas fa-user-friends"></i>
+                <span>All Employees</span>
+            </a>
+            <a href="{% url 'hr:leave_dashboard' %}" class="nav-item">
+                <i class="fas fa-chart-bar"></i>
+                <span>Leave Dashboard</span>
+            </a>
+            <a href="{% url 'hr:leave_approval_list' %}" class="nav-item">
+                <i class="fas fa-check-circle"></i>
+                <span>Approvals</span>
+                {% if pending_count > 0 %}
+                <span class="nav-badge">{{ pending_count }}</span>
+                {% endif %}
+            </a>
+        </div>
+
+        <div class="sidebar-divider"></div>
+
+        <div class="nav-section">
+            <div class="nav-title">Management</div>
+            <a href="{% url 'hr:hr_leave_management' %}" class="nav-item">
+                <i class="fas fa-cogs"></i>
+                <span>Leave Management</span>
+            </a>
+            <a href="{% url 'hr:finance_leaves_view' %}" class="nav-item active">
+                <i class="fas fa-calculator"></i>
+                <span>Payroll</span>
+                {% if leaves_for_payroll %}
+                <span class="nav-badge">{{ leaves_for_payroll|length }}</span>
+                {% endif %}
+            </a>
+            <a href="{% url 'hr:user_sync' %}" class="nav-item">
+                <i class="fas fa-sync-alt"></i>
+                <span>User Sync</span>
+            </a>
+        </div>
+
+        <div class="sidebar-divider"></div>
+
+        <div class="nav-section sidebar-actions">
+            <div class="nav-title">Quick Actions</div>
+            <a href="{% url 'hr:employee_create' %}" class="sidebar-btn success">
+                <i class="fas fa-user-plus"></i>
+                Add Employee
+            </a>
+            <a href="{% url 'hr:leave_request_create' %}" class="sidebar-btn">
+                <i class="fas fa-calendar-plus"></i>
+                Request Leave
+            </a>
+            <a href="{% url 'hr:hr_leave_add' %}" class="sidebar-btn danger">
+                <i class="fas fa-user-times"></i>
+                Add Absence
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <div class="header">
+            <h1>
+                <i class="fas fa-calculator"></i>
+                Finance Leave Processing
+            </h1>
+            <div class="header-right">
+                <div class="user-info">
+                    <div class="user-avatar">
+                        {% if user.get_full_name %}
+                            {{ user.get_full_name|first|upper }}
+                        {% else %}
+                            {{ user.username|first|upper }}
+                        {% endif %}
+                    </div>
+                    <div>
+                        <div style="color: var(--dark); font-weight: 600;">
+                            {% if user.get_full_name %}
+                                {{ user.get_full_name }}
+                            {% else %}
+                                {{ user.username }}
+                            {% endif %}
+                        </div>
+                        <small style="color: var(--gray); font-size: 0.85em;">
+                            {{ user.groups.first|default:"Finance User" }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Django Messages -->
+        {% if messages %}
+        <div class="django-messages">
+            {% for message in messages %}
+            <div class="message-alert {{ message.tags }}">
+                <div>
+                    <i class="fas fa-info-circle me-2"></i>
+                    {{ message }}
+                </div>
+                <button class="close-alert">&times;</button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Page Actions -->
+        <div class="action-buttons mb-4">
+            <a href="{% url 'hr:leave_dashboard' %}" class="btn">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+            <a href="{% url 'hr:export_leaves_pdf' %}" class="btn btn-success">
+                <i class="fas fa-file-pdf"></i> Export PDF Report
+            </a>
+            {% if leaves_for_payroll %}
+            <button onclick="processAllLeaves()" class="btn btn-warning">
+                <i class="fas fa-check-double"></i> Mark All as Processed
+            </button>
+            {% endif %}
+        </div>
+
+        <!-- Statistics -->
+        <div class="stats-grid">
+            <div class="stat-card orange">
+                <div class="stat-header">
+                    <div>
+                        <h3>For Processing</h3>
+                        <p class="stat-number">{{ leaves_for_payroll|length }}</p>
+                        <small class="stat-description">Awaiting payroll</small>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card green">
+                <div class="stat-header">
+                    <div>
+                        <h3>Processed</h3>
+                        <p class="stat-number">{{ processed_leaves|length }}</p>
+                        <small class="stat-description">Completed payroll</small>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card purple">
+                <div class="stat-header">
+                    <div>
+                        <h3>This Month</h3>
+                        <p class="stat-number">{{ leaves_for_payroll|length|add:processed_leaves|length }}</p>
+                        <small class="stat-description">Total leaves</small>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card red">
+                <div class="stat-header">
+                    <div>
+                        <h3>Unpaid Leaves</h3>
+                        <p class="stat-number">{{ unpaid_leaves_count|default:"0" }}</p>
+                        <small class="stat-description">No pay deduction</small>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-money-bill-alt"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Leaves for Payroll Processing -->
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">
+                        <i class="fas fa-tasks"></i>
+                        Leaves Awaiting Payroll Processing
+                        <span class="badge badge-warning" style="margin-left: 10px;">
+                            {{ leaves_for_payroll|length }}
+                        </span>
+                    </h2>
+                    <p class="card-subtitle">
+                        Mark leaves as processed when payroll calculations are complete
+                    </p>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <!-- Desktop View -->
+                <div class="desktop-view">
+                    {% if leaves_for_payroll %}
+                    <div class="table-container">
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Employee</th>
+                                        <th>Department</th>
+                                        <th>Leave Details</th>
+                                        <th>Duration</th>
+                                        <th>Paid/Unpaid</th>
+                                        <th>Approved On</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for leave in leaves_for_payroll %}
+                                    <tr>
+                                        <td>
+                                            <div style="display: flex; align-items: center; gap: 10px;">
+                                                <div class="user-avatar" style="width: 35px; height: 35px; font-size: 0.9em;">
+                                                    {{ leave.employee.full_name|first|upper }}
+                                                </div>
+                                                <div>
+                                                    <strong>{{ leave.employee.full_name }}</strong>
+                                                    <div class="text-muted" style="font-size: 0.85em;">
+                                                        {{ leave.employee.employee_id|default:"No ID" }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge badge-info">{{ leave.employee.department|default:"Not set" }}</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge badge-secondary">{{ leave.leave_type.name }}</span><br>
+                                            <small class="text-muted">
+                                                {{ leave.start_date|date:"M d" }} - {{ leave.end_date|date:"M d" }}
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <span class="badge badge-primary">{{ leave.days_requested }} days</span>
+                                        </td>
+                                        <td>
+                                            {% if leave.is_paid_leave %}
+                                                <span class="badge badge-success">Paid</span>
+                                            {% else %}
+                                                <span class="badge badge-warning">Unpaid</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if leave.approved_date %}
+                                                {{ leave.approved_date|date:"M d, Y" }}
+                                                <div class="text-muted" style="font-size: 0.85em;">
+                                                    by {{ leave.approved_by.username|default:"HR" }}
+                                                </div>
+                                            {% else %}
+                                                <span class="text-muted">Not available</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="action-links">
+                                                <a href="{% url 'hr:leave_detail' leave.id %}" class="action-link" title="View Details">
+                                                    <i class="fas fa-eye"></i> View
+                                                </a>
+                                                <button onclick="showProcessModal( leave.id )" class="action-link success" title="Mark as Processed">
+                                                    <i class="fas fa-check-double"></i> Process
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-check-circle fa-3x" style="color: var(--success); margin-bottom: 20px;"></i>
+                        <h3>All Caught Up!</h3>
+                        <p class="text-muted mb-3">No leaves awaiting payroll processing.</p>
+                        <a href="{% url 'hr:leave_dashboard' %}" class="btn">
+                            <i class="fas fa-arrow-left"></i> Back to Dashboard
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Mobile View -->
+                <div class="mobile-view">
+                    {% if leaves_for_payroll %}
+                        {% for leave in leaves_for_payroll %}
+                        <div class="payroll-card pending">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+                                <div style="flex: 1;">
+                                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                                        <div class="user-avatar" style="width: 35px; height: 35px; font-size: 0.9em;">
+                                            {{ leave.employee.full_name|first|upper }}
+                                        </div>
+                                        <div>
+                                            <strong>{{ leave.employee.full_name }}</strong>
+                                            <div class="text-muted" style="font-size: 0.85em;">
+                                                {{ leave.employee.employee_id|default:"No ID" }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
+                                        <span class="badge badge-info">{{ leave.employee.department|default:"Not set" }}</span>
+                                        <span class="badge badge-secondary">{{ leave.leave_type.name }}</span>
+                                        {% if leave.is_paid_leave %}
+                                            <span class="badge badge-success">Paid</span>
+                                        {% else %}
+                                            <span class="badge badge-warning">Unpaid</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                                <div>
+                                    <div class="text-muted" style="font-size: 0.85em;">Dates</div>
+                                    <div>{{ leave.start_date|date:"M d" }} - {{ leave.end_date|date:"M d" }}</div>
+                                </div>
+                                <div>
+                                    <div class="text-muted" style="font-size: 0.85em;">Days</div>
+                                    <div><span class="badge badge-primary">{{ leave.days_requested }}</span></div>
+                                </div>
+                            </div>
+                            
+                            {% if leave.approved_date %}
+                            <div style="margin-bottom: 15px;">
+                                <div class="text-muted" style="font-size: 0.85em;">Approved On</div>
+                                <div>{{ leave.approved_date|date:"M d, Y" }}</div>
+                                <div class="text-muted" style="font-size: 0.85em;">
+                                    by {{ leave.approved_by.username|default:"HR" }}
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="action-buttons">
+                                <a href="{% url 'hr:leave_detail' leave.id %}" class="btn btn-sm">
+                                    <i class="fas fa-eye"></i> View Details
+                                </a>
+                                <button onclick="showProcessModal( leave.id )" class="btn btn-sm btn-success">
+                                    <i class="fas fa-check-double"></i> Mark Processed
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-check-circle fa-3x" style="color: var(--success); margin-bottom: 20px;"></i>
+                        <h3>All Caught Up!</h3>
+                        <p class="text-muted mb-3">No leaves awaiting payroll processing.</p>
+                        <a href="{% url 'hr:leave_dashboard' %}" class="btn">
+                            <i class="fas fa-arrow-left"></i> Back to Dashboard
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recently Processed Leaves -->
+        {% if processed_leaves %}
+        <div class="card mt-4">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <i class="fas fa-history"></i>
+                    Recently Processed Leaves
+                    <span class="badge badge-success" style="margin-left: 10px;">
+                        {{ processed_leaves|length }}
+                    </span>
+                </h2>
+            </div>
+            
+            <div class="table-container">
+                <div class="table-responsive">
+                    <table class="table-striped">
+                        <thead>
+                            <tr>
+                                <th>Employee</th>
+                                <th>Leave Type</th>
+                                <th>Dates</th>
+                                <th>Days</th>
+                                <th>Processed By</th>
+                                <th>Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for leave in processed_leaves %}
+                            <tr>
+                                <td>{{ leave.employee.full_name }}</td>
+                                <td>
+                                    <span class="badge badge-secondary">{{ leave.leave_type.name }}</span>
+                                </td>
+                                <td>
+                                    {{ leave.start_date|date:"M d" }} - {{ leave.end_date|date:"M d" }}
+                                </td>
+                                <td>{{ leave.days_requested }}</td>
+                                <td>{{ request.user.username }}</td>
+                                <td>
+                                    <small class="text-muted">{{ leave.payroll_remarks|truncatechars:30|default:"No remarks" }}</small>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Navigation Cards -->
+        <div class="navigation-cards">
+            <a href="{% url 'hr:leave_dashboard' %}" class="navigation-card">
+                <i class="fas fa-home"></i>
+                <div>Leave Dashboard</div>
+            </a>
+            <a href="{% url 'hr:hr_leave_management' %}" class="navigation-card">
+                <i class="fas fa-users-cog"></i>
+                <div>HR Management</div>
+            </a>
+            <a href="{% url 'hr:leave_approval_list' %}" class="navigation-card">
+                <i class="fas fa-check-circle"></i>
+                <div>Manager Approvals</div>
+            </a>
+            <a href="{% url 'hr:my_leave_requests' %}" class="navigation-card">
+                <i class="fas fa-history"></i>
+                <div>My Requests</div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Process Modal -->
+    <div id="processModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div class="modal-content" style="background: var(--white); border-radius: 12px; width: 90%; max-width: 500px; padding: 30px; box-shadow: 0 20px 40px rgba(0,0,0,0.12); animation: scaleIn 0.3s ease;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="color: #1e293b; margin: 0;">
+                    <i class="fas fa-check-double" style="color: #10b981;"></i>
+                    Mark Leave as Processed
+                </h3>
+                <button onclick="closeProcessModal()" style="background: none; border: none; font-size: 1.5em; color: #94a3b8; cursor: pointer;">&times;</button>
+            </div>
+            
+            <div class="process-modal-form">
+                <p style="color: #475569; margin-bottom: 20px;">
+                    Are you sure you want to mark this leave as payroll processed?
+                </p>
+                
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-weight: 600; color: #1e293b; margin-bottom: 8px;">
+                        Remarks (Optional):
+                    </label>
+                    <textarea id="payrollRemarks" rows="3" placeholder="Add any payroll processing remarks..."></textarea>
+                    <small style="color: #94a3b8; font-size: 0.85em;">
+                        This will be saved with the leave record.
+                    </small>
+                </div>
+                
+                <div class="alert alert-info" style="margin-bottom: 20px; background: #dbeafe; color: #1e40af; padding: 12px; border-radius: 8px; border-left: 4px solid #3b82f6;">
+                    <i class="fas fa-info-circle" style="margin-right: 8px;"></i>
+                    This action cannot be undone. The leave will be marked as processed in the payroll system.
+                </div>
+                
+                <div style="display: flex; gap: 15px; justify-content: flex-end; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+                    <button onclick="closeProcessModal()" class="btn btn-outline" style="padding: 10px 20px; background: transparent; border: 2px solid #4f46e5; color: #4f46e5; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button onclick="processLeave()" class="btn btn-success" style="padding: 10px 20px; background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                        <i class="fas fa-check-double"></i> Mark as Processed
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        // Store Django values in JavaScript variables
+        const pendingCount = { leaves_for_payrolllength };
+        const unpaidLeavesCount = { unpaid_leaves_countdefault:"0" };
+        const processedCount = { processed_leaveslength };
+        const csrfToken = '{{ csrf_token }}';
+        
+        // HRSystem object (matching your hr-main.js)
+        const HRSystem = {
+            showNotification: function(message, type = 'info', title = '') {
+                const container = document.getElementById('notification-container');
+                const notification = document.createElement('div');
+                notification.className = 'notification-toast ' + type;
+                
+                let icon = 'info-circle';
+                switch(type) {
+                    case 'success': icon = 'check-circle'; break;
+                    case 'warning': icon = 'exclamation-triangle'; break;
+                    case 'error': icon = 'times-circle'; break;
+                    default: icon = 'info-circle';
+                }
+                
+                notification.innerHTML = `
+                    <div class="notification-icon">
+                        <i class="fas fa-${icon}"></i>
+                    </div>
+                    <div class="notification-content">
+                        ${title ? '<div class="notification-title">' + title + '</div>' : ''}
+                        <div class="notification-message">${message}</div>
+                    </div>
+                    <button class="notification-close" onclick="this.parentElement.remove()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                
+                container.appendChild(notification);
+                
+                // Auto remove after 5 seconds
+                setTimeout(() => {
+                    notification.style.opacity = '0';
+                    setTimeout(() => notification.remove(), 300);
+                }, 5000);
+            },
+            
+            confirmAction: function(message, title = 'Confirm Action') {
+                return new Promise((resolve) => {
+                    const modal = document.createElement('div');
+                    modal.className = 'confirmation-modal';
+                    modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1100; display: flex; align-items: center; justify-content: center; padding: 20px;';
+                    
+                    modal.innerHTML = `
+                        <div class="confirmation-content" style="background: white; border-radius: 12px; padding: 30px; max-width: 500px; width: 100%; box-shadow: 0 20px 40px rgba(0,0,0,0.12);">
+                            <h3 style="margin-bottom: 15px; color: #1e293b;">
+                                <i class="fas fa-question-circle" style="color: #f59e0b;"></i>
+                                ${title}
+                            </h3>
+                            <p style="color: #475569; margin-bottom: 25px;">${message}</p>
+                            <div style="display: flex; gap: 15px; justify-content: flex-end;">
+                                <button id="cancelBtn" style="padding: 10px 20px; background: transparent; border: 2px solid #4f46e5; color: #4f46e5; border-radius: 8px; font-weight: 600; cursor: pointer;">Cancel</button>
+                                <button id="confirmBtn" style="padding: 10px 20px; background: #ef4444; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Confirm</button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    document.body.appendChild(modal);
+                    
+                    modal.querySelector('#confirmBtn').onclick = () => {
+                        document.body.removeChild(modal);
+                        resolve(true);
+                    };
+                    
+                    modal.querySelector('#cancelBtn').onclick = () => {
+                        document.body.removeChild(modal);
+                        resolve(false);
+                    };
+                    
+                    modal.onclick = (e) => {
+                        if (e.target === modal) {
+                            document.body.removeChild(modal);
+                            resolve(false);
+                        }
+                    };
+                });
+            }
+        };
+    </script>
+    <script src="{% static 'js/hr-main.js' %}"></script>
+    
+    <script>
+        // Variables
+        let currentLeaveId = null;
+        let processModalElement = document.getElementById('processModal');
+        
+        // Show process modal
+        function showProcessModal(leaveId) {
+            currentLeaveId = leaveId;
+            document.getElementById('payrollRemarks').value = '';
+            processModalElement.style.display = 'flex';
+        }
+        
+        // Close process modal
+        function closeProcessModal() {
+            processModalElement.style.display = 'none';
+            currentLeaveId = null;
+        }
+        
+        // Process leave
+        function processLeave() {
+            if (!currentLeaveId) return;
+            
+            const remarks = document.getElementById('payrollRemarks').value;
+            
+            // AJAX call to process leave
+            $.ajax({
+                url: '/hr/mark-payroll-processed/' + currentLeaveId + '/',
+                method: 'POST',
+                data: { 
+                    csrfmiddlewaretoken: csrfToken,
+                    payroll_remarks: remarks
+                },
+                beforeSend: function() {
+                    HRSystem.showNotification('Processing leave...', 'info');
+                },
+                success: function(response) {
+                    HRSystem.showNotification('Leave marked as processed!', 'success');
+                    closeProcessModal();
+                    // Reload after 1.5 seconds
+                    setTimeout(function() {
+                        window.location.reload();
+                    }, 1500);
+                },
+                error: function() {
+                    HRSystem.showNotification('Error processing leave', 'error');
+                }
+            });
+        }
+        
+        // Process all leaves
+        function processAllLeaves() {
+            if (pendingCount === 0) {
+                HRSystem.showNotification('No leaves to process!', 'info');
+                return;
+            }
+            
+            HRSystem.confirmAction('Mark all ' + pendingCount + ' leaves as payroll processed?').then(function(confirmed) {
+                if (confirmed) {
+                    HRSystem.showNotification('Processing all leaves...', 'info');
+                    // In production, this would be a batch update
+                    // For now, just show a message
+                    setTimeout(function() {
+                        HRSystem.showNotification('Batch processing would be implemented in production.', 'info');
+                    }, 1000);
+                }
+            });
+        }
+        
+        // Screen size detection
+        function checkScreenSize() {
+            const desktopView = document.querySelector('.desktop-view');
+            const mobileView = document.querySelector('.mobile-view');
+            
+            if (window.innerWidth < 768) {
+                if (desktopView) desktopView.style.display = 'none';
+                if (mobileView) mobileView.style.display = 'block';
+            } else {
+                if (desktopView) desktopView.style.display = 'block';
+                if (mobileView) mobileView.style.display = 'none';
+            }
+        }
+        
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            if (event.target === processModalElement) {
+                closeProcessModal();
+            }
+        };
+        
+        // Initialize page
+        $(document).ready(function() {
+            // Check screen size on load and resize
+            checkScreenSize();
+            window.addEventListener('resize', checkScreenSize);
+            
+            // Auto-refresh if there are pending leaves
+            if (pendingCount > 0) {
+                // Refresh every 2 minutes
+                setInterval(function() {
+                    if (document.visibilityState === 'visible') {
+                        window.location.reload();
+                    }
+                }, 120000);
+            }
+            
+            // Add refresh button
+            $('.header-right').prepend('<button onclick="window.location.reload()" class="btn btn-outline" style="margin-right: 15px;"><i class="fas fa-sync-alt"></i> Refresh</button>');
+        });
+    </script>
+</body>
+</html>

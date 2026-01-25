@@ -1,0 +1,646 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR Leave Management - HR System</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Our HR CSS Files -->
+    <link rel="stylesheet" href="{% static 'css/hr-main.css' %}">
+    <link rel="stylesheet" href="{% static 'css/hr-components.css' %}">
+    <link rel="stylesheet" href="{% static 'css/hr-responsive.css' %}">
+    <link rel="stylesheet" href="{% static 'css/hr-notifications.css' %}">
+    
+    <style>
+        /* Page-specific styles */
+        .filter-badge {
+            cursor: pointer;
+            transition: var(--transition-normal);
+            padding: 8px 15px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .filter-badge:hover {
+            transform: translateY(-2px);
+        }
+        
+        .filter-badge.active {
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+        }
+        
+        .employee-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+        
+        .quick-actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            padding: 25px;
+        }
+        
+        .quick-action-section {
+            background: var(--white);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            box-shadow: var(--box-shadow-sm);
+        }
+        
+        .quick-action-section h4 {
+            color: var(--dark);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .quick-action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .filters-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Notification Container -->
+    <div id="notification-container"></div>
+    
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <i class="fas fa-building"></i>
+            <span>HR Portal</span>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-title">Main Menu</div>
+            <a href="{% url 'hr:hr_dashboard' %}" class="nav-item">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="{% url 'hr:employee_list' %}" class="nav-item">
+                <i class="fas fa-user-friends"></i>
+                <span>All Employees</span>
+            </a>
+            <a href="{% url 'hr:leave_dashboard' %}" class="nav-item">
+                <i class="fas fa-chart-bar"></i>
+                <span>Leave Dashboard</span>
+            </a>
+            <a href="{% url 'hr:leave_approval_list' %}" class="nav-item">
+                <i class="fas fa-check-circle"></i>
+                <span>Approvals</span>
+                {% if pending_count > 0 %}
+                <span class="nav-badge">{{ pending_count }}</span>
+                {% endif %}
+            </a>
+        </div>
+
+        <div class="sidebar-divider"></div>
+
+        <div class="nav-section">
+            <div class="nav-title">Management</div>
+            <a href="{% url 'hr:hr_leave_management' %}" class="nav-item active">
+                <i class="fas fa-cogs"></i>
+                <span>Leave Management</span>
+            </a>
+            <a href="{% url 'hr:finance_leaves_view' %}" class="nav-item">
+                <i class="fas fa-calculator"></i>
+                <span>Payroll</span>
+            </a>
+            <a href="{% url 'hr:user_sync' %}" class="nav-item">
+                <i class="fas fa-sync-alt"></i>
+                <span>User Sync</span>
+            </a>
+        </div>
+
+        <div class="sidebar-divider"></div>
+
+        <div class="nav-section sidebar-actions">
+            <div class="nav-title">Quick Actions</div>
+            <a href="{% url 'hr:employee_create' %}" class="sidebar-btn success">
+                <i class="fas fa-user-plus"></i>
+                Add Employee
+            </a>
+            <a href="{% url 'hr:hr_leave_add' %}" class="sidebar-btn danger">
+                <i class="fas fa-user-times"></i>
+                Add Absence
+            </a>
+            <a href="{% url 'hr:leave_request_create' %}" class="sidebar-btn">
+                <i class="fas fa-calendar-plus"></i>
+                Request Leave
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <div class="header">
+            <h1>
+                <i class="fas fa-users-cog"></i>
+                HR Leave Management
+            </h1>
+            <div class="header-right">
+                <div class="user-info">
+                    <div class="user-avatar">
+                        {% if user.get_full_name %}
+                            {{ user.get_full_name|first|upper }}
+                        {% else %}
+                            {{ user.username|first|upper }}
+                        {% endif %}
+                    </div>
+                    <div>
+                        <div style="color: var(--dark); font-weight: 600;">
+                            {% if user.get_full_name %}
+                                {{ user.get_full_name }}
+                            {% else %}
+                                {{ user.username }}
+                            {% endif %}
+                        </div>
+                        <small style="color: var(--gray); font-size: 0.85em;">
+                            {{ user.groups.first|default:"HR User" }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Django Messages -->
+        {% if messages %}
+        <div class="django-messages">
+            {% for message in messages %}
+            <div class="message-alert {{ message.tags }}">
+                <div>
+                    <i class="fas fa-info-circle me-2"></i>
+                    {{ message }}
+                </div>
+                <button class="close-alert">&times;</button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Page Actions -->
+        <div class="action-buttons mb-4">
+            <a href="{% url 'hr:hr_dashboard' %}" class="btn">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+            {% if status_filter or department_filter %}
+            <a href="{% url 'hr:export_leaves_pdf' %}?{% if status_filter %}status={{ status_filter }}{% endif %}{% if department_filter %}&department={{ department_filter }}{% endif %}" class="btn btn-success">
+                <i class="fas fa-file-pdf"></i> Export PDF
+            </a>
+            {% else %}
+            <a href="{% url 'hr:export_leaves_pdf' %}" class="btn btn-success">
+                <i class="fas fa-file-pdf"></i> Export PDF
+            </a>
+            {% endif %}
+            <button onclick="sendReminders()" class="btn btn-warning">
+                <i class="fas fa-bell"></i> Send Reminders
+            </button>
+            <a href="{% url 'hr:hr_leave_add' %}" class="btn btn-danger">
+                <i class="fas fa-user-times"></i> Add Absence Record
+            </a>
+        </div>
+
+        <!-- Statistics -->
+        <div class="stats-grid">
+            <div class="stat-card purple">
+                <div class="stat-header">
+                    <div>
+                        <h3>Total Leaves</h3>
+                        <p class="stat-number">{{ all_leaves_count|default:"0" }}</p>
+                        <small class="stat-description">All time records</small>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card green">
+                <div class="stat-header">
+                    <div>
+                        <h3>Approved</h3>
+                        <p class="stat-number">{{ approved_count|default:"0" }}</p>
+                        <small class="stat-description">Granted leaves</small>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card orange">
+                <div class="stat-header">
+                    <div>
+                        <h3>Pending</h3>
+                        <p class="stat-number">{{ pending_count|default:"0" }}</p>
+                        <small class="stat-description">Awaiting approval</small>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card red">
+                <div class="stat-header">
+                    <div>
+                        <h3>Rejected</h3>
+                        <p class="stat-number">{{ rejected_count|default:"0" }}</p>
+                        <small class="stat-description">Declined requests</small>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-times-circle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters Section -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <i class="fas fa-filter"></i>
+                    Filter Options
+                </h2>
+                {% if status_filter or department_filter %}
+                <a href="{% url 'hr:hr_leave_management' %}" class="btn btn-outline btn-sm">
+                    <i class="fas fa-times"></i> Clear Filters
+                </a>
+                {% endif %}
+            </div>
+            
+            <div style="padding: 25px;">
+                <!-- Status Filters -->
+                <div style="margin-bottom: 25px;">
+                    <h4 style="color: var(--dark); margin-bottom: 15px;">
+                        <i class="fas fa-tag"></i> Filter by Status
+                    </h4>
+                    <div class="filters-container">
+                        <a href="{% url 'hr:hr_leave_management' %}" class="badge {% if not status_filter %}badge-primary active{% else %}badge-secondary{% endif %} filter-badge">
+                            All ({{ all_leaves_count|default:"0" }})
+                        </a>
+                        {% if status_filter %}
+                        <a href="{% url 'hr:hr_leave_management' %}?status=pending{% if department_filter %}&department={{ department_filter }}{% endif %}" class="badge {% if status_filter == 'pending' %}badge-warning active{% else %}badge-secondary{% endif %} filter-badge">
+                            Pending ({{ filtered_pending_count|default:"0" }})
+                        </a>
+                        <a href="{% url 'hr:hr_leave_management' %}?status=approved{% if department_filter %}&department={{ department_filter }}{% endif %}" class="badge {% if status_filter == 'approved' %}badge-success active{% else %}badge-secondary{% endif %} filter-badge">
+                            Approved ({{ filtered_approved_count|default:"0" }})
+                        </a>
+                        <a href="{% url 'hr:hr_leave_management' %}?status=rejected{% if department_filter %}&department={{ department_filter }}{% endif %}" class="badge {% if status_filter == 'rejected' %}badge-danger active{% else %}badge-secondary{% endif %} filter-badge">
+                            Rejected ({{ filtered_rejected_count|default:"0" }})
+                        </a>
+                        <a href="{% url 'hr:hr_leave_management' %}?status=cancelled{% if department_filter %}&department={{ department_filter }}{% endif %}" class="badge {% if status_filter == 'cancelled' %}badge-secondary active{% else %}badge-secondary{% endif %} filter-badge">
+                            Cancelled ({{ filtered_cancelled_count|default:"0" }})
+                        </a>
+                        {% else %}
+                        <a href="{% url 'hr:hr_leave_management' %}?status=pending" class="badge badge-secondary filter-badge">
+                            Pending ({{ filtered_pending_count|default:"0" }})
+                        </a>
+                        <a href="{% url 'hr:hr_leave_management' %}?status=approved" class="badge badge-secondary filter-badge">
+                            Approved ({{ filtered_approved_count|default:"0" }})
+                        </a>
+                        <a href="{% url 'hr:hr_leave_management' %}?status=rejected" class="badge badge-secondary filter-badge">
+                            Rejected ({{ filtered_rejected_count|default:"0" }})
+                        </a>
+                        <a href="{% url 'hr:hr_leave_management' %}?status=cancelled" class="badge badge-secondary filter-badge">
+                            Cancelled ({{ filtered_cancelled_count|default:"0" }})
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Department Filter -->
+                {% if departments %}
+                <div>
+                    <h4 style="color: var(--dark); margin-bottom: 15px;">
+                        <i class="fas fa-building"></i> Filter by Department
+                    </h4>
+                    <div class="filters-container">
+                        <a href="{% url 'hr:hr_leave_management' %}{% if status_filter %}?status={{ status_filter }}{% endif %}" class="badge {% if not department_filter %}badge-primary active{% else %}badge-secondary{% endif %} filter-badge">
+                            All Departments
+                        </a>
+                        {% for dept in departments %}
+                        <a href="{% url 'hr:hr_leave_management' %}?{% if status_filter %}status={{ status_filter }}&{% endif %}department={{ dept }}" class="badge {% if department_filter == dept %}badge-info active{% else %}badge-secondary{% endif %} filter-badge">
+                            {{ dept }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Leaves Table -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <i class="fas fa-list"></i>
+                    Leave Requests
+                    <span class="badge badge-primary" style="margin-left: 10px;">
+                        {{ leaves|length }} Records
+                    </span>
+                </h2>
+                <div>
+                    <span class="text-muted">
+                        Showing {{ leaves|length }} of {{ all_leaves_count|default:"0" }} total
+                    </span>
+                </div>
+            </div>
+
+            {% if leaves %}
+            <div class="table-container">
+                <div class="table-responsive">
+                    <table class="table-striped">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Employee</th>
+                                <th>Department</th>
+                                <th>Leave Type</th>
+                                <th>Dates</th>
+                                <th>Days</th>
+                                <th>Status</th>
+                                <th>Submitted</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for leave in leaves %}
+                            <tr>
+                                <td>
+                                    <strong>#{{ leave.id }}</strong>
+                                </td>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <div class="employee-avatar">
+                                            {{ leave.employee.full_name|first|upper }}
+                                        </div>
+                                        <div>
+                                            <strong>{{ leave.employee.full_name }}</strong>
+                                            <div class="text-muted" style="font-size: 0.85em;">
+                                                {{ leave.employee.employee_id|default:"No ID" }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge badge-info">{{ leave.employee.department|default:"Not set" }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-secondary">{{ leave.leave_type.name }}</span>
+                                    {% if not leave.is_paid_leave %}
+                                    <span class="badge badge-warning" style="margin-left: 5px; font-size: 0.75em;">Unpaid</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {{ leave.start_date|date:"M d" }} - {{ leave.end_date|date:"M d, Y" }}
+                                </td>
+                                <td>
+                                    <strong>{{ leave.days_requested }}</strong> days
+                                </td>
+                                <td>
+                                    {% if leave.status == 'approved' %}
+                                    <span class="status-badge" style="background: #d1fae5; color: #065f46;">
+                                        <i class="fas fa-check-circle"></i> Approved
+                                    </span>
+                                    {% elif leave.status == 'pending' %}
+                                    <span class="status-badge" style="background: #fef3c7; color: #92400e;">
+                                        <i class="fas fa-clock"></i> Pending
+                                    </span>
+                                    {% elif leave.status == 'rejected' %}
+                                    <span class="status-badge" style="background: #fee2e2; color: #991b1b;">
+                                        <i class="fas fa-times-circle"></i> Rejected
+                                    </span>
+                                    {% elif leave.status == 'cancelled' %}
+                                    <span class="status-badge" style="background: #e5e7eb; color: #374151;">
+                                        <i class="fas fa-ban"></i> Cancelled
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {{ leave.submitted_date|date:"M d, Y" }}
+                                    <div class="text-muted" style="font-size: 0.85em;">
+                                        {{ leave.submitted_date|time }}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="action-links">
+                                        <a href="{% url 'hr:leave_detail' leave.id %}" class="action-link" title="View Details">
+                                            <i class="fas fa-eye"></i> View
+                                        </a>
+                                        <a href="{% url 'hr:hr_leave_edit' leave.id %}" class="action-link" title="Edit Leave">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </a>
+                                        {% if leave.status == 'pending' %}
+                                        <a href="{% url 'hr:leave_approve_reject' leave.id %}" class="action-link success" title="Review Request">
+                                            <i class="fas fa-check"></i> Review
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="9" class="text-center p-4">
+                                    <div class="empty-state">
+                                        <i class="fas fa-calendar-times fa-3x" style="color: var(--gray-light); margin-bottom: 20px;"></i>
+                                        <h3>No Leaves Found</h3>
+                                        <p class="text-muted mb-3">Try changing your filters or add a new leave record.</p>
+                                        <div class="action-buttons">
+                                            <a href="{% url 'hr:hr_leave_management' %}" class="btn">
+                                                <i class="fas fa-times"></i> Clear Filters
+                                            </a>
+                                            <a href="{% url 'hr:hr_leave_add' %}" class="btn btn-success">
+                                                <i class="fas fa-plus-circle"></i> Add Leave Record
+                                            </a>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card info mt-4">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <i class="fas fa-bolt"></i>
+                    Quick Actions
+                </h2>
+            </div>
+            <div class="quick-actions-grid">
+                <div class="quick-action-section">
+                    <h4 style="color: var(--dark); margin-bottom: 15px;">
+                        <i class="fas fa-file-export" style="color: var(--primary);"></i> Export Reports
+                    </h4>
+                    <div class="quick-action-buttons">
+                        {% if status_filter or department_filter %}
+                        <a href="{% url 'hr:export_leaves_pdf' %}?{% if status_filter %}status={{ status_filter }}{% endif %}{% if department_filter %}&department={{ department_filter }}{% endif %}" class="btn btn-danger">
+                            <i class="fas fa-file-pdf"></i> Generate PDF Report
+                        </a>
+                        {% else %}
+                        <a href="{% url 'hr:export_leaves_pdf' %}" class="btn btn-danger">
+                            <i class="fas fa-file-pdf"></i> Generate PDF Report
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="quick-action-section">
+                    <h4 style="color: var(--dark); margin-bottom: 15px;">
+                        <i class="fas fa-bell" style="color: var(--warning);"></i> Notifications
+                    </h4>
+                    <div class="quick-action-buttons">
+                        <button onclick="sendReminders()" class="btn btn-warning">
+                            <i class="fas fa-bell"></i> Send Reminders
+                        </button>
+                        <a href="{% url 'hr:send_leave_reminders' %}" class="btn btn-outline">
+                            <i class="fas fa-paper-plane"></i> Email Managers
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="quick-action-section">
+                    <h4 style="color: var(--dark); margin-bottom: 15px;">
+                        <i class="fas fa-plus-circle" style="color: var(--success);"></i> Add Records
+                    </h4>
+                    <div class="quick-action-buttons">
+                        <a href="{% url 'hr:hr_leave_add' %}" class="btn btn-success">
+                            <i class="fas fa-user-plus"></i> Add Absence Record
+                        </a>
+                        <a href="{% url 'hr:leave_request_create' %}" class="btn btn-outline">
+                            <i class="fas fa-calendar-plus"></i> Request Leave
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{% static 'js/hr-main.js' %}"></script>
+    
+    <script>
+        // Send reminders function
+        function sendReminders() {
+            HRSystem.confirmAction('Send reminder emails to managers with pending leave approvals?').then(function(confirmed) {
+                if (confirmed) {
+                    // Store the CSRF token in a variable
+                    var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '{{ csrf_token }}';
+                    
+                    // AJAX call to send reminders
+                    $.ajax({
+                        url: '{% url "hr:send_leave_reminders" %}',
+                        method: 'POST',
+                        data: { 
+                            csrfmiddlewaretoken: csrfToken,
+                            action: 'remind'
+                        },
+                        beforeSend: function() {
+                            HRSystem.showNotification('Sending reminders...', 'info');
+                        },
+                        success: function(response) {
+                            HRSystem.showNotification('Reminders sent successfully!', 'success');
+                        },
+                        error: function() {
+                            HRSystem.showNotification('Error sending reminders', 'error');
+                        }
+                    });
+                }
+            });
+        }
+        
+        // Initialize page
+        $(document).ready(function() {
+            // Add active class to filter badges on click
+            $('.filter-badge').on('click', function() {
+                $('.filter-badge').removeClass('active');
+                $(this).addClass('active');
+            });
+            
+            // Add refresh functionality
+            var refreshBtn = $('<button>')
+                .addClass('btn btn-outline')
+                .css('margin-right', '15px')
+                .html('<i class="fas fa-sync-alt"></i> Refresh')
+                .on('click', function() {
+                    window.location.reload();
+                });
+            $('.header-right').prepend(refreshBtn);
+            
+            // Add current filters info
+            var statusFilter = '{{ status_filter|default:"" }}';
+            var departmentFilter = '{{ department_filter|default:"" }}';
+            
+            if (statusFilter || departmentFilter) {
+                var filterMessage = '';
+                if (statusFilter) {
+                    filterMessage = 'Status: ' + statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1);
+                }
+                if (departmentFilter) {
+                    if (statusFilter) filterMessage += ', ';
+                    filterMessage += 'Department: ' + departmentFilter;
+                }
+                
+                $('#notification-container').append(`
+                    <div class="notification-toast info">
+                        <div class="notification-icon">
+                            <i class="fas fa-filter"></i>
+                        </div>
+                        <div class="notification-content">
+                            <div class="notification-title">Filters Applied</div>
+                            <div class="notification-message">${filterMessage}</div>
+                        </div>
+                        <button class="notification-close" onclick="$(this).closest('.notification-toast').remove()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `);
+            }
+        });
+    </script>
+</body>
+</html>

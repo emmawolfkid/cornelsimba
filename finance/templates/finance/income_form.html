@@ -1,0 +1,404 @@
+{% extends 'finance/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}{% if editing %}Edit{% else %}Add New{% endif %} Income - Finance{% endblock %}
+
+{% block page_title %}💰 {% if editing %}Edit{% else %}Add New{% endif %} Income{% endblock %}
+
+{% block breadcrumb %}
+<a href="{% url 'finance:dashboard' %}">Dashboard</a> / 
+<a href="{% url 'finance:income_list' %}">Income</a> / 
+{% if editing %}Edit{% else %}Add New{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'finance/css/income_form.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="income-form-container">
+    <!-- Notifications are handled by base.html -->
+    
+    <div class="income-form-card">
+        <form method="POST" id="income-form" data-validate="true">
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+            <div class="errorlist">
+                {{ form.non_field_errors }}
+            </div>
+            {% endif %}
+            
+            <!-- Sale linking info (if editing from sale) -->
+            {% if sale %}
+            <div class="sale-link-section">
+                <h4><i class="fas fa-link"></i> Linked to Sale</h4>
+                <div class="sale-details">
+                    <div class="sale-detail">
+                        <div class="sale-label">Sale Number</div>
+                        <div class="sale-value">{{ sale.sale_number }}</div>
+                    </div>
+                    <div class="sale-detail">
+                        <div class="sale-label">Customer</div>
+                        <div class="sale-value">{{ sale.customer.name }}</div>
+                    </div>
+                    <div class="sale-detail">
+                        <div class="sale-label">Amount</div>
+                        <div class="sale-value tsh-amount income">
+                            Tsh {{ sale.net_amount|floatformat:0|intcomma }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Source/Income Type -->
+            <div class="income-form-row">
+                <div class="income-form-group">
+                    <label for="id_source" class="income-form-label required">Income Source</label>
+                    <select name="source" id="id_source" class="form-control" required>
+                        <option value="">Select Income Source</option>
+                        <option value="Sales Revenue" 
+                            {% if sale or form.source.value == "Sales Revenue" %}selected{% endif %}>
+                            Sales Revenue
+                        </option>
+                        <option value="Service Income" 
+                            {% if form.source.value == "Service Income" %}selected{% endif %}>
+                            Service Income
+                        </option>
+                        <option value="Interest Income" 
+                            {% if form.source.value == "Interest Income" %}selected{% endif %}>
+                            Interest Income
+                        </option>
+                        <option value="Consulting Fees" 
+                            {% if form.source.value == "Consulting Fees" %}selected{% endif %}>
+                            Consulting Fees
+                        </option>
+                        <option value="Rental Income" 
+                            {% if form.source.value == "Rental Income" %}selected{% endif %}>
+                            Rental Income
+                        </option>
+                        <option value="Commission" 
+                            {% if form.source.value == "Commission" %}selected{% endif %}>
+                            Commission
+                        </option>
+                        <option value="Other Income" 
+                            {% if form.source.value == "Other Income" %}selected{% endif %}>
+                            Other Income
+                        </option>
+                    </select>
+                    <div class="help-text">Select the source of income</div>
+                    {% if form.source.errors %}
+                    <div class="errorlist">{{ form.source.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="income-form-group">
+                    <label for="id_amount" class="income-form-label required">Amount (Tsh)</label>
+                    <div class="income-amount-wrapper">
+                        <span class="income-currency-prefix">Tsh</span>
+                        <input type="text" 
+                               name="amount" 
+                               id="id_amount" 
+                               class="form-control income-currency-input"
+                               value="{{ form.amount.value|default:'' }}"
+                               required
+                               placeholder="Enter amount">
+                    </div>
+                    <div class="help-text">Enter amount in Tanzanian Shillings (without commas)</div>
+                    <div class="income-amount-display" id="amount-display"></div>
+                    {% if form.amount.errors %}
+                    <div class="errorlist">{{ form.amount.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Date and Department -->
+            <div class="income-form-row">
+                <div class="income-form-group">
+                    <label for="id_date" class="income-form-label required">Date</label>
+                    <input type="date" 
+                           name="date" 
+                           id="id_date" 
+                           class="form-control"
+                           value="{{ form.date.value|default:''|date:'Y-m-d' }}"
+                           required>
+                    {% if form.date.errors %}
+                    <div class="errorlist">{{ form.date.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="income-form-group">
+                    <label for="id_department" class="income-form-label required">Department</label>
+                    <select name="department" id="id_department" class="form-control" required>
+                        <option value="">Select Department</option>
+                        <option value="Sales" 
+                            {% if sale or form.department.value == "Sales" %}selected{% endif %}>
+                            Sales
+                        </option>
+                        <option value="Marketing" 
+                            {% if form.department.value == "Marketing" %}selected{% endif %}>
+                            Marketing
+                        </option>
+                        <option value="Finance" 
+                            {% if form.department.value == "Finance" %}selected{% endif %}>
+                            Finance
+                        </option>
+                        <option value="Operations" 
+                            {% if form.department.value == "Operations" %}selected{% endif %}>
+                            Operations
+                        </option>
+                        <option value="Services" 
+                            {% if form.department.value == "Services" %}selected{% endif %}>
+                            Services
+                        </option>
+                        <option value="Other" 
+                            {% if form.department.value == "Other" %}selected{% endif %}>
+                            Other
+                        </option>
+                    </select>
+                    <div class="help-text">Which department generated this income?</div>
+                    {% if form.department.errors %}
+                    <div class="errorlist">{{ form.department.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Currency and Reference -->
+            <div class="income-form-row">
+                <div class="income-form-group">
+                    <label for="id_currency" class="income-form-label">Currency</label>
+                    <select name="currency" id="id_currency" class="form-control">
+                        <option value="Tsh" selected>Tanzanian Shillings (Tsh)</option>
+                        <option value="USD" {% if form.currency.value == "USD" %}selected{% endif %}>US Dollars (USD)</option>
+                        <option value="EUR" {% if form.currency.value == "EUR" %}selected{% endif %}>Euros (EUR)</option>
+                    </select>
+                    <div class="help-text">Transaction currency</div>
+                </div>
+                
+                <div class="income-form-group">
+                    <label for="id_reference" class="income-form-label">Reference Number</label>
+                    <input type="text" 
+                           name="reference" 
+                           id="id_reference" 
+                           class="form-control"
+                           value="{{ form.reference.value|default:'' }}"
+                           placeholder="e.g., INV-001, REC-001">
+                    <div class="help-text">Invoice number, receipt number, etc.</div>
+                    <div class="reference-notice">
+                        <h4><i class="fas fa-info-circle"></i> Auto-generated Reference</h4>
+                        <p>Leave blank to auto-generate: INC-YYYYMMDD-HHMMSS</p>
+                    </div>
+                    {% if form.reference.errors %}
+                    <div class="errorlist">{{ form.reference.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Description -->
+            <div class="income-form-group">
+                <label for="id_description" class="income-form-label">Description</label>
+                <textarea name="description" 
+                          id="id_description" 
+                          class="form-control" 
+                          rows="4" 
+                          placeholder="Provide details about this income...">{{ form.description.value|default:'' }}</textarea>
+                <div class="help-text">Provide details about this income (what, when, how, customer details)</div>
+                {% if form.description.errors %}
+                <div class="errorlist">{{ form.description.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <!-- Form Actions -->
+            <div class="income-form-actions">
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-save"></i> 
+                    {% if editing %}Update Income{% else %}Save Income{% endif %}
+                </button>
+                <a href="{% url 'finance:income_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+    
+    <a href="{% url 'finance:dashboard' %}" class="income-back-link">
+        <i class="fas fa-arrow-left"></i> Back to Dashboard
+    </a>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Income Form Specific JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('income-form');
+    const amountField = document.getElementById('id_amount');
+    const dateField = document.getElementById('id_date');
+    const sourceField = document.getElementById('id_source');
+    const departmentField = document.getElementById('id_department');
+    const currencyField = document.getElementById('id_currency');
+    const referenceField = document.getElementById('id_reference');
+    const amountDisplay = document.getElementById('amount-display');
+    const amountPrefix = document.querySelector('.income-currency-prefix');
+    
+    // Set today's date as default if empty
+    if (dateField && !dateField.value) {
+        const today = new Date().toISOString().split('T')[0];
+        dateField.value = today;
+    }
+    
+    // Auto-focus on source field
+    if (sourceField) {
+        sourceField.focus();
+    }
+    
+    // Auto-select department based on source
+    if (sourceField && departmentField && !departmentField.value) {
+        sourceField.addEventListener('change', function() {
+            if (this.value === 'Sales Revenue') {
+                departmentField.value = 'Sales';
+            } else if (this.value === 'Service Income' || this.value === 'Consulting Fees') {
+                departmentField.value = 'Services';
+            } else if (this.value === 'Finance Revenue') {
+                departmentField.value = 'Finance';
+            } else {
+                departmentField.value = 'Other';
+            }
+        });
+        
+        // Trigger on load if source is selected
+        if (sourceField.value) {
+            sourceField.dispatchEvent(new Event('change'));
+        }
+    }
+    
+    // Amount formatting and display
+    if (amountField && amountDisplay) {
+        amountField.addEventListener('input', function() {
+            let value = this.value.replace(/[^\d.]/g, '');
+            
+            if (value) {
+                // Update display
+                const num = parseFloat(value);
+                const formatted = num.toLocaleString('en-US', {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
+                });
+                amountDisplay.textContent = `Amount: ${amountPrefix.textContent} ${formatted}`;
+                amountDisplay.style.color = 'var(--success-color)';
+            } else {
+                amountDisplay.textContent = '';
+            }
+        });
+        
+        // Format initial value if exists
+        if (amountField.value) {
+            amountField.dispatchEvent(new Event('input'));
+        }
+    }
+    
+    // Currency change handler
+    if (currencyField && amountPrefix) {
+        currencyField.addEventListener('change', function() {
+            const currency = this.value;
+            let symbol = 'Tsh';
+            
+            switch(currency) {
+                case 'USD':
+                    symbol = '$';
+                    break;
+                case 'EUR':
+                    symbol = '€';
+                    break;
+                default:
+                    symbol = 'Tsh';
+            }
+            
+            amountPrefix.textContent = symbol;
+            
+            // Update amount display
+            if (amountDisplay && amountDisplay.textContent) {
+                amountDisplay.textContent = amountDisplay.textContent.replace(
+                    /^(Amount:\s*).*?\s/, 
+                    `$1${symbol} `
+                );
+            }
+        });
+    }
+    
+    // Form submission validation
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            // Clean amount field by removing commas and extra spaces
+            if (amountField && amountField.value) {
+                amountField.value = amountField.value.replace(/[^\d.]/g, '');
+            }
+            
+            // Validate amount is a positive number
+            if (amountField) {
+                const amount = parseFloat(amountField.value);
+                if (isNaN(amount) || amount <= 0) {
+                    e.preventDefault();
+                    showNotification('Please enter a valid amount greater than 0.', 'error');
+                    amountField.classList.add('error-input');
+                    amountField.focus();
+                    return false;
+                }
+            }
+            
+            // Auto-generate reference if empty
+            if (referenceField && !referenceField.value.trim()) {
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                const seconds = String(now.getSeconds()).padStart(2, '0');
+                referenceField.value = `INC-${year}${month}${day}-${hours}${minutes}${seconds}`;
+            }
+            
+            return true;
+        });
+    }
+    
+    // Add error styling to fields with errors on page load
+    document.querySelectorAll('.errorlist').forEach(errorField => {
+        const fieldId = errorField.id ? errorField.id.replace('-errors', '') : null;
+        if (fieldId) {
+            const inputField = document.getElementById(fieldId);
+            if (inputField) {
+                inputField.classList.add('error-input');
+                
+                // Scroll to first error
+                if (!window.location.hash && inputField === document.querySelector('.error-input')) {
+                    setTimeout(() => {
+                        inputField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        inputField.focus();
+                    }, 100);
+                }
+            }
+        }
+    });
+    
+    // Remove error styling when user starts typing
+    document.querySelectorAll('input, select, textarea').forEach(field => {
+        field.addEventListener('input', function() {
+            this.classList.remove('error-input');
+            
+            // Remove error message if exists
+            const errorMsg = this.nextElementSibling;
+            if (errorMsg && errorMsg.classList.contains('error-message')) {
+                errorMsg.remove();
+            }
+        });
+        
+        field.addEventListener('change', function() {
+            this.classList.remove('error-input');
+        });
+    });
+});
+</script>
+{% endblock %}

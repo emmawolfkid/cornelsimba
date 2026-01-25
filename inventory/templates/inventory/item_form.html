@@ -1,0 +1,330 @@
+{% extends 'inventory/base.html' %}
+{% load static %}
+
+{% block title %}{% if item %}Edit{% else %}Add New{% endif %} Item - Inventory{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'inventory/css/forms.css' %}">
+<style>
+    /* Item form specific styles */
+    .container { 
+        max-width: 800px; 
+        margin: 0 auto; 
+    }
+    
+    h1 { 
+        color: #2c3e50; 
+        margin-bottom: 30px; 
+        padding-bottom: 10px; 
+        border-bottom: 3px solid #f39c12; 
+    }
+    
+    /* Form card */
+    .form-card { 
+        background: white; 
+        padding: 30px; 
+        border-radius: 8px; 
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05); 
+        margin-bottom: 30px;
+    }
+    
+    /* Form groups */
+    .form-group { 
+        margin-bottom: 20px; 
+    }
+    
+    .help-text { 
+        font-size: 0.9em; 
+        color: #666; 
+        margin-top: 5px; 
+    }
+    
+    /* Form row for side-by-side fields */
+    .form-row { 
+        display: flex; 
+        gap: 15px; 
+    }
+    
+    .form-row .form-group { 
+        flex: 1; 
+    }
+    
+    /* Checkbox */
+    .checkbox-group { 
+        display: flex; 
+        align-items: center; 
+        gap: 10px; 
+        margin-bottom: 10px; 
+    }
+    
+    .checkbox-group input { 
+        width: auto; 
+        transform: scale(1.2); 
+    }
+    
+    .checkbox-group label { 
+        margin-bottom: 0; 
+        cursor: pointer; 
+    }
+    
+    /* Errors */
+    .errorlist { 
+        list-style: none; 
+        padding: 0; 
+        margin: 5px 0; 
+        color: #e74c3c; 
+        font-size: 0.9em;
+    }
+    
+    /* Actions */
+    .actions { 
+        display: flex; 
+        gap: 10px; 
+        margin-top: 30px; 
+    }
+    
+    /* Back link */
+    .back-link { 
+        display: inline-block; 
+        margin-top: 20px; 
+        color: #3498db; 
+        text-decoration: none; 
+        font-weight: 500;
+    }
+    
+    .back-link:hover { 
+        text-decoration: underline; 
+    }
+    
+    /* Currency note */
+    .currency-note { 
+        font-size: 0.9em; 
+        color: #666; 
+        margin-top: 5px; 
+        font-style: italic; 
+    }
+    
+    /* Alert messages */
+    .alert { 
+        padding: 15px; 
+        border-radius: 8px; 
+        margin-bottom: 20px;
+        border-left: 4px solid #f39c12;
+    }
+    
+    .alert-success { 
+        background: #d4edda; 
+        color: #155724; 
+        border-left-color: #28a745;
+    }
+    
+    .alert-danger { 
+        background: #f8d7da; 
+        color: #721c24; 
+        border-left-color: #dc3545;
+    }
+    
+    .alert-warning { 
+        background: #fff3cd; 
+        color: #856404; 
+        border-left-color: #ffc107;
+    }
+    
+    /* Required field indicator */
+    .required::after {
+        content: " *";
+        color: #e74c3c;
+    }
+    
+    /* Mobile responsive */
+    @media (max-width: 768px) {
+        .form-row {
+            flex-direction: column;
+            gap: 0;
+        }
+        
+        .actions {
+            flex-direction: column;
+        }
+        
+        .actions .btn {
+            width: 100%;
+            text-align: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1>{% if item %}✏️ Edit Item: {{ item.name }}{% else %}➕ Add New Inventory Item{% endif %}</h1>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+
+<div class="form-card">
+    <form method="POST" id="itemForm">
+        {% csrf_token %}
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="id_name" class="required">Item Name</label>
+                {{ form.name }}
+                <div class="help-text">Enter the name of the item</div>
+                {% if form.name.errors %}
+                <div class="error">{{ form.name.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="id_sku">SKU</label>
+                {{ form.sku }}
+                <div class="help-text">Leave blank to auto-generate</div>
+                {% if form.sku.errors %}
+                <div class="error">{{ form.sku.errors }}</div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="id_category" class="required">Category</label>
+                {{ form.category }}
+                <div class="help-text">Raw Materials, Chemicals, or Other</div>
+                {% if form.category.errors %}
+                <div class="error">{{ form.category.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="id_unit_of_measure" class="required">Unit of Measure</label>
+                {{ form.unit_of_measure }}
+                <div class="help-text">e.g., pcs, kg, liter, box, g, mg</div>
+                {% if form.unit_of_measure.errors %}
+                <div class="error">{{ form.unit_of_measure.errors }}</div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="id_description">Description</label>
+            {{ form.description }}
+            <div class="help-text">Optional description of the item</div>
+            {% if form.description.errors %}
+            <div class="error">{{ form.description.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="id_reorder_level">Reorder Level</label>
+                {{ form.reorder_level }}
+                <div class="help-text">Alert when stock reaches this level</div>
+                {% if form.reorder_level.errors %}
+                <div class="error">{{ form.reorder_level.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="id_minimum_stock">Minimum Stock</label>
+                {{ form.minimum_stock }}
+                <div class="help-text">Critical level - take immediate action</div>
+                {% if form.minimum_stock.errors %}
+                <div class="error">{{ form.minimum_stock.errors }}</div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <div class="checkbox-group">
+                {{ form.is_active }}
+                <label for="id_is_active">Item is Active</label>
+            </div>
+            <div class="help-text">Inactive items won't appear in dropdowns</div>
+            {% if form.is_active.errors %}
+            <div class="error">{{ form.is_active.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="actions">
+            <button type="submit" class="btn btn-success" id="submitBtn">
+                {% if item %}Update Item{% else %}Create Item{% endif %}
+            </button>
+            <a href="{% if item %}{% url 'inventory:item_detail' item.pk %}{% else %}{% url 'inventory:item_list' %}{% endif %}" 
+               class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<a href="{% url 'inventory:dashboard' %}" class="back-link">← Back to Dashboard</a>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-format SKU input
+    const skuInput = document.getElementById('id_sku');
+    if (skuInput) {
+        skuInput.addEventListener('input', function(e) {
+            this.value = this.value.toUpperCase().replace(/\s+/g, '-');
+        });
+    }
+    
+    // Validate minimum stock < reorder level
+    const minStockInput = document.getElementById('id_minimum_stock');
+    const reorderLevelInput = document.getElementById('id_reorder_level');
+    
+    if (minStockInput && reorderLevelInput) {
+        minStockInput.addEventListener('change', validateStockLevels);
+        reorderLevelInput.addEventListener('change', validateStockLevels);
+        
+        function validateStockLevels() {
+            const minStock = parseFloat(minStockInput.value);
+            const reorderLevel = parseFloat(reorderLevelInput.value);
+            
+            if (!isNaN(minStock) && !isNaN(reorderLevel) && minStock >= reorderLevel) {
+                alert('⚠️ Warning: Minimum stock should be LESS than reorder level.\n\nMinimum Stock: Critical level (take immediate action)\nReorder Level: Warning level (reorder suggested)');
+                minStockInput.focus();
+                return false;
+            }
+            return true;
+        }
+    }
+    
+    // Form submission validation
+    const form = document.getElementById('itemForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            // Validate stock levels before submission
+            if (minStockInput && reorderLevelInput) {
+                if (!validateStockLevels()) {
+                    e.preventDefault();
+                    return false;
+                }
+            }
+            
+            // Show loading indicator
+            const submitBtn = document.getElementById('submitBtn');
+            if (submitBtn) {
+                submitBtn.innerHTML = 'Saving...';
+                submitBtn.disabled = true;
+            }
+            
+            return true;
+        });
+    }
+    
+    // Add error styling to form fields with errors
+    document.addEventListener('DOMContentLoaded', function() {
+        const formFields = form.querySelectorAll('input, select, textarea');
+        formFields.forEach(field => {
+            if (field.parentElement.querySelector('.error')) {
+                field.classList.add('error');
+            }
+        });
+    });
+</script>
+{% endblock %}

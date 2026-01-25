@@ -1,0 +1,223 @@
+{% extends 'finance/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Expense Details - Finance{% endblock %}
+
+{% block page_title %}📋 Expense Details{% endblock %}
+
+{% block breadcrumb %}
+<a href="{% url 'finance:dashboard' %}">Dashboard</a> / 
+<a href="{% url 'finance:expense_list' %}">Expenses</a> / 
+Details
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'finance/css/expense_detail.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="expense-detail-container">
+    <!-- Header -->
+    <div class="expense-detail-header">
+        <h1><i class="fas fa-file-invoice-dollar"></i> Expense Details</h1>
+    </div>
+    
+    <!-- Navigation -->
+    <div class="expense-detail-nav">
+        <a href="{% url 'finance:expense_list' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Expenses
+        </a>
+        
+        {% if not expense.is_paid %}
+        <a href="{% url 'finance:expense_mark_paid' expense.pk %}" class="btn btn-success btn-pay">
+            <i class="fas fa-check-circle"></i> Mark as Paid
+        </a>
+        {% endif %}
+        
+        <button onclick="window.print()" class="btn btn-info">
+            <i class="fas fa-print"></i> Print Details
+        </button>
+    </div>
+    
+    <!-- Amount Display -->
+    <div class="expense-amount-display">
+        Tsh {{ expense.amount|floatformat:0|intcomma }}
+    </div>
+    
+    <div class="expense-content-grid">
+        <!-- Left Column: Main Details -->
+        <div>
+            <div class="expense-details-card">
+                <h2><i class="fas fa-info-circle"></i> Expense Information</h2>
+                
+                <table class="expense-details-table">
+                    <tr>
+                        <th>Category:</th>
+                        <td><strong>{{ expense.category }}</strong></td>
+                    </tr>
+                    <tr>
+                        <th>Expense Type:</th>
+                        <td>{{ expense.get_expense_type_display }}</td>
+                    </tr>
+                    <tr>
+                        <th>Date:</th>
+                        <td>{{ expense.date|date:"F d, Y" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Department:</th>
+                        <td>{{ expense.department|default:"Not specified" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Payment Method:</th>
+                        <td>{{ expense.get_payment_method_display }}</td>
+                    </tr>
+                    <tr>
+                        <th>Currency:</th>
+                        <td>{{ expense.get_currency_display }}</td>
+                    </tr>
+                    <tr>
+                        <th>Status:</th>
+                        <td>
+                            {% if expense.is_paid %}
+                                <span class="status-badge status-paid">
+                                    <i class="fas fa-check-circle"></i> 
+                                    Paid on {{ expense.payment_date|date:"M d, Y" }}
+                                </span>
+                            {% else %}
+                                <span class="status-badge status-pending">
+                                    <i class="fas fa-clock"></i> 
+                                    Pending Payment
+                                </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Created:</th>
+                        <td>{{ expense.created_at|date:"F d, Y H:i" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Last Updated:</th>
+                        <td>{{ expense.updated_at|date:"F d, Y H:i" }}</td>
+                    </tr>
+                </table>
+                
+                <!-- Description -->
+                {% if expense.description %}
+                <div class="expense-description-box">
+                    <h3><i class="fas fa-align-left"></i> Description</h3>
+                    <p>{{ expense.description|linebreaks }}</p>
+                </div>
+                {% endif %}
+                
+                <!-- Related Purchase Order -->
+                {% if expense.purchase_order %}
+                <div class="expense-po-box">
+                    <h3><i class="fas fa-box"></i> Related Purchase Order</h3>
+                    <div class="po-details">
+                        <p><strong>PO Number:</strong> {{ expense.purchase_order.po_number }}</p>
+                        <p><strong>Supplier:</strong> {{ expense.purchase_order.supplier.name }}</p>
+                        <p><strong>Total Amount:</strong> Tsh {{ expense.purchase_order.total_amount|floatformat:0|intcomma }}</p>
+                        <p><strong>Order Date:</strong> {{ expense.purchase_order.order_date|date:"F d, Y" }}</p>
+                        <p><strong>Status:</strong> {{ expense.purchase_order.get_status_display }}</p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Right Column: Actions and Notes -->
+        <div>
+            <div class="expense-actions-card">
+                <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
+                
+                <div class="expense-action-buttons">
+                    {% if not expense.is_paid %}
+                    <a href="{% url 'finance:expense_mark_paid' expense.pk %}" class="btn btn-success btn-pay">
+                        <i class="fas fa-check-circle"></i> Mark as Paid
+                    </a>
+                    {% endif %}
+                    
+                    <button onclick="window.print()" class="btn btn-info">
+                        <i class="fas fa-print"></i> Print Details
+                    </button>
+                    
+                    <a href="{% url 'finance:expense_edit' expense.pk %}" class="btn btn-warning">
+                        <i class="fas fa-edit"></i> Edit Expense
+                    </a>
+                    
+                    <a href="{% url 'finance:expense_list' %}" class="btn btn-secondary">
+                        <i class="fas fa-list"></i> Back to List
+                    </a>
+                </div>
+                
+                <!-- Audit Trail -->
+                <div class="expense-audit-trail">
+                    <p><strong><i class="fas fa-history"></i> Audit Trail</strong></p>
+                    <p>Created: {{ expense.created_at|date:"M d, Y H:i" }}</p>
+                    <p>Last Updated: {{ expense.updated_at|date:"M d, Y H:i" }}</p>
+                    {% if expense.is_paid %}
+                    <p>Paid: {{ expense.payment_date|date:"M d, Y H:i" }}</p>
+                    {% endif %}
+                    {% if expense.created_by %}
+                    <p>Created By: {{ expense.created_by.get_full_name|default:expense.created_by.username }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Notes Section -->
+            <div class="expense-details-card" style="margin-top: 20px;">
+                <h3><i class="fas fa-sticky-note"></i> Notes</h3>
+                <p style="color: #666; font-size: 0.9rem;">
+                    This expense record is part of your financial accounting system. 
+                    All changes are logged in the audit trail.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Confirmation for mark as paid
+document.querySelectorAll('.btn-pay').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+        if (!confirm('Are you sure you want to mark this expense as paid?\n\nAmount: Tsh {{ expense.amount|floatformat:0|intcomma }}\nCategory: {{ expense.category }}')) {
+            e.preventDefault();
+        }
+    });
+});
+
+// Print functionality
+document.querySelectorAll('.btn-info').forEach(btn => {
+    if (btn.textContent.includes('Print')) {
+        btn.addEventListener('click', function() {
+            window.print();
+        });
+    }
+});
+
+// Format amount display
+const amountDisplay = document.querySelector('.expense-amount-display');
+if (amountDisplay) {
+    const text = amountDisplay.textContent;
+    const amount = text.replace(/[^\d.]/g, '');
+    
+    if (amount && !isNaN(parseFloat(amount))) {
+        const num = parseFloat(amount);
+        amountDisplay.textContent = 'Tsh ' + Math.abs(num).toLocaleString('en-US');
+    }
+}
+
+// Add confirmation for edit
+const editBtn = document.querySelector('a[href*="edit"]');
+if (editBtn) {
+    editBtn.addEventListener('click', function(e) {
+        if (!confirm('You are about to edit this expense. Continue?')) {
+            e.preventDefault();
+        }
+    });
+}
+</script>
+{% endblock %}

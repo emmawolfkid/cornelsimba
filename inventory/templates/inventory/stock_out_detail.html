@@ -1,0 +1,259 @@
+{% extends 'inventory/base.html' %}
+{% load static %}
+
+{% block title %}Stock Out Details - Inventory{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'inventory/css/detail.css' %}">
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header">
+    <div class="page-title-section">
+        <a href="{% url 'inventory:stock_out_list' %}" class="back-link">
+            ← Back to Stock Out List
+        </a>
+        <h1 class="page-title">📋 Stock Out Details</h1>
+        <p class="page-subtitle">Stock Out ID: #{{ stock_out.id }}</p>
+    </div>
+</div>
+
+<!-- Messages -->
+{% if messages %}
+<div class="message-container">
+    {% for message in messages %}
+        <div class="message message-{{ message.tags }}">
+            {{ message }}
+        </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Card Grid -->
+<div class="card-grid">
+    <!-- Stock Information Card -->
+    <div class="card">
+        <h2 class="card-title">📦 Stock Information</h2>
+        
+        <div class="detail-grid">
+            <div class="detail-item">
+                <div class="detail-label">Item Name</div>
+                <div class="detail-value">
+                    <strong>{{ stock_out.item.name }}</strong><br>
+                    <span class="sku-text">SKU: {{ stock_out.item.sku|default:"N/A" }}</span>
+                </div>
+            </div>
+            
+            <div class="detail-item">
+                <div class="detail-label">Quantity to Issue</div>
+                <div class="detail-value">
+                    <strong class="quantity-large">
+                        {{ stock_out.quantity }} {{ stock_out.item.unit_of_measure }}
+                    </strong>
+                </div>
+            </div>
+            
+            <div class="detail-item">
+                <div class="detail-label">Current Available Stock</div>
+                <div class="detail-value">
+                    <div class="stock-info">
+                        <span class="stock-indicator {% if stock_out.item.quantity >= stock_out.quantity %}stock-sufficient{% else %}stock-insufficient{% endif %}">
+                            <span class="stock-quantity">{{ stock_out.item.quantity }}</span> {{ stock_out.item.unit_of_measure }}
+                        </span>
+                        
+                        {% if stock_out.item.quantity >= stock_out.quantity %}
+                        <span class="sufficient-text">✓ Sufficient</span>
+                        {% else %}
+                        <span class="insufficient-text">✗ Insufficient</span>
+                        {% endif %}
+                    </div>
+                    
+                    {% if stock_out.item.quantity < stock_out.quantity %}
+                    <div class="emphasis">
+                        <strong>Stock Shortage:</strong> {{ stock_out.quantity|add:"-"|add:stock_out.item.quantity|floatformat:3 }} {{ stock_out.item.unit_of_measure }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Request Details Card -->
+    <div class="card">
+        <h2 class="card-title">📝 Request Details</h2>
+        
+        <div class="detail-grid">
+            <div class="detail-item">
+                <div class="detail-label">Purpose</div>
+                <div class="detail-value">{{ stock_out.get_purpose_display }}</div>
+            </div>
+            
+            <div class="detail-item">
+                <div class="detail-label">Issued To</div>
+                <div class="detail-value">{{ stock_out.issued_to|default:"Not specified" }}</div>
+            </div>
+            
+            <div class="detail-item">
+                <div class="detail-label">Reference</div>
+                <div class="detail-value">{{ stock_out.reference|default:"N/A" }}</div>
+            </div>
+            
+            <div class="detail-item">
+                <div class="detail-label">Sale Reference</div>
+                <div class="detail-value">
+                    {% if stock_out.linked_sale %}
+                        <a href="{% url 'sales:sale_detail' stock_out.linked_sale.id %}" target="_blank" class="sale-link">
+                            {{ stock_out.linked_sale.sale_number }}
+                        </a>
+                    {% else %}
+                        {{ stock_out.sale_reference|default:"N/A" }}
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="detail-item">
+                <div class="detail-label">Notes</div>
+                <div class="detail-value notes-text">{{ stock_out.notes|default:"No notes provided" }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Status & Timeline Card -->
+<div class="card">
+    <h2 class="card-title">📅 Status & Timeline</h2>
+    
+    <div class="detail-grid">
+        <div class="detail-item">
+            <div class="detail-label">Status</div>
+            <div class="detail-value">
+                <span class="badge badge-{{ stock_out.status }}">
+                    {{ stock_out.get_status_display }}
+                </span>
+            </div>
+        </div>
+        
+        <div class="detail-item">
+            <div class="detail-label">Created By</div>
+            <div class="detail-value">
+                {% if stock_out.created_by %}
+                    {{ stock_out.created_by.get_full_name|default:stock_out.created_by.username }}
+                {% else %}
+                    N/A
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="detail-item">
+            <div class="detail-label">Created Date</div>
+            <div class="detail-value">{{ stock_out.date|date:"F d, Y H:i" }}</div>
+        </div>
+        
+        {% if stock_out.status == 'approved' %}
+        <div class="detail-item">
+            <div class="detail-label">Approved By</div>
+            <div class="detail-value">
+                {% if stock_out.approved_by %}
+                    {{ stock_out.approved_by.get_full_name|default:stock_out.approved_by.username }}
+                {% else %}
+                    N/A
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="detail-item">
+            <div class="detail-label">Approved Date</div>
+            <div class="detail-value">
+                {% if stock_out.approved_at %}
+                    {{ stock_out.approved_at|date:"F d, Y H:i" }}
+                {% else %}
+                    N/A
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if stock_out.status == 'rejected' %}
+        <div class="detail-item">
+            <div class="detail-label">Rejected By</div>
+            <div class="detail-value">
+                {% if stock_out.rejected_by %}
+                    {{ stock_out.rejected_by.get_full_name|default:stock_out.rejected_by.username }}
+                {% else %}
+                    N/A
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="detail-item">
+            <div class="detail-label">Rejection Date</div>
+            <div class="detail-value">
+                {% if stock_out.rejected_at %}
+                    {{ stock_out.rejected_at|date:"F d, Y H:i" }}
+                {% else %}
+                    N/A
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Actions Section -->
+{% if stock_out.status == 'pending' %}
+<div class="actions-section">
+    <h3 class="actions-title">⚡ Manager Actions</h3>
+    
+    <div class="btn-group">
+        <form method="post" action="{% url 'inventory:approve_stockout' stock_out.id %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success" 
+                    onclick="return confirm('Are you sure you want to APPROVE stock out for {{ stock_out.quantity }} {{ stock_out.item.unit_of_measure }} of {{ stock_out.item.name }}?');">
+                ✓ Approve Stock Out
+            </button>
+        </form>
+        
+        <form method="post" action="{% url 'inventory:reject_stockout' stock_out.id %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger" 
+                    onclick="return confirm('Are you sure you want to REJECT this stock out request?');">
+                ✗ Reject Stock Out
+            </button>
+        </form>
+        
+        <a href="{% url 'inventory:stock_out_edit' stock_out.id %}" class="btn btn-warning">
+            ✏️ Edit Notes
+        </a>
+    </div>
+</div>
+{% endif %}
+
+<!-- Navigation Buttons -->
+<div class="btn-group" style="justify-content: center; margin-top: 40px;">
+    <a href="{% url 'inventory:stock_out_list' %}" class="btn btn-secondary">
+        ← Back to Stock Out List
+    </a>
+    <a href="{% url 'inventory:pending_sales_stockouts' %}" class="btn">
+        📈 Pending Sales Stock Outs
+    </a>
+    <a href="{% url 'inventory:dashboard' %}" class="btn">
+        📊 Dashboard
+    </a>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Form submission confirmation
+    document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            const button = this.querySelector('button[type="submit"]');
+            if (button.textContent.includes('Approve') || button.textContent.includes('Reject')) {
+                // Confirmation already handled by onclick
+                return true;
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,87 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Finance System{% endblock %}</title>
+    
+    <!-- External CSS -->
+    <link rel="stylesheet" href="{% static 'finance/css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'finance/css/sidebar.css' %}">
+    <link rel="stylesheet" href="{% static 'finance/css/responsive.css' %}">
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Notification System -->
+    {% if messages %}
+    <div class="notification-container">
+        {% for message in messages %}
+        <div class="notification {{ message.tags }}" id="notification-{{ forloop.counter }}">
+            <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+            <span>{{ message }}</span>
+            <button class="notification-close" onclick="this.parentElement.remove()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Main Layout -->
+    <div class="layout-wrapper">
+        <!-- Sidebar -->
+        {% include 'finance/includes/sidebar.html' %}
+        
+        <!-- Main Content -->
+        <div class="main-content">
+          
+            <!-- Content Area -->
+            <div class="content-wrapper">
+                <div class="container-fluid">
+                    {% block content_header %}
+                    <div class="content-header">
+                        <h1>{% block page_title %}{% endblock %}</h1>
+                        <div class="breadcrumb">
+                            {% block breadcrumb %}
+                            <a href="{% url 'finance:dashboard' %}">Dashboard</a>
+                            {% endblock %}
+                        </div>
+                    </div>
+                    {% endblock %}
+                    
+                    <!-- Main Content Block -->
+                    <div class="main-content-area">
+                        {% block content %}{% endblock %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="{% static 'finance/js/base.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+    
+    <script>
+        // Auto-hide notifications after 5 seconds
+        setTimeout(function() {
+            document.querySelectorAll('.notification').forEach(notification => {
+                notification.style.opacity = '0';
+                setTimeout(() => notification.remove(), 500);
+            });
+        }, 5000);
+        
+        // Close notification on button click
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.notification-close')) {
+                e.target.closest('.notification').remove();
+            }
+        });
+    </script>
+</body>
+</html>

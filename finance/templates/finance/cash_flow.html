@@ -1,0 +1,288 @@
+{% extends 'finance/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Cash Flow Statement - Finance{% endblock %}
+
+{% block page_title %}💸 Cash Flow Statement{% endblock %}
+
+{% block breadcrumb %}
+<a href="{% url 'finance:dashboard' %}">Dashboard</a> / Cash Flow
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'finance/css/cash_flow.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="cash-flow-container">
+    <!-- Page Header -->
+    <div class="cash-flow-header">
+        <h1><i class="fas fa-money-check-alt"></i> Cash Flow Statement</h1>
+        <div class="cash-flow-period">
+            <i class="fas fa-calendar-alt"></i> 
+            Period: {{ start_date|date:"F d, Y" }} to {{ end_date|date:"F d, Y" }}
+        </div>
+    </div>
+    
+    <!-- Summary Grid -->
+    <div class="cash-flow-summary-grid">
+        <div class="cash-flow-summary-card inflow">
+            <h3><i class="fas fa-arrow-down"></i> Cash Inflows</h3>
+            <div class="cash-flow-amount">
+                Tsh {{ cash_inflows|floatformat:0|intcomma }}
+            </div>
+            <p>Income received in cash during period</p>
+        </div>
+        
+        <div class="cash-flow-summary-card outflow">
+            <h3><i class="fas fa-arrow-up"></i> Cash Outflows</h3>
+            <div class="cash-flow-amount">
+                Tsh {{ total_outflows|floatformat:0|intcomma }}
+            </div>
+            <p>Expenses + Payroll paid during period</p>
+        </div>
+        
+        <div class="cash-flow-summary-card net">
+            <h3><i class="fas fa-chart-line"></i> Net Cash Flow</h3>
+            <div class="cash-flow-amount {% if net_cash_flow >= 0 %}inflow{% else %}outflow{% endif %}">
+                Tsh {{ net_cash_flow|floatformat:0|intcomma }}
+            </div>
+            <p>
+                {% if net_cash_flow >= 0 %}
+                    <span style="color: var(--success-color); font-weight: 600;">
+                        <i class="fas fa-check-circle"></i> Positive cash flow
+                    </span>
+                {% else %}
+                    <span style="color: var(--danger-color); font-weight: 600;">
+                        <i class="fas fa-exclamation-circle"></i> Negative cash flow
+                    </span>
+                {% endif %}
+            </p>
+        </div>
+    </div>
+    
+    <!-- Cash Inflows Details -->
+    <h3 class="cash-flow-section-header">
+        <i class="fas fa-sign-in-alt"></i> Cash Inflows Details
+    </h3>
+    
+    {% if income_transactions %}
+    <table class="cash-flow-table inflow-table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Source</th>
+                <th>Amount</th>
+                <th>Type</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for income in income_transactions %}
+            <tr>
+                <td class="cash-flow-date">{{ income.payment_date|date:"M d, Y" }}</td>
+                <td class="cash-flow-source">{{ income.source }}</td>
+                <td class="cash-flow-amount-cell inflow-amount">
+                    Tsh {{ income.amount|floatformat:0|intcomma }}
+                </td>
+                <td class="cash-flow-type">{{ income.income_type }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr class="cash-flow-total-row">
+                <td colspan="2"><strong>Total Cash Inflows</strong></td>
+                <td class="cash-flow-amount-cell inflow-amount">
+                    <strong>Tsh {{ cash_inflows|floatformat:0|intcomma }}</strong>
+                </td>
+                <td></td>
+            </tr>
+        </tfoot>
+    </table>
+    {% else %}
+    <div class="cash-flow-empty-state">
+        <i class="fas fa-file-invoice-dollar"></i>
+        <h4>No Cash Inflows</h4>
+        <p>No income transactions were received in cash during this period.</p>
+    </div>
+    {% endif %}
+    
+    <!-- Cash Outflows Details -->
+    <h3 class="cash-flow-section-header">
+        <i class="fas fa-sign-out-alt"></i> Cash Outflows Details
+    </h3>
+    
+    {% if expense_transactions or payroll_transactions %}
+    <table class="cash-flow-table outflow-table">
+        <thead>
+            <tr>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Amount</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for expense in expense_transactions %}
+            <tr>
+                <td><span class="badge badge-danger">Expense</span></td>
+                <td class="cash-flow-source">{{ expense.category }}</td>
+                <td class="cash-flow-amount-cell outflow-amount">
+                    Tsh {{ expense.amount|floatformat:0|intcomma }}
+                </td>
+                <td class="cash-flow-date">{{ expense.payment_date|date:"M d, Y" }}</td>
+            </tr>
+            {% endfor %}
+            
+            {% for payroll in payroll_transactions %}
+            <tr>
+                <td><span class="badge badge-warning">Payroll</span></td>
+                <td class="cash-flow-source">{{ payroll.employee.full_name }}</td>
+                <td class="cash-flow-amount-cell outflow-amount">
+                    Tsh {{ payroll.gross_salary|floatformat:0|intcomma }}
+                </td>
+                <td class="cash-flow-date">{{ payroll.payment_date|date:"M d, Y" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr class="cash-flow-total-row">
+                <td colspan="2"><strong>Total Cash Outflows</strong></td>
+                <td class="cash-flow-amount-cell outflow-amount">
+                    <strong>Tsh {{ total_outflows|floatformat:0|intcomma }}</strong>
+                </td>
+                <td></td>
+            </tr>
+        </tfoot>
+    </table>
+    {% else %}
+    <div class="cash-flow-empty-state">
+        <i class="fas fa-receipt"></i>
+        <h4>No Cash Outflows</h4>
+        <p>No expenses or payroll were paid in cash during this period.</p>
+    </div>
+    {% endif %}
+    
+  <!-- Cash Flow Analysis -->
+<div class="cash-flow-analysis">
+    <h3><i class="fas fa-chart-pie"></i> Cash Flow Analysis</h3>
+    
+    <div class="analysis-item">
+        <div class="analysis-label">Cash Conversion Rate</div>
+        <div class="analysis-value">
+            {% if total_income > 0 %}
+                Tsh {{ cash_inflows|floatformat:0|intcomma }} / Tsh {{ total_income|floatformat:0|intcomma }}
+                ({{ cash_conversion_rate }}% of income collected in cash)
+            {% else %}
+                No income recorded
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="analysis-item">
+        <div class="analysis-label">Cash Reserve Coverage</div>
+        <div class="analysis-value">
+            {% if total_outflows > 0 %}
+                Can cover 
+                {% if available_cash >= total_outflows %}
+                    <span class="analysis-value good">
+                        at least 1 month of expenses
+                    </span>
+                {% elif available_cash > 0 %}
+                    {{ cash_reserve_coverage }} months of expenses
+                {% else %}
+                    <span class="analysis-value danger">
+                        no expenses (insufficient cash)
+                    </span>
+                {% endif %}
+            {% else %}
+                No expenses in period
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="analysis-item">
+        <div class="analysis-label">Financial Health</div>
+        <div class="analysis-value">
+            {% if net_cash_flow < 0 %}
+                <span class="analysis-value danger">
+                    <i class="fas fa-exclamation-triangle"></i> 
+                    Negative cash flow - Consider reducing expenses or improving collections
+                </span>
+            {% elif net_cash_flow < total_outflows %}
+                <span class="analysis-value warning">
+                    <i class="fas fa-info-circle"></i> 
+                    Marginal cash position - Maintain current operations
+                </span>
+            {% else %}
+                <span class="analysis-value good">
+                    <i class="fas fa-check-circle"></i> 
+                    Healthy cash position - Consider investment opportunities
+                </span>
+            {% endif %}
+        </div>
+    </div>
+</div>
+       <!-- Actions -->
+    <div class="cash-flow-actions">
+        <a href="{% url 'finance:dashboard' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+        <!-- Add PDF Download Button here -->
+        <a href="{% url 'finance:download_cash_flow_pdf' %}?start_date={{ start_date|date:'Y-m-d' }}&end_date={{ end_date|date:'Y-m-d' }}" 
+           class="btn btn-danger">
+            <i class="fas fa-file-pdf"></i> Download PDF
+        </a>
+        <button onclick="window.print()" class="btn btn-primary">
+            <i class="fas fa-print"></i> Print Report
+        </button>
+        <a href="{% url 'finance:reports' %}" class="btn btn-info">
+            <i class="fas fa-chart-bar"></i> View Reports
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Format all currency amounts
+document.addEventListener('DOMContentLoaded', function() {
+    // Format cash flow amounts
+    document.querySelectorAll('.cash-flow-amount').forEach(element => {
+        const text = element.textContent;
+        const amount = text.replace(/[^\d.]/g, '');
+        
+        if (amount && !isNaN(parseFloat(amount))) {
+            const num = parseFloat(amount);
+            element.textContent = 'Tsh ' + Math.abs(num).toLocaleString('en-US');
+        }
+    });
+    
+    // Format table amounts
+    document.querySelectorAll('.cash-flow-amount-cell').forEach(element => {
+        const text = element.textContent;
+        const amount = text.replace(/[^\d.]/g, '');
+        
+        if (amount && !isNaN(parseFloat(amount))) {
+            const num = parseFloat(amount);
+            element.textContent = 'Tsh ' + Math.abs(num).toLocaleString('en-US');
+        }
+    });
+});
+
+// Add date range picker functionality
+function updateCashFlowDates() {
+    const startDate = document.getElementById('start_date').value;
+    const endDate = document.getElementById('end_date').value;
+    
+    if (startDate && endDate) {
+        window.location.href = `{% url 'finance:cash_flow' %}?start_date=${startDate}&end_date=${endDate}`;
+    }
+}
+
+// Auto-refresh every 5 minutes for real-time updates
+setTimeout(function() {
+    location.reload();
+}, 300000); // 5 minutes
+</script>
+{% endblock %}

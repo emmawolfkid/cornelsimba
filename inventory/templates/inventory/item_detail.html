@@ -1,0 +1,303 @@
+{% extends 'inventory/base.html' %}
+{% load static %}
+
+{% block title %}{{ item.name }} - Item Details{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'inventory/css/detail.css' %}">
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header">
+    <h1 class="page-title">📦 {{ item.name }}</h1>
+    <p class="page-subtitle">
+        SKU: {{ item.sku|default:"Not set" }} | 
+        Category: {{ item.get_category_display }} | 
+        Created: {{ item.created_at|date:"F d, Y" }}
+    </p>
+</div>
+
+<!-- Item Information Card -->
+<div class="card">
+    <h2 class="card-title">📋 Item Information</h2>
+    
+    <!-- Info Grid -->
+    <div class="info-grid">
+        <div class="info-item">
+            <label>Stock Status</label>
+            <p>
+                {% if not item.is_active %}
+                <span class="status-badge status-inactive">Inactive</span>
+                {% elif item.is_critical_stock %}
+                <span class="status-badge status-critical">Critical Stock</span>
+                {% elif item.is_low_stock %}
+                <span class="status-badge status-low">Low Stock</span>
+                {% else %}
+                <span class="status-badge status-good">Good Stock</span>
+                {% endif %}
+            </p>
+        </div>
+        
+        <div class="info-item">
+            <label>Current Quantity</label>
+            <p class="value-large">
+                <span class="decimal">{{ item.quantity|floatformat:3 }}</span> {{ item.unit_of_measure }}
+            </p>
+        </div>
+        
+        <div class="info-item">
+            <label>Reorder Level</label>
+            <p class="decimal">{{ item.reorder_level|floatformat:3 }} {{ item.unit_of_measure }}</p>
+        </div>
+        
+        <div class="info-item">
+            <label>Minimum Stock</label>
+            <p class="decimal">{{ item.minimum_stock|floatformat:3 }} {{ item.unit_of_measure }}</p>
+        </div>
+        
+        <div class="info-item">
+            <label>Unit of Measure</label>
+            <p>{{ item.unit_of_measure }}</p>
+        </div>
+        
+        <div class="info-item">
+            <label>Category</label>
+            <p>{{ item.get_category_display }}</p>
+        </div>
+        
+        <div class="info-item">
+            <label>Last Updated</label>
+            <p>{{ item.updated_at|date:"F d, Y H:i" }}</p>
+        </div>
+        
+        <div class="info-item">
+            <label>Active Status</label>
+            <p>{% if item.is_active %}✅ Active{% else %}⛔ Inactive{% endif %}</p>
+        </div>
+    </div>
+    
+    {% if item.description %}
+    <div class="info-item description-item">
+        <label>Description</label>
+        <p class="description-text">{{ item.description }}</p>
+    </div>
+    {% endif %}
+    
+    <!-- Stock Summary -->
+    <div class="stock-summary-grid">
+        <div class="summary-card">
+            <h3>Total Stock In</h3>
+            <p><span class="decimal">{{ total_in|floatformat:3 }}</span></p>
+            <div class="sub-text">{{ item.unit_of_measure }}</div>
+        </div>
+        
+        <div class="summary-card">
+            <h3>Total Stock Out</h3>
+            <p><span class="decimal">{{ total_out|floatformat:3 }}</span></p>
+            <div class="sub-text">{{ item.unit_of_measure }}</div>
+        </div>
+        
+        <div class="summary-card">
+            <h3>Current Stock</h3>
+            <p><span class="decimal">{{ item.quantity|floatformat:3 }}</span></p>
+            <div class="sub-text">{{ item.unit_of_measure }}</div>
+        </div>
+        
+        <div class="summary-card">
+            <h3>Net Movement</h3>
+            <p><span class="decimal">{{ total_in|floatformat:3 }}</span></p>
+            <div class="sub-text">in / <span class="decimal">{{ total_out|floatformat:3 }}</span> out</div>
+        </div>
+    </div>
+    
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+        <a href="{% url 'inventory:item_update' item.pk %}" class="btn">
+            <span class="icon">✏️</span> Edit Item
+        </a>
+        <a href="{% url 'inventory:stock_in_create' %}?item={{ item.pk }}" class="btn btn-success">
+            <span class="icon">📥</span> Stock In
+        </a>
+        {% if item.quantity > 0 %}
+        <a href="{% url 'inventory:stock_out_create' %}?item={{ item.pk }}" class="btn btn-warning">
+            <span class="icon">📤</span> Stock Out
+        </a>
+        {% endif %}
+        <a href="{% url 'inventory:adjustment_create' %}?item={{ item.pk }}" class="btn btn-outline">
+            <span class="icon">🔄</span> Adjustment
+        </a>
+        <a href="{% url 'inventory:item_list' %}" class="btn btn-secondary">
+            <span class="icon">←</span> All Items
+        </a>
+        <a href="{% url 'inventory:dashboard' %}" class="btn">
+            <span class="icon">📊</span> Dashboard
+        </a>
+    </div>
+</div>
+
+<!-- History Tabs Card -->
+<div class="card">
+    <h2 class="card-title">📊 Stock History</h2>
+    
+    <div class="tabs-container">
+        <div class="tabs">
+            <div class="tab active" onclick="showTab('stock-in')">📥 Stock In</div>
+            <div class="tab" onclick="showTab('stock-out')">📤 Stock Out</div>
+            <div class="tab" onclick="showTab('stock-history')">📋 All History</div>
+        </div>
+        
+        <!-- Stock In Tab -->
+        <div id="stock-in" class="tab-content active">
+            <h3 class="section-title">Stock In Records</h3>
+            {% if stock_ins %}
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Quantity</th>
+                            <th>Source</th>
+                            <th>Supplier</th>
+                            <th>Reference</th>
+                            <th>Received By</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for stock_in in stock_ins %}
+                        <tr>
+                            <td>{{ stock_in.date|date:"M d, Y H:i" }}</td>
+                            <td class="decimal">{{ stock_in.quantity|floatformat:3 }} {{ item.unit_of_measure }}</td>
+                            <td>{{ stock_in.get_source_display }}</td>
+                            <td>{{ stock_in.supplier|default:"-" }}</td>
+                            <td>{{ stock_in.reference|default:"-" }}</td>
+                            <td>{{ stock_in.received_by|default:"-" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                No stock in records found.
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Stock Out Tab -->
+        <div id="stock-out" class="tab-content">
+            <h3 class="section-title">Stock Out Records</h3>
+            {% if stock_outs %}
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Quantity</th>
+                            <th>Issued To</th>
+                            <th>Purpose</th>
+                            <th>Reference</th>
+                            <th>Issued By</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for stock_out in stock_outs %}
+                        <tr>
+                            <td>{{ stock_out.date|date:"M d, Y H:i" }}</td>
+                            <td class="decimal">{{ stock_out.quantity|floatformat:3 }} {{ item.unit_of_measure }}</td>
+                            <td>{{ stock_out.issued_to|default:"-" }}</td>
+                            <td>{{ stock_out.get_purpose_display }}</td>
+                            <td>{{ stock_out.reference|default:"-" }}</td>
+                            <td>{{ stock_out.issued_by|default:"-" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                No stock out records found.
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Stock History Tab -->
+        <div id="stock-history" class="tab-content">
+            <h3 class="section-title">Complete Stock History (Latest 50)</h3>
+            {% if stock_history %}
+            <div class="table-responsive">
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>Date/Time</th>
+                            <th>Transaction</th>
+                            <th>Quantity</th>
+                            <th>Previous</th>
+                            <th>New</th>
+                            <th>Reference</th>
+                            <th>User</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for history in stock_history %}
+                        <tr>
+                            <td>{{ history.created_at|date:"M d, Y H:i" }}</td>
+                            <td class="transaction-type">
+                                {% if history.transaction_type == 'STOCK_IN' %}
+                                📥 Stock In
+                                {% elif history.transaction_type == 'STOCK_OUT' %}
+                                📤 Stock Out
+                                {% elif history.transaction_type == 'ADJUSTMENT' %}
+                                🔄 Adjustment
+                                {% else %}
+                                {{ history.transaction_type }}
+                                {% endif %}
+                            </td>
+                            <td class="decimal">{{ history.quantity|floatformat:3 }}</td>
+                            <td class="decimal">{{ history.previous_quantity|floatformat:3 }}</td>
+                            <td class="decimal">{{ history.new_quantity|floatformat:3 }}</td>
+                            <td>{{ history.reference|default:"-" }}</td>
+                            <td>{{ history.created_by|default:"System" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                No stock history records found.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Navigation Links -->
+<div class="action-buttons">
+    <a href="{% url 'inventory:dashboard' %}" class="btn btn-secondary">
+        ← Back to Dashboard
+    </a>
+    <a href="/" class="btn">
+        ← Main Dashboard
+    </a>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Tab switching functionality
+    function showTab(tabName) {
+        // Hide all tabs
+        document.querySelectorAll('.tab-content').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        
+        // Show selected tab
+        document.getElementById(tabName).classList.add('active');
+        event.target.classList.add('active');
+    }
+</script>
+{% endblock %}

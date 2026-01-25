@@ -1,0 +1,176 @@
+/* ===== DASHBOARD SPECIFIC STYLES ===== */
+
+/* Section Headers */
+.dashboard-section-header {
+    color: var(--secondary-color);
+    margin: 40px 0 20px;
+    border-bottom: 2px solid;
+    padding-bottom: 12px;
+    font-size: 1.3rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.dashboard-section-header.income { border-color: var(--success-color); }
+.dashboard-section-header.expense { border-color: var(--danger-color); }
+.dashboard-section-header.finance { border-color: var(--primary-color); }
+.dashboard-section-header.payables { border-color: var(--warning-color); }
+
+/* Quick Actions */
+.dashboard-quick-actions {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+}
+
+.btn-purple {
+    background: #9b59b6;
+    color: white;
+}
+
+.btn-purple:hover {
+    background: #8e44ad;
+}
+
+/* Stat Cards with specific colors */
+.stat-card-cash {
+    border-left: 5px solid var(--success-color);
+}
+
+.stat-card-working {
+    border-left: 5px solid var(--primary-color);
+}
+
+.stat-card-ratio {
+    border-left: 5px solid var(--warning-color);
+}
+
+.stat-card-profit {
+    border-left: 5px solid #9b59b6;
+}
+
+.stat-card-income {
+    border-left: 5px solid var(--success-color);
+}
+
+.stat-card-expense {
+    border-left: 5px solid var(--danger-color);
+}
+
+.stat-card-payroll {
+    border-left: 5px solid var(--primary-color);
+}
+
+.stat-card-unpaid-expense {
+    border-left: 5px solid var(--danger-color);
+}
+
+.stat-card-unpaid-payroll {
+    border-left: 5px solid #e67e22;
+}
+
+.stat-card-total-payables {
+    border-left: 5px solid #d35400;
+}
+
+.stat-card-paid-out {
+    border-left: 5px solid #c0392b;
+}
+
+/* Ratio Display */
+.ratio-display {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin: 10px 0;
+}
+
+.ratio-good { color: var(--success-color); }
+.ratio-warning { color: var(--warning-color); }
+.ratio-danger { color: var(--danger-color); }
+
+/* Alert Buttons */
+.alert-btn-small {
+    font-size: 0.9rem;
+    padding: 8px 16px;
+}
+
+/* Financial Statements Section */
+.financial-statements {
+    margin-top: 30px;
+}
+
+/* Balance Sheet Colors */
+.balance-sheet-assets {
+    background: #e8f4fc;
+    color: var(--primary-color);
+}
+
+.balance-sheet-liabilities {
+    background: #fce8e8;
+    color: var(--danger-color);
+}
+
+/* Health Indicators */
+.health-indicator {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-left: 10px;
+}
+
+.health-good { background: #d4edda; color: #155724; }
+.health-warning { background: #fff3cd; color: #856404; }
+.health-danger { background: #f8d7da; color: #721c24; }
+
+/* Profit/Loss Colors */
+.profit { color: var(--success-color) !important; }
+.loss { color: var(--danger-color) !important; }
+
+/* Text Colors */
+.text-muted {
+    color: #666;
+}
+
+/* Button with dark background */
+.btn-dark-bg {
+    background: #2c3e50;
+    color: white;
+}
+
+.btn-dark-bg:hover {
+    background: #1a252f;
+    color: white;
+}
+
+/* Recent Transactions Grid */
+.recent-transactions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 25px;
+    margin-bottom: 30px;
+}
+
+/* Mobile Improvements for Dashboard */
+@media (max-width: 768px) {
+    .dashboard-quick-actions {
+        gap: 8px;
+    }
+    
+    .dashboard-quick-actions .btn {
+        flex: 1;
+        min-width: 0;
+        justify-content: center;
+    }
+    
+    .recent-transactions-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .ratio-display {
+        font-size: 2rem;
+    }
+}

@@ -1,0 +1,244 @@
+/* ===== PAYROLL FORM SPECIFIC STYLES ===== */
+
+/* Form Card */
+.payroll-form-card {
+    background: white;
+    padding: 30px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-md);
+    margin-bottom: 25px;
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Section Headers */
+.payroll-section-header {
+    color: var(--secondary-color);
+    margin: 30px 0 20px;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 12px;
+    font-size: 1.3rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Form Groups */
+.payroll-form-group {
+    margin-bottom: 25px;
+}
+
+.payroll-form-label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 600;
+    color: var(--secondary-color);
+    font-size: 0.95rem;
+}
+
+.payroll-form-label.required::after {
+    content: " *";
+    color: var(--danger-color);
+}
+
+.payroll-help-text {
+    font-size: 0.85em;
+    color: #666;
+    margin-top: 8px;
+    line-height: 1.4;
+}
+
+/* Form Row */
+.payroll-form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+/* Amount Wrapper */
+.payroll-amount-wrapper {
+    position: relative;
+}
+
+.payroll-currency-prefix {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #666;
+    font-weight: 500;
+    pointer-events: none;
+}
+
+.payroll-currency-input {
+    padding-left: 60px !important;
+}
+
+/* Salary Summary Card */
+.payroll-salary-summary-card {
+    background: #f8f9fa;
+    padding: 25px;
+    border-radius: var(--border-radius);
+    margin-top: 25px;
+    border-left: 5px solid var(--primary-color);
+}
+
+.payroll-salary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 1rem;
+}
+
+.payroll-salary-row.total {
+    font-weight: bold;
+    border-top: 2px solid #ddd;
+    margin-top: 15px;
+    padding-top: 15px;
+    font-size: 1.2rem;
+    color: var(--success-color);
+}
+
+.payroll-salary-label {
+    color: #666;
+}
+
+.payroll-salary-value {
+    font-weight: 600;
+    font-family: 'Consolas', monospace;
+}
+
+.payroll-gross-value {
+    color: var(--primary-color);
+}
+
+.payroll-deductions-value {
+    color: var(--danger-color);
+}
+
+.payroll-net-value {
+    color: var(--success-color);
+}
+
+/* Employee Info Display */
+.payroll-employee-info {
+    background: #e8f4fc;
+    padding: 15px;
+    border-radius: 8px;
+    margin: 15px 0;
+    display: none;
+}
+
+.payroll-employee-info.active {
+    display: block;
+}
+
+.payroll-employee-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.payroll-employee-detail {
+    font-size: 0.9rem;
+}
+
+.payroll-employee-label {
+    color: #666;
+    font-size: 0.85rem;
+}
+
+.payroll-employee-value {
+    font-weight: 500;
+}
+
+/* Confirmation Check */
+.payroll-confirmation-check {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 20px 0;
+    padding: 15px;
+    background: #fff3cd;
+    border-radius: 8px;
+    border-left: 4px solid var(--warning-color);
+}
+
+.payroll-confirmation-check input[type="checkbox"] {
+    width: auto;
+    transform: scale(1.2);
+}
+
+.payroll-confirmation-check label {
+    margin: 0;
+    color: #856404;
+    font-weight: 500;
+}
+
+/* Form Actions */
+.payroll-form-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 35px;
+    padding-top: 25px;
+    border-top: 1px solid var(--border-color);
+    flex-wrap: wrap;
+}
+
+/* Amount Display */
+.payroll-amount-display {
+    font-size: 0.9rem;
+    color: #666;
+    margin-top: 8px;
+    font-weight: 500;
+    min-height: 1.2em;
+}
+
+/* Back Link */
+.payroll-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 20px;
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    padding: 10px 0;
+}
+
+.payroll-back-link:hover {
+    text-decoration: underline;
+}
+
+/* Errors */
+.payroll-error-input {
+    border-color: var(--danger-color) !important;
+    background: #fffafa;
+}
+
+/* Mobile Improvements for Payroll Form */
+@media (max-width: 768px) {
+    .payroll-form-card {
+        padding: 20px;
+    }
+    
+    .payroll-form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .payroll-form-actions {
+        flex-direction: column;
+    }
+    
+    .payroll-salary-summary-card {
+        padding: 20px;
+    }
+    
+    .payroll-employee-details {
+        grid-template-columns: 1fr;
+    }
+}

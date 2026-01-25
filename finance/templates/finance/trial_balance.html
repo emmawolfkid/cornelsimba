@@ -1,0 +1,131 @@
+{% extends 'finance/base.html' %}
+{% load static %}
+{% load humanize %}
+{% load finance_filters %}  <!-- Load your custom filters -->
+
+{% block title %}Trial Balance - Finance{% endblock %}
+
+{% block page_title %}⚖️ Trial Balance{% endblock %}
+
+{% block breadcrumb %}
+<a href="{% url 'finance:dashboard' %}">Dashboard</a> / Trial Balance
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .alert-success { background-color: #d4edda; color: #155724; padding: 10px; border-radius: 4px; }
+    .alert-danger { background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th { background-color: #f2f2f2; text-align: left; padding: 10px; border: 1px solid #ddd; }
+    td { padding: 10px; border: 1px solid #ddd; }
+    tfoot { font-weight: bold; background-color: #f9f9f9; }
+    .difference { margin-top: 20px; padding: 10px; background-color: #f8f9fa; border-radius: 4px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="margin: 30px;">
+    <h2>Trial Balance - {% now "F j, Y" %}</h2>
+
+    <!-- SIMPLE VERSION - Use view calculations -->
+    {% if is_balanced %}
+    <div class="alert-success">
+        ✅ Trial balance is balanced.
+    </div>
+    {% else %}
+    <div class="alert-danger">
+        ⚠️ Trial balance is NOT balanced! Difference: 
+        <span id="diff">Tsh {{ abs_difference|floatformat:2|intcomma }}</span>
+    </div>
+    {% endif %}
+
+    <table>
+        <thead>
+            <tr>
+                <th>Account Code</th>
+                <th>Account Name</th>
+                <th>Account Type</th>
+                <th>Debit (Tsh)</th>
+                <th>Credit (Tsh)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for account in accounts %}
+            <tr>
+                <td>{{ account.code }}</td>
+                <td>{{ account.name }}</td>
+                <td>{{ account.get_account_type_display }}</td>
+                <td>
+                    {% if account.is_debit %}
+                        {{ account.debit_balance|floatformat:2|intcomma }}
+                    {% else %}
+                        0.00
+                    {% endif %}
+                </td>
+                <td>
+                    {% if not account.is_debit %}
+                        {{ account.credit_balance|floatformat:2|intcomma }}
+                    {% else %}
+                        0.00
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" style="text-align: center; padding: 20px; color: #666;">
+                    No accounts found
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        {% if accounts %}
+        <tfoot>
+            <tr>
+                <td colspan="3"><strong>Total</strong></td>
+                <td id="total-debits">
+                    <strong>{{ total_debits|floatformat:2|intcomma }}</strong>
+                </td>
+                <td id="total-credits">
+                    <strong>{{ total_credits|floatformat:2|intcomma }}</strong>
+                </td>
+            </tr>
+        </tfoot>
+        {% endif %}
+    </table>
+
+    <div class="difference">
+        <strong>Difference:</strong> 
+        <span id="difference">
+            Tsh {{ difference|floatformat:2|intcomma }}
+        </span>
+    </div>
+    <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 10px; text-align: center;">
+        <h4 style="margin-bottom: 15px;">
+            <i class="fas fa-download"></i> Download Options
+        </h4>
+        <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+            <!-- PDF Download Button -->
+            <a href="{% url 'finance:download_trial_balance_pdf' %}" 
+               class="btn btn-danger" 
+               style="background: #dc3545; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                <i class="fas fa-file-pdf"></i> Download PDF
+            </a>
+            
+            <!-- Print Button -->
+            <button onclick="window.print()" 
+                    class="btn btn-secondary" 
+                    style="background: #6c757d; color: white; padding: 10px 20px; border-radius: 5px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
+                <i class="fas fa-print"></i> Print
+            </button>
+            
+            <!-- Back to Reports -->
+            <a href="{% url 'finance:reports' %}" 
+               class="btn btn-primary" 
+               style="background: #007bff; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                <i class="fas fa-chart-bar"></i> View Reports
+            </a>
+        </div>
+    </div>
+    <!-- ========== END DOWNLOAD SECTION ========== -->
+</div>
+{% endblock %}

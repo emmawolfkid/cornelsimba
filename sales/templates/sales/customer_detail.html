@@ -1,0 +1,471 @@
+{% extends 'sales/base.html' %}
+{% load static %}
+
+{% block title %}{{ customer.name }} - Customer Details - CornelSimba ERP{% endblock %}
+{% block page_title %}{{ customer.name }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/customer_detail.css' %}">
+{% endblock %}
+
+{% block content %}
+    <!-- Customer Header -->
+    <div class="customer-header">
+        <div class="dashboard-container">
+            <nav class="customer-breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'sales:customer_list' %}" class="text-decoration-none">Customers</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ customer.name }}</li>
+                </ol>
+            </nav>
+            
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                <div>
+                    <h1 class="customer-title">{{ customer.name }}</h1>
+                    <p class="customer-subtitle">
+                        {{ customer.get_customer_type_display }} • Created: {{ customer.created_at|date:"F j, Y" }}
+                    </p>
+                </div>
+                
+                <div class="customer-actions">
+                    <a href="{% url 'sales:sale_create' %}?customer={{ customer.pk }}" 
+                       class="btn-custom btn-success-custom">
+                        <i class="bi bi-cart-plus"></i>
+                        New Sale
+                    </a>
+                   <a href="{% url 'sales:customer_edit' customer.pk %}" 
+   class="btn-custom btn-primary-custom">
+    <i class="bi bi-pencil"></i>
+    Edit Customer
+</a>
+                    <a href="{% url 'sales:customer_list' %}" 
+                       class="btn-custom btn-outline-custom">
+                        <i class="bi bi-arrow-left"></i>
+                        Back to List
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-container">
+        <div class="row g-4">
+            <!-- Customer Information -->
+            <div class="col-lg-4">
+                <div class="customer-info-card animate-in">
+                    <div class="customer-info-header">
+                        <h5>Customer Information</h5>
+                    </div>
+                    <div class="customer-info-body">
+                        <div class="detail-row">
+                            <div class="detail-label">Contact Person</div>
+                            <div class="detail-value">{{ customer.contact_person|default:"-" }}</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Phone</div>
+                            <div class="detail-value">
+                                {% if customer.phone %}
+                                <a href="tel:{{ customer.phone }}">{{ customer.phone }}</a>
+                                {% else %}-{% endif %}
+                            </div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Email</div>
+                            <div class="detail-value">
+                                {% if customer.email %}
+                                <a href="mailto:{{ customer.email }}">{{ customer.email }}</a>
+                                {% else %}-{% endif %}
+                            </div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Tax ID</div>
+                            <div class="detail-value">{{ customer.tax_id|default:"-" }}</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Credit Limit</div>
+                            <div class="detail-value currency-display">
+                                {{ customer.credit_limit|floatformat:0|default:"0" }}
+                            </div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Payment Terms</div>
+                            <div class="detail-value">{{ customer.payment_terms|default:"-" }}</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Status</div>
+                            <div class="detail-value">
+                                {% if customer.is_active %}
+                                <span class="status-badge active">Active</span>
+                                {% else %}
+                                <span class="status-badge inactive">Inactive</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        {% if customer.address %}
+                        <div class="address-section">
+                            <div class="address-label">Address</div>
+                            <div class="address-content">{{ customer.address|linebreaksbr }}</div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if customer.notes %}
+                        <div class="notes-section">
+                            <div class="notes-label">Notes</div>
+                            <div class="notes-content">{{ customer.notes|linebreaksbr }}</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sales Summary -->
+            <div class="col-lg-4">
+                <div class="summary-card animate-in animate-delay-1">
+                    <div class="summary-value total-sales">{{ total_sales|default:"0" }}</div>
+                    <div class="summary-label">Total Sales</div>
+                    
+                    <div class="mt-4 pt-4 border-top">
+                        <div class="summary-value total-revenue">
+                            Tsh {{ total_revenue|floatformat:0|default:"0" }}
+                        </div>
+                        <div class="summary-label">Total Revenue</div>
+                    </div>
+                    
+                    <div class="credit-usage">
+                        <div class="credit-usage-label">
+                            <span class="credit-usage-text">Credit Usage</span>
+                            <span class="credit-usage-percent">
+                                {% widthratio customer.credit_limit 10000000 100 %}%
+                            </span>
+                        </div>
+                        <div class="credit-progress">
+                           <div class="credit-progress-bar" 
+     data-width="{% widthratio customer.credit_limit 10000000 100 %}"></div>
+                        </div>
+                        <div class="credit-limit">
+                            Tsh {{ customer.credit_limit|floatformat:0|default:"0" }} of Tsh 10,000,000 limit
+                        </div>
+                    </div>
+                    
+                    <a href="{% url 'sales:report' %}?customer={{ customer.id }}" 
+                       class="btn-custom btn-outline-custom w-100 mt-4">
+                        <i class="bi bi-graph-up"></i>
+                        View Detailed Reports
+                    </a>
+                </div>
+                
+                <!-- Quick Actions -->
+                <div class="quick-actions-grid mt-4">
+                    <a href="{% url 'sales:sale_create' %}?customer={{ customer.pk }}" 
+                       class="quick-action-btn">
+                        <i class="bi bi-cart-plus"></i>
+                        New Sale
+                    </a>
+                  <a href="{% url 'sales:sale_list' %}?customer={{ customer.pk }}" 
+   class="quick-action-btn">
+    <i class="bi bi-cash-coin"></i>
+    View Sales
+</a>
+                    <a href="mailto:{{ customer.email|default:'#' }}" 
+                       class="quick-action-btn" {% if not customer.email %}disabled{% endif %}>
+                        <i class="bi bi-envelope"></i>
+                        Send Email
+                    </a>
+                    <a href="tel:{{ customer.phone|default:'#' }}" 
+                       class="quick-action-btn" {% if not customer.phone %}disabled{% endif %}>
+                        <i class="bi bi-telephone"></i>
+                        Call Customer
+                    </a>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="col-lg-4">
+                <div class="customer-info-card activity-card animate-in animate-delay-2">
+                    <div class="customer-info-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Recent Activity</h5>
+                            <span class="section-badge">{{ sales.count }}</span>
+                        </div>
+                    </div>
+                    <div class="customer-info-body">
+                        <div class="activity-list">
+                            {% for sale in sales|slice:":5" %}
+                            <div class="activity-item">
+                                <div class="activity-header">
+                                    <div class="activity-title">{{ sale.sale_number }}</div>
+                                    <div class="activity-date">{{ sale.sale_date|date:"M d" }}</div>
+                                </div>
+                                <div class="activity-body">
+                                    <div class="activity-amount">
+                                        Tsh {{ sale.net_amount|floatformat:0|default:"0" }}
+                                    </div>
+                                    <div class="activity-status">
+                                        {% if sale.status == 'COMPLETED' %}
+                                        <span class="sale-status completed">Completed</span>
+                                        {% else %}
+                                        <span class="sale-status pending">{{ sale.status }}</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="empty-activity">
+                                <i class="bi bi-receipt"></i>
+                                <p>No recent activity</p>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        {% if sales.count > 5 %}
+                        <a href="#recent-sales" class="btn-custom btn-outline-custom w-100 mt-3">
+                            <i class="bi bi-arrow-down"></i>
+                            View All Activity
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Sales Table -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="section-header" id="recent-sales">
+                    <h5 class="section-title">Recent Sales</h5>
+                    {% if sales.count > 10 %}
+                    <span class="section-badge">Last 10 of {{ sales.count }} sales</span>
+                    {% endif %}
+                </div>
+                
+                <div class="sales-table-container animate-in animate-delay-3">
+                    <table class="sales-table">
+                        <thead>
+                            <tr>
+                                <th>Sale #</th>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Amount</th>
+                                <th>Paid</th>
+                                <th>Balance</th>
+                                <th>Status</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sale in sales|slice:":10" %}
+                            <tr>
+                                <td><strong>{{ sale.sale_number }}</strong></td>
+                                <td>{{ sale.sale_date|date:"Y-m-d" }}</td>
+                                <td>{{ sale.get_sale_type_display }}</td>
+                                <td class="currency-display">{{ sale.net_amount|floatformat:0|default:"0" }}</td>
+                                <td class="currency-display">{{ sale.amount_paid|floatformat:0|default:"0" }}</td>
+                                <td class="currency-display">{{ sale.balance_due|floatformat:0|default:"0" }}</td>
+                                <td>
+                                    {% if sale.status == 'COMPLETED' %}
+                                    <span class="sale-status completed">Completed</span>
+                                    {% elif sale.status == 'PENDING' %}
+                                    <span class="sale-status pending">Pending</span>
+                                    {% elif sale.status == 'CANCELLED' %}
+                                    <span class="sale-status cancelled">Cancelled</span>
+                                    {% elif sale.status == 'DRAFT' %}
+                                    <span class="sale-status draft">Draft</span>
+                                    {% else %}
+                                    <span class="sale-status">{{ sale.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <a href="{% url 'sales:sale_detail' sale.pk %}" 
+                                       class="btn-custom btn-outline-custom"
+                                       style="padding: 0.5rem 1rem; font-size: 0.8125rem;">
+                                        <i class="bi bi-eye"></i>
+                                        View
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="8">
+                                    <div class="empty-sales">
+                                        <i class="bi bi-cart-x"></i>
+                                        <h5>No sales found for this customer</h5>
+                                        <p>Create the first sale to get started</p>
+                                        <a href="{% url 'sales:sale_create' %}?customer={{ customer.pk }}" 
+                                           class="btn-custom btn-primary-custom">
+                                            <i class="bi bi-cart-plus"></i>
+                                            Create First Sale
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                {% if sales.count > 10 %}
+                <div class="text-center mt-3">
+                    <a href="{% url 'sales:sale_list' %}?customer={{ customer.pk }}" 
+                       class="btn-custom btn-outline-custom">
+                        <i class="bi bi-list"></i>
+                        View All {{ sales.count }} Sales
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Toast notification system
+    function showToast(message, type = 'success') {
+        const toast = document.createElement('div');
+        toast.className = `toast-notification toast-${type}`;
+        toast.innerHTML = `
+            <div class="toast-icon">
+                <i class="bi ${type === 'success' ? 'bi-check-circle' : type === 'error' ? 'bi-x-circle' : 'bi-exclamation-circle'}"></i>
+            </div>
+            <div class="toast-content">
+                ${message}
+            </div>
+        `;
+        
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 3000);
+    }
+    
+    // Check for messages from Django
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle Django messages from data attribute
+        const messagesContainer = document.getElementById('django-messages');
+        if (messagesContainer) {
+            try {
+                const messages = JSON.parse(messagesContainer.getAttribute('data-messages'));
+                messages.forEach(msg => {
+                    showToast(msg.message, msg.tags);
+                });
+            } catch (e) {
+                console.log('No messages or error parsing messages');
+            }
+        }
+        
+        // Check for URL parameters for success messages
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('success')) {
+            showToast(urlParams.get('success'), 'success');
+            
+            // Clean URL
+            const cleanUrl = window.location.pathname;
+            window.history.replaceState({}, document.title, cleanUrl);
+        }
+        
+        // Animate elements on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animate-in');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+        
+        // Observe all cards
+        document.querySelectorAll('.customer-info-card, .summary-card, .sales-table-container').forEach(card => {
+            observer.observe(card);
+        });
+        
+        // Mobile optimizations
+        if ('ontouchstart' in window) {
+            // Increase touch target size for mobile
+            const touchElements = document.querySelectorAll('.activity-item, .btn-custom, .quick-action-btn');
+            touchElements.forEach(el => {
+                el.style.minHeight = '44px';
+                el.style.minWidth = '44px';
+            });
+            
+            // Touch feedback
+            const interactiveElements = document.querySelectorAll('.activity-item, .quick-action-btn, .btn-custom');
+            interactiveElements.forEach(el => {
+                el.addEventListener('touchstart', function() {
+                    this.style.opacity = '0.7';
+                });
+                
+                el.addEventListener('touchend', function() {
+                    this.style.opacity = '1';
+                });
+            });
+            
+            // Smooth scrolling for anchor links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href');
+                    if (targetId !== '#') {
+                        const targetElement = document.querySelector(targetId);
+                        if (targetElement) {
+                            targetElement.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'start'
+                            });
+                        }
+                    }
+                });
+            });
+        }
+        
+        // Credit limit progress bar animation
+        const progressBar = document.querySelector('.credit-progress-bar');
+        if (progressBar) {
+            const width = progressBar.dataset.width || '0';
+            progressBar.style.width = '0';
+            
+            setTimeout(() => {
+                progressBar.style.width = width + '%';
+                progressBar.style.maxWidth = '100%';
+            }, 300);
+        }
+        
+        // Print functionality
+        const printBtn = document.querySelector('[onclick*="print"]');
+        if (printBtn) {
+            printBtn.addEventListener('click', function() {
+                window.print();
+            });
+        }
+        
+        // Copy customer details to clipboard
+        const copyDetailsBtn = document.querySelector('[onclick*="copyDetails"]');
+        if (copyDetailsBtn) {
+            copyDetailsBtn.addEventListener('click', function() {
+                const customerDetails = {
+                    name: this.closest('.customer-info-card').querySelector('.customer-title')?.textContent || '',
+                    phone: document.querySelector('[href^="tel:"]')?.textContent || '',
+                    email: document.querySelector('[href^="mailto:"]')?.textContent || '',
+                    address: document.querySelector('.address-content')?.textContent || ''
+                };
+                
+                const detailsText = `Customer: ${customerDetails.name.trim()}\nPhone: ${customerDetails.phone.trim()}\nEmail: ${customerDetails.email.trim()}\nAddress: ${customerDetails.address.trim()}`;
+                
+                navigator.clipboard.writeText(detailsText).then(() => {
+                    showToast('Customer details copied to clipboard', 'success');
+                }).catch(err => {
+                    showToast('Failed to copy details', 'error');
+                });
+            });
+        }
+    });
+</script>
+{% endblock %}

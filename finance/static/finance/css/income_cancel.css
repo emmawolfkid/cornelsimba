@@ -1,0 +1,347 @@
+/* ===== INCOME CANCEL STYLES ===== */
+
+/* Container */
+.income-cancel-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 15px;
+}
+
+/* Page Header */
+.income-cancel-header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 3px solid var(--warning-color);
+}
+
+.income-cancel-header h1 {
+    color: var(--secondary-color);
+    font-size: 1.8rem;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.income-cancel-subtitle {
+    color: #666;
+    font-size: 1rem;
+}
+
+/* Cancel Card */
+.income-cancel-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+    margin-bottom: 30px;
+}
+
+.income-cancel-card-header {
+    background: var(--warning-color);
+    color: #000;
+    padding: 20px 25px;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
+.income-cancel-card-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.income-cancel-card-body {
+    padding: 25px;
+}
+
+/* Warning Alert */
+.warning-alert {
+    background: #fff3cd;
+    border-left: 5px solid var(--warning-color);
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 25px;
+}
+
+.warning-alert h3 {
+    color: #856404;
+    margin: 0 0 10px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.warning-alert ul {
+    margin: 10px 0 0 20px;
+    color: #856404;
+}
+
+.warning-alert li {
+    margin-bottom: 8px;
+}
+
+.warning-alert li:last-child {
+    margin-bottom: 0;
+}
+
+/* Income Details */
+.income-details-section {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 25px;
+    border: 1px solid var(--border-color);
+}
+
+.income-details-section h4 {
+    margin: 0 0 15px 0;
+    color: var(--secondary-color);
+    font-size: 1.1rem;
+}
+
+.details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.detail-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.detail-label {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 5px;
+}
+
+.detail-value {
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.detail-value.amount {
+    color: var(--success-color);
+    font-family: 'Consolas', monospace;
+}
+
+/* Cancellation Form */
+.cancel-form {
+    margin-top: 25px;
+}
+
+.cancel-form-group {
+    margin-bottom: 25px;
+}
+
+.cancel-form-label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 600;
+    color: var(--secondary-color);
+}
+
+.cancel-form-label.required::after {
+    content: " *";
+    color: var(--danger-color);
+}
+
+.cancel-form-textarea {
+    width: 100%;
+    padding: 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1em;
+    min-height: 120px;
+    resize: vertical;
+    transition: all 0.2s;
+}
+
+.cancel-form-textarea:focus {
+    outline: none;
+    border-color: var(--warning-color);
+    box-shadow: 0 0 0 3px rgba(243, 156, 18, 0.1);
+}
+
+.form-help {
+    font-size: 0.85em;
+    color: #666;
+    margin-top: 8px;
+}
+
+/* Confirmation Check */
+.confirmation-check {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 20px 0;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid var(--warning-color);
+}
+
+.confirmation-check input[type="checkbox"] {
+    transform: scale(1.3);
+    cursor: pointer;
+}
+
+.confirmation-check label {
+    margin: 0;
+    color: var(--danger-color);
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.confirmation-check:hover {
+    background: #f0f1f2;
+}
+
+/* High Value Warning */
+.high-value-warning {
+    background: #fff3cd;
+    border-left: 5px solid #ffc107;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.high-value-warning h4 {
+    margin: 0 0 8px 0;
+    color: #856404;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Form Actions */
+.cancel-form-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+    flex-wrap: wrap;
+}
+
+.btn-cancel {
+    background: var(--warning-color);
+    color: #000;
+}
+
+.btn-cancel:hover {
+    background: #e67e22;
+    color: #000;
+}
+
+/* Character Counter */
+.char-counter {
+    font-size: 0.85em;
+    color: #666;
+    margin-top: 5px;
+    text-align: right;
+}
+
+.char-counter.low {
+    color: var(--danger-color);
+}
+
+.char-counter.good {
+    color: var(--success-color);
+}
+
+/* Back Link */
+.income-cancel-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 30px;
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    padding: 10px 0;
+    transition: color 0.2s;
+}
+
+.income-cancel-back-link:hover {
+    text-decoration: underline;
+    color: var(--secondary-color);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .income-cancel-container {
+        padding: 12px;
+    }
+    
+    .income-cancel-card {
+        margin: 0;
+        border-radius: 0;
+    }
+    
+    .income-cancel-card-body {
+        padding: 20px;
+    }
+    
+    .details-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .cancel-form-actions {
+        flex-direction: column;
+    }
+    
+    .cancel-form-actions .btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .income-cancel-header h1 {
+        font-size: 1.5rem;
+        flex-direction: column;
+        gap: 5px;
+    }
+    
+    .confirmation-check {
+        padding: 12px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    
+    .confirmation-check input[type="checkbox"] {
+        align-self: flex-start;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .income-cancel-card {
+        background: #2c3e50;
+        color: #ecf0f1;
+    }
+    
+    .income-details-section {
+        background: #34495e;
+        border-color: #4da6ff;
+    }
+    
+    .warning-alert, .high-value-warning {
+        background: #34495e;
+        color: #ecf0f1;
+    }
+    
+    .warning-alert h3, .high-value-warning h4 {
+        color: #f1c40f;
+    }
+    
+    .confirmation-check {
+        background: #34495e;
+        border-color: #f1c40f;
+    }
+}

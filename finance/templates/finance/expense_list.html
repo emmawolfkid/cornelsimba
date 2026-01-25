@@ -1,0 +1,430 @@
+{% extends 'finance/base.html' %}
+{% load static %} 
+{% load humanize %}
+
+{% load finance_filters %}
+
+{% block title %}Expense Records - Finance{% endblock %}
+
+{% block page_title %}💰 Expense Records{% endblock %}
+
+{% block breadcrumb %}
+<a href="{% url 'finance:dashboard' %}">Dashboard</a> / Expense Records
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'finance/css/expense.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="header-actions">
+    <a href="{% url 'finance:expense_create' %}" class="btn btn-danger">
+        <i class="fas fa-plus-circle"></i> Add New Expense
+    </a>
+    
+    <div class="header-buttons">
+        <a href="{% url 'finance:dashboard' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Dashboard
+        </a>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="fas fa-filter"></i> Filters
+        </h3>
+    </div>
+    <div class="card-body">
+        <form method="get" class="filter-form">
+            <div class="expense-filter-row">
+                <div class="form-group">
+                    <label class="form-label">Expense Type</label>
+                    <select name="type" class="form-control">
+                        <option value="">All Expense Types</option>
+                        {% for type_code, type_name in expense_types %}
+                        <option value="{{ type_code }}" {% if request.GET.type == type_code %}selected{% endif %}>
+                            {{ type_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Department</label>
+                    <select name="department" class="form-control">
+                        <option value="">All Departments</option>
+                        <option value="Sales" {% if request.GET.department == "Sales" %}selected{% endif %}>Sales</option>
+                        <option value="Procurement" {% if request.GET.department == "Procurement" %}selected{% endif %}>Procurement</option>
+                        <option value="HR" {% if request.GET.department == "HR" %}selected{% endif %}>HR</option>
+                        <option value="IT" {% if request.GET.department == "IT" %}selected{% endif %}>IT</option>
+                        <option value="Operations" {% if request.GET.department == "Operations" %}selected{% endif %}>Operations</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Payment Status</label>
+                    <select name="paid" class="form-control">
+                        <option value="">All Status</option>
+                        <option value="true" {% if request.GET.paid == "true" %}selected{% endif %}>Paid</option>
+                        <option value="false" {% if request.GET.paid == "false" %}selected{% endif %}>Pending</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Search</label>
+                    <input type="text" name="search" class="form-control" 
+                           placeholder="Search category, description..." 
+                           value="{{ request.GET.search }}">
+                </div>
+            </div>
+            
+            <div class="expense-filter-actions">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search"></i> Apply Filters
+                </button>
+                
+                {% if request.GET %}
+                <a href="{% url 'finance:expense_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Clear All
+                </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="summary-cards">
+    <div class="summary-card total">
+        <div class="summary-icon">
+            <i class="fas fa-file-invoice-dollar"></i>
+        </div>
+        <div class="summary-details">
+            <h3>Total Expenses</h3>
+            <div class="summary-value tsh-amount">
+                Tsh {{ total_amount|floatformat:0|intcomma|default:"0" }}
+            </div>
+            <p class="summary-count">{{ expenses.paginator.count }} record(s)</p>
+        </div>
+    </div>
+    
+    <div class="summary-card paid">
+        <div class="summary-icon">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="summary-details">
+            <h3>Total Paid</h3>
+            <div class="summary-value tsh-amount income">
+                Tsh {{ paid_amount|floatformat:0|intcomma|default:"0" }}
+            </div>
+            <p class="summary-count">{{ paid_expense_count }} paid</p>
+        </div>
+    </div>
+    
+    <div class="summary-card pending">
+        <div class="summary-icon">
+            <i class="fas fa-clock"></i>
+        </div>
+        <div class="summary-details">
+            <h3>Pending Payment</h3>
+            <div class="summary-value tsh-amount expense">
+                Tsh {{ pending_amount|floatformat:0|intcomma|default:"0" }}
+            </div>
+            <p class="summary-count">{{ unpaid_expense_count }} pending</p>
+        </div>
+    </div>
+</div>
+
+<!-- Expense Table -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="fas fa-receipt"></i> Expense Records
+        </h3>
+        <div class="expense-card-actions">
+            <span class="badge badge-info">
+                Page {{ expenses.number }} of {{ expenses.paginator.num_pages }}
+            </span>
+        </div>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Category</th>
+                    <th>Type</th>
+                    <th>Amount (Tsh)</th>
+                    <th>Date</th>
+                    <th>Department</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for expense in expenses %}
+                <tr class="expense-row">
+                    <td>
+                        <div class="expense-category">
+                            <strong>{{ expense.category|truncatechars:25 }}</strong>
+                            {% if expense.purchase_order %}
+                            <br><small class="text-info">
+                                <i class="fas fa-shopping-cart"></i> PO: {{ expense.purchase_order.po_number }}
+                            </small>
+                            {% endif %}
+                            {% if expense.description %}
+                            <br><small class="text-muted">{{ expense.description|truncatechars:30 }}</small>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>
+                        {% if expense.expense_type == 'Procurement' %}
+                            <span class="badge badge-primary">Procurement</span>
+                        {% elif expense.expense_type == 'Salary' %}
+                            <span class="badge badge-warning">Salary</span>
+                        {% elif expense.expense_type == 'Utility' %}
+                            <span class="badge badge-purple">Utility</span>
+                        {% else %}
+                            <span class="badge badge-secondary">{{ expense.get_expense_type_display }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="tsh-amount expense">
+                        Tsh {{ expense.amount|floatformat:0|intcomma }}
+                    </td>
+                    <td>
+                        <strong>{{ expense.date|date:"Y-m-d" }}</strong>
+                        <br>
+                        <small class="text-muted">{{ expense.date|date:"D" }}</small>
+                    </td>
+                    <td>
+                        {% if expense.department %}
+                        <span class="department-badge">{{ expense.department }}</span>
+                        {% else %}
+                        <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if expense.is_paid %}
+                        <span class="badge badge-success">
+                            <i class="fas fa-check-circle"></i> Paid
+                        </span>
+                        <br>
+                        {% if expense.payment_date %}
+                        <small class="text-muted">{{ expense.payment_date|date:"Y-m-d" }}</small>
+                        {% endif %}
+                        {% else %}
+                        <span class="badge badge-danger">
+                            <i class="fas fa-clock"></i> Pending
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="expense-actions">
+                            <a href="{% url 'finance:expense_detail' expense.pk %}" class="expense-btn-action expense-btn-view" title="View Details">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            
+                            {% if not expense.is_paid %}
+                            <a href="{% url 'finance:expense_mark_paid' expense.pk %}" class="expense-btn-action expense-btn-success" 
+                               title="Mark as Paid">
+                                <i class="fas fa-check"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center py-5">
+                        <div class="expense-empty-state">
+                            <i class="fas fa-receipt fa-3x text-muted mb-3"></i>
+                            <h4>No expense records found</h4>
+                            <p class="text-muted">
+                                {% if request.GET %}
+                                    Try adjusting your filters
+                                {% else %}
+                                    Start by adding your first expense record
+                                {% endif %}
+                            </p>
+                            <a href="{% url 'finance:expense_create' %}" class="btn btn-danger mt-2">
+                                <i class="fas fa-plus-circle"></i> Add Expense Record
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <div class="card-footer">
+        <div class="pagination-container">
+            <div class="pagination-info">
+                Showing {{ expenses.start_index }} to {{ expenses.end_index }} of {{ expenses.paginator.count }} records
+            </div>
+            
+            <nav class="pagination">
+                {% if expenses.has_previous %}
+                <a href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                   class="page-link">
+                    <i class="fas fa-angle-double-left"></i>
+                </a>
+                <a href="?page={{ expenses.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                   class="page-link">
+                    <i class="fas fa-angle-left"></i>
+                </a>
+                {% endif %}
+                
+                {% for num in expenses.paginator.page_range %}
+                    {% if expenses.number == num %}
+                    <span class="page-link active">{{ num }}</span>
+                    {% elif num > expenses.number|add:'-3' and num < expenses.number|add:'3' %}
+                    <a href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                       class="page-link">{{ num }}</a>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if expenses.has_next %}
+                <a href="?page={{ expenses.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                   class="page-link">
+                    <i class="fas fa-angle-right"></i>
+                </a>
+                <a href="?page={{ expenses.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                   class="page-link">
+                    <i class="fas fa-angle-double-right"></i>
+                </a>
+                {% endif %}
+            </nav>
+        </div>
+    </div>
+    {% endif %}
+</div>
+<!-- Quick Stats -->
+<div class="expense-quick-stats">
+    <div class="expense-stat-card">
+        <h4><i class="fas fa-shopping-cart text-primary"></i> Procurement</h4>
+        <div class="amount">
+            Tsh {{ procurement_amount|floatformat:0|intcomma|default:"0" }}
+        </div>
+    </div>
+    
+    <div class="expense-stat-card">
+        <h4><i class="fas fa-users text-warning"></i> Salary</h4>
+        <div class="amount">
+            Tsh {{ salary_amount|floatformat:0|intcomma|default:"0" }}
+        </div>
+    </div>
+    
+    <div class="expense-stat-card">
+        <h4><i class="fas fa-bolt text-purple"></i> Utility</h4>
+        <div class="amount">
+            Tsh {{ utility_amount|floatformat:0|intcomma|default:"0" }}
+        </div>
+    </div>
+    
+    <div class="expense-stat-card">
+        <h4><i class="fas fa-chart-line text-info"></i> Average</h4>
+        <div class="amount">
+            Tsh {{ average_amount|floatformat:0|intcomma|default:"0" }}
+        </div>
+    </div>
+</div>
+
+<!-- Payment Summary -->
+<div class="card mt-4">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="fas fa-chart-pie"></i> Payment Summary
+        </h3>
+    </div>
+    <div class="card-body">
+        <div class="payment-summary">
+            <div class="payment-progress">
+                <div class="progress-label">
+                    <span>Paid: {{ paid_amount|floatformat:0|intcomma }} Tsh</span>
+                    <span>{{ paid_percentage|floatformat:1 }}%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill paid" id="paid-progress"></div>
+                </div>
+                
+                <div class="progress-label">
+                    <span>Pending: {{ pending_amount|floatformat:0|intcomma }} Tsh</span>
+                    <span>{{ pending_percentage|floatformat:1 }}%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill pending" id="pending-progress"></div>
+                </div>
+            </div>
+            
+            <div class="payment-legend">
+                <div class="legend-item">
+                    <span class="legend-color paid"></span>
+                    <span>Paid Expenses ({{ paid_expense_count }})</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color pending"></span>
+                    <span>Pending Payment ({{ unpaid_expense_count }})</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Confirmation for mark as paid
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.expense-btn-success').forEach(link => {
+            link.addEventListener('click', function(e) {
+                if (!confirm('Are you sure you want to mark this expense as paid?')) {
+                    e.preventDefault();
+                }
+            });
+        });
+        
+        // Auto-format all currency amounts
+        document.querySelectorAll('.tsh-amount').forEach(element => {
+            const text = element.textContent;
+            const amount = text.replace(/[^\d.]/g, '');
+            if (amount && !isNaN(parseFloat(amount))) {
+                const num = parseFloat(amount);
+                element.textContent = 'Tsh ' + Math.abs(num).toLocaleString();
+                if (num < 0) {
+                    element.textContent = '-Tsh ' + Math.abs(num).toLocaleString();
+                }
+            }
+        });
+        
+        // Make table rows clickable for detail view
+        document.querySelectorAll('.expense-row').forEach(row => {
+            const viewLink = row.querySelector('.expense-btn-view');
+            if (viewLink) {
+                row.addEventListener('click', function(e) {
+                    // Don't trigger if clicking on action buttons
+                    if (!e.target.closest('.expense-actions') && 
+                        !e.target.closest('a') && 
+                        !e.target.closest('button')) {
+                        window.location.href = viewLink.href;
+                    }
+                });
+                
+                // Change cursor on hover
+                row.style.cursor = 'pointer';
+            }
+        });
+        
+        // Set progress bar widths with JavaScript
+        const paidPercentage = parseFloat("{{ paid_percentage|default:0 }}") || 0;
+        const pendingPercentage = parseFloat("{{ pending_percentage|default:0 }}") || 0;
+        
+        document.getElementById('paid-progress').style.width = paidPercentage + '%';
+        document.getElementById('pending-progress').style.width = pendingPercentage + '%';
+    });
+</script>
+{% endblock %}
