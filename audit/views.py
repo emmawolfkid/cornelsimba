@@ -1,6 +1,5 @@
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib.admin.views.decorators import staff_member_required
 from django.core.paginator import Paginator
 from .models import AuditLog
 from django.db.models import Q
@@ -9,18 +8,17 @@ from django.http import HttpResponse
 from datetime import datetime, timedelta
 from io import BytesIO
 from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import letter, landscape
+from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 from django.template.loader import render_to_string
 from xhtml2pdf import pisa
-from django.db.models import Count
-from django.utils.timezone import now
-from datetime import timedelta
-import tempfile
+import logging
 
+# Add logging for debugging
+logger = logging.getLogger(__name__)
 
 def is_manager(user):
    return (user.is_staff or 
@@ -62,7 +60,7 @@ def audit_logs(request):
             logs = logs.filter(timestamp__date__gte=quarter_ago)
         elif time_period == 'year':
             year_ago = today - timedelta(days=365)
-            logs = logs.filter(timestamp__date__gte=year_ago)
+            logs = logs.filter(timestamp__date__date__gte=year_ago)
     
     # Apply filters
     if user_filter:
@@ -87,9 +85,9 @@ def audit_logs(request):
             Q(object_id__icontains=search_query)
         )
     
-    # Check if PDF export is requested
+    # Check if PDF export is requested - SIMPLIFIED
     if 'export' in request.GET and request.GET.get('export') == 'pdf':
-        return export_audit_logs_pdf(request, logs)
+        return export_audit_logs_pdf_simple(request, logs)
     
     # Get summary statistics
     today_logs = logs.filter(timestamp__date=datetime.now().date()).count()
@@ -159,9 +157,9 @@ def audit_log_detail(request, log_id):
         timestamp__date=datetime.now().date()
     ).count() if log.user else 0
     
-    # Check if PDF download is requested
+    # Check if PDF download is requested - SIMPLIFIED
     if 'download' in request.GET and request.GET.get('download') == 'pdf':
-        return download_audit_log_pdf(request, log, old_values, new_values)
+        return download_audit_log_pdf_simple(request, log, old_values, new_values)
     
     context = {
         'log': log,
@@ -174,200 +172,176 @@ def audit_log_detail(request, log_id):
     
     return render(request, 'audit/audit_log_detail.html', context)
 
-def export_audit_logs_pdf(request, queryset):
-    """Export audit logs to PDF with filters preserved"""
-    response = HttpResponse(content_type='application/pdf')
-    filename = f"audit_logs_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-    response['Content-Disposition'] = f'attachment; filename="{filename}"'
-    
-    # Get filter parameters for the PDF header
-    user_filter = request.GET.get('user', '')
-    module_filter = request.GET.get('module', '')
-    action_filter = request.GET.get('action', '')
-    date_from = request.GET.get('date_from', '')
-    date_to = request.GET.get('date_to', '')
-    time_period = request.GET.get('time_period', '')
-    
-    # Create the PDF object
-    buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=landscape(letter))
-    elements = []
-    
-    # Define styles
-    styles = getSampleStyleSheet()
-    title_style = ParagraphStyle(
-        'CustomTitle',
-        parent=styles['Heading1'],
-        fontSize=16,
-        spaceAfter=20,
-        alignment=1  # Center aligned
-    )
-    subtitle_style = ParagraphStyle(
-        'CustomSubtitle',
-        parent=styles['Normal'],
-        fontSize=10,
-        spaceAfter=15,
-        alignment=1
-    )
-    filter_style = ParagraphStyle(
-        'FilterStyle',
-        parent=styles['Normal'],
-        fontSize=9,
-        spaceAfter=10,
-        alignment=0
-    )
-    
-    # Add title
-    elements.append(Paragraph("Audit Logs Export - Cornel Simba", title_style))
-    elements.append(Paragraph(f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", subtitle_style))
-    
-    # Add filter information
-    filter_info = []
-    if time_period:
-        period_map = {
-            'today': 'Today',
-            'yesterday': 'Yesterday',
-            'week': 'Last 7 days',
-            'month': 'Last 30 days',
-            'quarter': 'Last 90 days',
-            'year': 'Last 365 days'
-        }
-        filter_info.append(f"Time Period: {period_map.get(time_period, time_period)}")
-    if user_filter:
-        filter_info.append(f"User: {user_filter}")
-    if module_filter:
-        filter_info.append(f"Module: {module_filter}")
-    if action_filter:
-        filter_info.append(f"Action: {action_filter}")
-    if date_from:
-        filter_info.append(f"From: {date_from}")
-    if date_to:
-        filter_info.append(f"To: {date_to}")
-    
-    if filter_info:
-        elements.append(Paragraph("Filters Applied: " + " | ".join(filter_info), filter_style))
-    
-    elements.append(Spacer(1, 0.2*inch))
-    
-    # Prepare table data
-    data = [['ID', 'Date & Time', 'User', 'Action', 'Module', 'Object Type', 'Object ID', 'Description', 'IP Address']]
-    
-    for log in queryset:
-        data.append([
-            str(log.id),
-            log.timestamp.strftime('%Y-%m-%d %H:%M'),
-            log.user.username if log.user else 'System',
-            log.get_action_display(),
-            log.get_module_display(),
-            log.object_type or '-',
-            str(log.object_id) if log.object_id else '-',
-            (log.description or '-')[:50] + '...' if len(log.description or '') > 50 else (log.description or '-'),
-            log.ip_address or '-'
-        ])
-    
-    # Create table
-    table = Table(data)
-    table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#34495e')),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, 0), 9),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.white),
-        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-        ('FONTSIZE', (0, 1), (-1, -1), 8),
-        ('TOPPADDING', (0, 1), (-1, -1), 4),
-        ('BOTTOMPADDING', (0, 1), (-1, -1), 4),
-        ('LEFTPADDING', (0, 0), (-1, -1), 6),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 6),
-    ]))
-    
-    elements.append(table)
-    elements.append(Spacer(1, 0.2*inch))
-    elements.append(Paragraph(f"Total Records: {queryset.count()}", styles['Normal']))
-    elements.append(Paragraph(f"Page 1 of 1", styles['Normal']))
-    
-    # Build PDF
-    doc.build(elements)
-    pdf = buffer.getvalue()
-    buffer.close()
-    
-    response.write(pdf)
-    return response
+# ================= SIMPLIFIED PDF FUNCTIONS =================
 
-def download_audit_log_pdf(request, log, old_values, new_values):
-    """
-    Safe PDF download for single audit log.
-    Ensures ReportLab only gets strings, no dicts or objects.
-    """
-
-    response = HttpResponse(content_type='application/pdf')
-    filename = f"audit_log_{log.id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-    response['Content-Disposition'] = f'attachment; filename="{filename}"'
-
-    buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter)
-
-    styles = getSampleStyleSheet()
-    elements = []
-
-    # Title
-    elements.append(Paragraph(f"Audit Log Detail - Cornel Simba", styles['Heading1']))
-    elements.append(Spacer(1, 12))
-
-    # Log basic info
-    basic_info = [
-        f"<b>Log ID:</b> {log.id}",
-        f"<b>Date:</b> {log.timestamp.strftime('%Y-%m-%d %H:%M:%S')}",
-        f"<b>User:</b> {log.user.username if log.user else 'System'}",
-        f"<b>Action:</b> {log.get_action_display()}",
-        f"<b>Module:</b> {log.get_module_display()}",
-        f"<b>Object Type:</b> {log.object_type or '-'}",
-        f"<b>Object ID:</b> {str(log.object_id) if log.object_id else '-'}",
-        f"<b>IP Address:</b> {log.ip_address or '-'}",
-        f"<b>Description:</b> {log.description or '-'}",
-    ]
-    for info in basic_info:
-        elements.append(Paragraph(info, styles['Normal']))
-        elements.append(Spacer(1, 6))
-
-    # Old values
-    elements.append(Spacer(1, 12))
-    elements.append(Paragraph("<b>Old Values:</b>", styles['Heading2']))
-    if old_values:
-        try:
-            old_text = json.dumps(old_values, indent=2) if isinstance(old_values, dict) else str(old_values)
-        except:
-            old_text = str(old_values)
-    else:
-        old_text = "-"
-    elements.append(Paragraph(old_text.replace('\n', '<br/>'), styles['Normal']))
-
-    # New values
-    elements.append(Spacer(1, 12))
-    elements.append(Paragraph("<b>New Values:</b>", styles['Heading2']))
-    if new_values:
-        try:
-            new_text = json.dumps(new_values, indent=2) if isinstance(new_values, dict) else str(new_values)
-        except:
-            new_text = str(new_values)
-    else:
-        new_text = "-"
-    elements.append(Paragraph(new_text.replace('\n', '<br/>'), styles['Normal']))
-
-    # Footer
-    elements.append(Spacer(1, 20))
-    elements.append(Paragraph(f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", styles['Italic']))
-
+def export_audit_logs_pdf_simple(request, queryset):
+    """Simple and reliable PDF export for production"""
     try:
+        # Log for debugging
+        logger.info(f"PDF export requested, {queryset.count()} records")
+        
+        response = HttpResponse(content_type='application/pdf')
+        filename = f"audit_logs_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        
+        # Create the PDF using reportlab directly (no xhtml2pdf)
+        buffer = BytesIO()
+        
+        # Use A4 landscape
+        doc = SimpleDocTemplate(buffer, pagesize=landscape(A4))
+        elements = []
+        
+        # Simple styles
+        styles = getSampleStyleSheet()
+        
+        # Title
+        title = Paragraph("Audit Logs Report - Cornel Simba", styles['Title'])
+        elements.append(title)
+        
+        # Generation date
+        date_str = Paragraph(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}", styles['Normal'])
+        elements.append(date_str)
+        elements.append(Spacer(1, 20))
+        
+        # Basic table with limited columns for reliability
+        data = [['Timestamp', 'User', 'Action', 'Module', 'Description']]
+        
+        # Limit to 100 records for performance
+        for log in queryset[:100]:
+            # Clean and truncate description
+            desc = (log.description or '')[:80]
+            if len(log.description or '') > 80:
+                desc = desc + "..."
+                
+            data.append([
+                log.timestamp.strftime('%Y-%m-%d %H:%M'),
+                log.user.username[:15] if log.user else 'System',
+                log.get_action_display(),
+                log.get_module_display(),
+                desc
+            ])
+        
+        # Create table
+        table = Table(data, colWidths=[2*inch, 1.5*inch, 1*inch, 1.5*inch, 4*inch])
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('FONTSIZE', (0, 1), (-1, -1), 9),
+        ]))
+        
+        elements.append(table)
+        elements.append(Spacer(1, 20))
+        
+        # Footer with count
+        footer = Paragraph(f"Total records found: {queryset.count()}", styles['Normal'])
+        elements.append(footer)
+        
+        # Build PDF
         doc.build(elements)
-    except Exception as e:
-        # Debugging: write error to response (remove in production)
-        response = HttpResponse(f"PDF generation failed: {e}", content_type='text/plain')
+        pdf = buffer.getvalue()
+        buffer.close()
+        
+        response.write(pdf)
+        logger.info(f"PDF generated successfully: {filename}")
         return response
+        
+    except Exception as e:
+        logger.error(f"PDF export error: {str(e)}")
+        # Return simple error
+        return HttpResponse(f"Error generating PDF: {str(e)}", status=500)
 
-    pdf = buffer.getvalue()
-    buffer.close()
-    response.write(pdf)
-    return response
+def download_audit_log_pdf_simple(request, log, old_values, new_values):
+    """Simple PDF download for single log"""
+    try:
+        logger.info(f"Single log PDF requested for log ID: {log.id}")
+        
+        response = HttpResponse(content_type='application/pdf')
+        filename = f"audit_log_{log.id}.pdf"
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        
+        # Create PDF directly with reportlab (no HTML template)
+        buffer = BytesIO()
+        
+        # Create canvas
+        c = canvas.Canvas(buffer, pagesize=A4)
+        width, height = A4
+        
+        # Title
+        c.setFont("Helvetica-Bold", 16)
+        c.drawString(50, height - 50, "Audit Log Details - Cornel Simba")
+        
+        c.setFont("Helvetica", 10)
+        c.drawString(50, height - 70, f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        
+        # Log details
+        y_position = height - 100
+        
+        details = [
+            f"Log ID: {log.id}",
+            f"Timestamp: {log.timestamp.strftime('%Y-%m-%d %H:%M:%S')}",
+            f"User: {log.user.username if log.user else 'System'}",
+            f"Module: {log.get_module_display()}",
+            f"Action: {log.get_action_display()}",
+            f"Object Type: {log.object_type or 'N/A'}",
+            f"Object ID: {log.object_id or 'N/A'}",
+            f"IP Address: {log.ip_address or 'N/A'}",
+            f"Browser: {log.browser_info or 'N/A'}",
+        ]
+        
+        # Add details
+        c.setFont("Helvetica-Bold", 12)
+        c.drawString(50, y_position, "Log Information:")
+        y_position -= 20
+        
+        c.setFont("Helvetica", 10)
+        for detail in details:
+            if y_position < 100:  # Check if we need new page
+                c.showPage()
+                y_position = height - 50
+                c.setFont("Helvetica", 10)
+            
+            c.drawString(70, y_position, detail)
+            y_position -= 15
+        
+        # Description
+        y_position -= 10
+        c.setFont("Helvetica-Bold", 12)
+        c.drawString(50, y_position, "Description:")
+        y_position -= 20
+        
+        c.setFont("Helvetica", 10)
+        # Split description into multiple lines if too long
+        desc = log.description or "No description"
+        lines = []
+        while len(desc) > 100:
+            lines.append(desc[:100])
+            desc = desc[100:]
+        if desc:
+            lines.append(desc)
+        
+        for line in lines:
+            if y_position < 100:
+                c.showPage()
+                y_position = height - 50
+                c.setFont("Helvetica", 10)
+            c.drawString(70, y_position, line)
+            y_position -= 15
+        
+        # Save PDF
+        c.save()
+        pdf = buffer.getvalue()
+        buffer.close()
+        
+        response.write(pdf)
+        logger.info(f"Single log PDF generated: {filename}")
+        return response
+        
+    except Exception as e:
+        logger.error(f"Single log PDF error: {str(e)}")
+        return HttpResponse(f"Error generating PDF: {str(e)}", status=500)

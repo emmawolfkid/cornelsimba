@@ -495,10 +495,11 @@
                 <i class="fas fa-home"></i>
                 <span>Dashboard</span>
             </a>
-            <button onclick="exportToPDF()" class="action-btn primary">
-                <i class="fas fa-file-pdf"></i>
-                <span>Export PDF</span>
-            </button>
+            <a href="?download=pdf" class="action-btn primary">
+    <i class="fas fa-file-pdf"></i>
+    <span>Download PDF</span>
+</a>
+
             <button onclick="window.print()" class="action-btn warning">
                 <i class="fas fa-print"></i>
                 <span>Print</span>
@@ -776,73 +777,23 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/audit-detail.js' %}"></script>
 <script>
-    // Export to PDF
-    function exportToPDF() {
-        const overlay = document.getElementById('loadingOverlay');
-        const message = document.getElementById('loadingMessage');
-        
-        if (message) {
-            message.textContent = 'Generating PDF document...';
-        }
-        
-        if (overlay) {
-            overlay.style.display = 'flex';
-        }
-        
-        // Open PDF in new tab
-        setTimeout(() => {
-            window.open('?download=pdf', '_blank');
-            if (overlay) {
-                overlay.style.display = 'none';
-            }
-        }, 1000);
-    }
-    
     // IP Lookup
     function lookupIP(ip) {
-        if (confirm(`Look up IP address: ${ip}?\nThis will open an external site.`)) {
-            window.open(`https://whatismyipaddress.com/ip/${ip}`, '_blank');
-        }
+        window.open(`https://whatismyipaddress.com/ip/${ip}`, '_blank');
     }
     
-    // Copy log details to clipboard
-    function copyLogDetails() {
-        const details = `Audit Log #{{ log.id }}
-Timestamp: {{ log.timestamp }}
-User: {{ log.user.username|default:"System" }}
-Action: {{ log.get_action_display }}
-Module: {{ log.get_module_display }}
-Description: {{ log.description }}
-IP: {{ log.ip_address|default:"N/A" }}
-Object: {{ log.object_type|default:"N/A" }} {% if log.object_id %}#{{ log.object_id }}{% endif %}`;
-        
-        navigator.clipboard.writeText(details).then(() => {
-            alert('Log details copied to clipboard!');
-        }).catch(err => {
-            console.error('Copy failed:', err);
-            alert('Failed to copy details');
-        });
-    }
-    
-    // Calculate page load stats
+    // Show loading for PDF download
     document.addEventListener('DOMContentLoaded', function() {
-        if (window.performance) {
-            const timing = window.performance.timing;
-            const loadTime = timing.loadEventEnd - timing.navigationStart;
-            const loadTimeEl = document.getElementById('pageLoadTime');
-            if (loadTimeEl) {
-                loadTimeEl.textContent = `Loaded in ${loadTime}ms`;
-            }
-        }
-        
-        // Calculate data size
-        const dataSizeEl = document.getElementById('dataSize');
-        if (dataSizeEl) {
-            const htmlSize = new Blob([document.documentElement.outerHTML]).size;
-            const sizeInKB = (htmlSize / 1024).toFixed(1);
-            dataSizeEl.textContent = `${sizeInKB} KB`;
+        const pdfButton = document.querySelector('a[href*="download=pdf"]');
+        if (pdfButton) {
+            pdfButton.addEventListener('click', function() {
+                const overlay = document.getElementById('loadingOverlay');
+                if (overlay) {
+                    overlay.style.display = 'flex';
+                    setTimeout(() => overlay.style.display = 'none', 10000);
+                }
+            });
         }
     });
 </script>

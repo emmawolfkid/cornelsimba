@@ -191,59 +191,44 @@
         </form>
     </section>
 
-    <!-- Export Section -->
-    <section class="export-section">
-        <div class="export-header">
-            <h2>
-                <i class="fas fa-file-export"></i>
-                Export & Download Options
-            </h2>
-            <div class="export-options">
-                <button class="export-btn pdf" onclick="downloadCurrentView()">
-                    <i class="fas fa-file-pdf"></i>
-                    <span>Download PDF</span>
-                </button>
-                <button class="export-btn csv" onclick="downloadCSV()">
-                    <i class="fas fa-file-csv"></i>
-                    <span>Download CSV</span>
-                </button>
-                <button class="export-btn excel" onclick="downloadExcel()">
-                    <i class="fas fa-file-excel"></i>
-                    <span>Download Excel</span>
-                </button>
-                <button class="export-btn print" onclick="printReport()">
-                    <i class="fas fa-print"></i>
-                    <span>Print Report</span>
-                </button>
+ <!-- Export Section -->
+<section class="export-section">
+    <div class="export-header">
+        <h2>
+            <i class="fas fa-file-export"></i>
+            Export Options
+        </h2>
+        <div class="export-options">
+            <button class="export-btn pdf" onclick="downloadCurrentView()">
+                <i class="fas fa-file-pdf"></i>
+                <span>Download PDF</span>
+            </button>
+            <button class="export-btn print" onclick="printReport()">
+                <i class="fas fa-print"></i>
+                <span>Print</span>
+            </button>
+        </div>
+    </div>
+
+    
+    <!-- Export Information -->
+    <div class="export-info">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+            <i class="fas fa-info-circle"></i>
+            <strong>Download Information:</strong>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; font-size: 0.85rem;">
+            <div>
+                <i class="fas fa-file-pdf" style="color: #e74c3c;"></i>
+                <strong>PDF Download:</strong> Downloads all filtered records as PDF
+            </div>
+            <div>
+                <i class="fas fa-print" style="color: #f39c12;"></i>
+                <strong>Print:</strong> Prints current page view
             </div>
         </div>
-        
-        <!-- Export Information -->
-        <div class="export-info" style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 15px; font-size: 0.9rem; color: #7f8c8d;">
-            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
-                <i class="fas fa-info-circle"></i>
-                <strong>Download Options:</strong>
-            </div>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; font-size: 0.85rem;">
-                <div>
-                    <i class="fas fa-file-pdf" style="color: #e74c3c;"></i>
-                    <strong>PDF:</strong> For printing and sharing
-                </div>
-                <div>
-                    <i class="fas fa-file-csv" style="color: #3498db;"></i>
-                    <strong>CSV:</strong> For data analysis
-                </div>
-                <div>
-                    <i class="fas fa-file-excel" style="color: #27ae60;"></i>
-                    <strong>Excel:</strong> For spreadsheet editing
-                </div>
-                <div>
-                    <i class="fas fa-print" style="color: #f39c12;"></i>
-                    <strong>Print:</strong> For physical copies
-                </div>
-            </div>
-        </div>
-    </section>
+    </div>
+</section>
 
     <!-- Audit Logs -->
     <section class="logs-container">
@@ -501,7 +486,7 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <h3 style="color: #2c3e50; display: flex; align-items: center; gap: 10px;">
                 <i class="fas fa-download"></i>
-                Download Options
+                PDF Download Options
             </h3>
             <button onclick="document.getElementById('downloadInfoModal').style.display = 'none'" style="background: none; border: none; font-size: 1.5rem; color: #7f8c8d; cursor: pointer;">
                 &times;
@@ -509,46 +494,31 @@
         </div>
         
         <div style="margin-bottom: 25px;">
-            <p style="color: #7f8c8d; margin-bottom: 15px;">Choose your preferred download format:</p>
+            <p style="color: #7f8c8d; margin-bottom: 15px;">Choose what to download:</p>
             
             <div style="display: grid; grid-template-columns: 1fr; gap: 15px;">
-                <button onclick="downloadCurrentView()" style="display: flex; align-items: center; gap: 15px; padding: 15px; background: #f8f9fa; border: 1px solid #ddd; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
+                <button onclick="downloadCurrentView(); document.getElementById('downloadInfoModal').style.display = 'none';" 
+                        style="display: flex; align-items: center; gap: 15px; padding: 15px; background: #f8f9fa; border: 1px solid #ddd; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
                     <div style="background: #e74c3c; color: white; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
-                        <i class="fas fa-file-pdf"></i>
+                        <i class="fas fa-filter"></i>
                     </div>
                     <div style="text-align: left;">
-                        <div style="font-weight: 600; color: #2c3e50;">PDF Document</div>
-                        <div style="font-size: 0.9rem; color: #7f8c8d;">Best for printing and sharing</div>
+                        <div style="font-weight: 600; color: #2c3e50;">Download Filtered Results</div>
+                        <div style="font-size: 0.9rem; color: #7f8c8d;">Current search & filter results</div>
                     </div>
                 </button>
                 
-                <button onclick="downloadCSV()" style="display: flex; align-items: center; gap: 15px; padding: 15px; background: #f8f9fa; border: 1px solid #ddd; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
-                    <div style="background: #3498db; color: white; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
-                        <i class="fas fa-file-csv"></i>
+                <button onclick="downloadAllLogs(); document.getElementById('downloadInfoModal').style.display = 'none';" 
+                        style="display: flex; align-items: center; gap: 15px; padding: 15px; background: #f8f9fa; border: 1px solid #ddd; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
+                    <div style="background: #9b59b6; color: white; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                        <i class="fas fa-database"></i>
                     </div>
                     <div style="text-align: left;">
-                        <div style="font-weight: 600; color: #2c3e50;">CSV File</div>
-                        <div style="font-size: 0.9rem; color: #7f8c8d;">Best for data analysis</div>
-                    </div>
-                </button>
-                
-                <button onclick="downloadExcel()" style="display: flex; align-items: center; gap: 15px; padding: 15px; background: #f8f9fa; border: 1px solid #ddd; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
-                    <div style="background: #27ae60; color: white; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
-                        <i class="fas fa-file-excel"></i>
-                    </div>
-                    <div style="text-align: left;">
-                        <div style="font-weight: 600; color: #2c3e50;">Excel Spreadsheet</div>
-                        <div style="font-size: 0.9rem; color: #7f8c8d;">Best for spreadsheet editing</div>
+                        <div style="font-weight: 600; color: #2c3e50;">Download ALL Logs</div>
+                        <div style="font-size: 0.9rem; color: #7f8c8d;">Ignore filters, download everything</div>
                     </div>
                 </button>
             </div>
-        </div>
-        
-        <div style="border-top: 1px solid #eaeaea; padding-top: 15px;">
-            <button onclick="downloadAllLogs()" style="width: 100%; padding: 12px; background: #9b59b6; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 10px;">
-                <i class="fas fa-download"></i>
-                Download ALL Logs (Ignore Filters)
-            </button>
         </div>
     </div>
 </div>
@@ -559,7 +529,9 @@
         100% { transform: rotate(360deg); }
     }
 </style>
-{% block extra_js %}
+
+
+{{% block extra_js %}
 <script>
     // Filter toggle for mobile
     document.getElementById('filterToggle').addEventListener('click', function() {
@@ -569,119 +541,37 @@
     // Time period filter
     function setTimePeriod(period) {
         document.getElementById('timePeriod').value = period;
-        
-        // Update active chip
-        document.querySelectorAll('.filter-chip').forEach(chip => {
-            chip.classList.remove('active');
-            if (chip.textContent.includes(period.charAt(0).toUpperCase() + period.slice(1))) {
-                chip.classList.add('active');
-            }
-        });
-        
-        // Submit form
         document.getElementById('auditFilterForm').submit();
     }
     
     // Clear all filters
     function clearAllFilters() {
-        if (confirm('Clear all filters and search criteria?')) {
+        if (confirm('Clear all filters?')) {
             window.location.href = "{% url 'audit:audit_logs' %}";
         }
     }
     
-    // ========== DOWNLOAD FUNCTIONS ==========
+    // ========== PDF DOWNLOAD FUNCTIONS ==========
     
-    // Download current view as PDF
     function downloadCurrentView() {
-        showLoading('Preparing PDF download...');
-        setTimeout(() => {
-            const params = new URLSearchParams(window.location.search);
-            params.set('download', 'pdf');
-            params.set('filtered', 'true');
-            // Force download instead of opening in new tab
-            const link = document.createElement('a');
-            link.href = '?' + params.toString();
-            link.download = `audit-logs-${new Date().toISOString().split('T')[0]}.pdf`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            hideLoading();
-            
-            // Show success notification
-            showNotification('success', 'PDF Download Started', 'Your PDF file is being downloaded.');
-        }, 1000);
+        showLoading('Generating PDF...');
+        const url = new URL(window.location);
+        url.searchParams.set('export', 'pdf');
+        window.location.href = url.toString();
     }
     
-    // Download as CSV
-    function downloadCSV() {
-        showLoading('Preparing CSV download...');
-        setTimeout(() => {
-            const params = new URLSearchParams(window.location.search);
-            params.set('download', 'csv');
-            params.set('filtered', 'true');
-            const link = document.createElement('a');
-            link.href = '?' + params.toString();
-            link.download = `audit-logs-${new Date().toISOString().split('T')[0]}.csv`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            hideLoading();
-            
-            showNotification('success', 'CSV Download Started', 'Your CSV file is being downloaded.');
-        }, 1000);
-    }
-    
-    // Download as Excel
-    function downloadExcel() {
-        showLoading('Preparing Excel download...');
-        setTimeout(() => {
-            const params = new URLSearchParams(window.location.search);
-            params.set('download', 'excel');
-            params.set('filtered', 'true');
-            const link = document.createElement('a');
-            link.href = '?' + params.toString();
-            link.download = `audit-logs-${new Date().toISOString().split('T')[0]}.xlsx`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            hideLoading();
-            
-            showNotification('success', 'Excel Download Started', 'Your Excel file is being downloaded.');
-        }, 1000);
-    }
-    
-    // Print report
-    function printReport() {
-        showNotification('info', 'Print Preview', 'Opening print dialog...');
-        setTimeout(() => {
-            window.print();
-        }, 500);
-    }
-    
-    // Download all logs (regardless of filters)
     function downloadAllLogs() {
-        if (confirm('Download ALL audit logs (ignoring current filters)? This may take a while for large datasets.')) {
-            showLoading('Preparing full download...');
-            setTimeout(() => {
-                const params = new URLSearchParams();
-                params.set('download', 'pdf');
-                params.set('filtered', 'false');
-                const link = document.createElement('a');
-                link.href = '?' + params.toString();
-                link.download = `all-audit-logs-${new Date().toISOString().split('T')[0]}.pdf`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                hideLoading();
-                
-                showNotification('success', 'Full Download Started', 'All audit logs are being downloaded.');
-            }, 1500);
+        if (confirm('Download ALL audit logs?')) {
+            showLoading('Generating PDF...');
+            window.location.href = "{% url 'audit:audit_logs' %}?export=pdf";
         }
     }
     
-    // Page size change
+    function printReport() {
+        window.print();
+    }
+    
     function changePageSize(size) {
-        showLoading('Changing page size...');
         const url = new URL(window.location);
         url.searchParams.set('page_size', size);
         url.searchParams.set('page', '1');
@@ -690,147 +580,23 @@
     
     // ========== UTILITY FUNCTIONS ==========
     
-    // Loading functions
     function showLoading(message) {
         const overlay = document.getElementById('loadingOverlay');
         const messageEl = document.getElementById('loadingMessage');
-        
-        if (messageEl && message) {
-            messageEl.textContent = message;
-        }
-        
+        if (messageEl) messageEl.textContent = message;
         if (overlay) {
             overlay.style.display = 'flex';
+            setTimeout(() => overlay.style.display = 'none', 10000);
         }
     }
     
     function hideLoading() {
         const overlay = document.getElementById('loadingOverlay');
-        if (overlay) {
-            overlay.style.display = 'none';
-        }
+        if (overlay) overlay.style.display = 'none';
     }
     
-    // Notification system
-    function showNotification(type, title, message) {
-        // Create notification container if it doesn't exist
-        let container = document.getElementById('notificationContainer');
-        if (!container) {
-            container = document.createElement('div');
-            container.id = 'notificationContainer';
-            container.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; max-width: 400px; width: 90%;';
-            document.body.appendChild(container);
-        }
-        
-        // Create notification
-        const notification = document.createElement('div');
-        notification.className = `notification ${type}`;
-        notification.style.cssText = 'background: white; border-radius: 8px; padding: 15px; margin-bottom: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; align-items: flex-start; gap: 12px; border-left: 4px solid #3498db; animation: slideInRight 0.3s ease;';
-        
-        // Set border color based on type
-        if (type === 'success') notification.style.borderLeftColor = '#27ae60';
-        if (type === 'error') notification.style.borderLeftColor = '#e74c3c';
-        if (type === 'warning') notification.style.borderLeftColor = '#f39c12';
-        if (type === 'info') notification.style.borderLeftColor = '#3498db';
-        
-        // Set icon based on type
-        let icon = 'fa-info-circle';
-        if (type === 'success') icon = 'fa-check-circle';
-        if (type === 'error') icon = 'fa-exclamation-circle';
-        if (type === 'warning') icon = 'fa-exclamation-triangle';
-        
-        notification.innerHTML = `
-            <div style="font-size: 1.2rem; color: inherit;">
-                <i class="fas ${icon}"></i>
-            </div>
-            <div style="flex: 1;">
-                <div style="font-weight: 600; margin-bottom: 4px;">${title}</div>
-                <div style="font-size: 0.9rem; color: #666;">${message}</div>
-            </div>
-            <button onclick="this.parentElement.remove()" style="background: none; border: none; color: #999; cursor: pointer; font-size: 1rem; padding: 4px;">
-                <i class="fas fa-times"></i>
-            </button>
-        `;
-        
-        container.appendChild(notification);
-        
-        // Auto-remove after 5 seconds
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.style.opacity = '0';
-                notification.style.transform = 'translateX(100%)';
-                setTimeout(() => {
-                    if (notification.parentNode) {
-                        notification.remove();
-                    }
-                }, 300);
-            }
-        }, 5000);
-    }
-    
-    // Handle responsive table/card view
-    function checkViewport() {
-        const mobileView = document.querySelector('.mobile-logs-view');
-        const tableView = document.querySelector('.table-container');
-        
-        if (window.innerWidth <= 768) {
-            // Mobile view
-            if (mobileView) mobileView.style.display = 'flex';
-            if (tableView) tableView.style.display = 'none';
-        } else {
-            // Desktop view
-            if (mobileView) mobileView.style.display = 'none';
-            if (tableView) tableView.style.display = 'block';
-        }
-    }
-    
-    // Add CSS animation for notifications
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes slideInRight {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-    `;
-    document.head.appendChild(style);
-    
-    // Initial check
-    checkViewport();
-    
-    // Check on resize
-    window.addEventListener('resize', checkViewport);
-    
-    // Auto-hide loading after 10 seconds (safety)
-    setTimeout(hideLoading, 10000);
-    
-    // Form submission loading
     document.getElementById('auditFilterForm').addEventListener('submit', function() {
         showLoading('Applying filters...');
     });
-    
-    // Add download all button to page header (optional)
-    function addDownloadAllButton() {
-        const headerActions = document.querySelector('.header-actions');
-        if (headerActions) {
-            const downloadAllBtn = document.createElement('button');
-            downloadAllBtn.className = 'header-btn';
-            downloadAllBtn.style.background = '#9b59b6';
-            downloadAllBtn.innerHTML = '<i class="fas fa-download"></i><span>Download All</span>';
-            downloadAllBtn.onclick = downloadAllLogs;
-            headerActions.appendChild(downloadAllBtn);
-        }
-    }
-    
-    // Add the button after page loads
-    document.addEventListener('DOMContentLoaded', function() {
-        addDownloadAllButton();
-    });
 </script>
-{% endblock %}
 {% endblock %}
