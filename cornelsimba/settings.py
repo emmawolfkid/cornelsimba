@@ -190,7 +190,7 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 
-EMAIL_HOST_USER = 'emmawolfgang90@gmail.com'
-EMAIL_HOST_PASSWORD = 'piagxpvoatfnealy'
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
 
-DEFAULT_FROM_EMAIL = 'Cornel Simba System <yourgmail@gmail.com>'
+DEFAULT_FROM_EMAIL = 'Cornel Simba System <emmawolfgang90@gmail.com>'
