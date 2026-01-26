@@ -297,10 +297,13 @@ def export_audit_logs_pdf(request, queryset):
     return response
 
 def download_audit_log_pdf(request, log, old_values, new_values):
-    """Download single audit log as PDF (Render-safe)"""
+    """
+    Safe PDF download for single audit log.
+    Ensures ReportLab only gets strings, no dicts or objects.
+    """
 
     response = HttpResponse(content_type='application/pdf')
-    filename = f"audit_log_{log.id}_{datetime.now().strftime('%Y%m%d')}.pdf"
+    filename = f"audit_log_{log.id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
 
     buffer = BytesIO()
@@ -309,36 +312,62 @@ def download_audit_log_pdf(request, log, old_values, new_values):
     styles = getSampleStyleSheet()
     elements = []
 
-    elements.append(Paragraph("Audit Log Detail - Cornel Simba", styles['Heading1']))
+    # Title
+    elements.append(Paragraph(f"Audit Log Detail - Cornel Simba", styles['Heading1']))
     elements.append(Spacer(1, 12))
 
-    elements.append(Paragraph(f"<b>Log ID:</b> {log.id}", styles['Normal']))
-    elements.append(Paragraph(f"<b>Date:</b> {log.timestamp}", styles['Normal']))
-    elements.append(Paragraph(f"<b>User:</b> {log.user.username if log.user else 'System'}", styles['Normal']))
-    elements.append(Paragraph(f"<b>Action:</b> {log.get_action_display()}", styles['Normal']))
-    elements.append(Paragraph(f"<b>Module:</b> {log.get_module_display()}", styles['Normal']))
-    elements.append(Paragraph(f"<b>Description:</b> {log.description}", styles['Normal']))
-    elements.append(Spacer(1, 12))
+    # Log basic info
+    basic_info = [
+        f"<b>Log ID:</b> {log.id}",
+        f"<b>Date:</b> {log.timestamp.strftime('%Y-%m-%d %H:%M:%S')}",
+        f"<b>User:</b> {log.user.username if log.user else 'System'}",
+        f"<b>Action:</b> {log.get_action_display()}",
+        f"<b>Module:</b> {log.get_module_display()}",
+        f"<b>Object Type:</b> {log.object_type or '-'}",
+        f"<b>Object ID:</b> {str(log.object_id) if log.object_id else '-'}",
+        f"<b>IP Address:</b> {log.ip_address or '-'}",
+        f"<b>Description:</b> {log.description or '-'}",
+    ]
+    for info in basic_info:
+        elements.append(Paragraph(info, styles['Normal']))
+        elements.append(Spacer(1, 6))
 
     # Old values
-    elements.append(Paragraph("Old Values", styles['Heading3']))
-    elements.append(Paragraph(str(old_values) if old_values else "-", styles['Normal']))
-    elements.append(Spacer(1, 10))
+    elements.append(Spacer(1, 12))
+    elements.append(Paragraph("<b>Old Values:</b>", styles['Heading2']))
+    if old_values:
+        try:
+            old_text = json.dumps(old_values, indent=2) if isinstance(old_values, dict) else str(old_values)
+        except:
+            old_text = str(old_values)
+    else:
+        old_text = "-"
+    elements.append(Paragraph(old_text.replace('\n', '<br/>'), styles['Normal']))
 
     # New values
-    elements.append(Paragraph("New Values", styles['Heading3']))
-    elements.append(Paragraph(str(new_values) if new_values else "-", styles['Normal']))
-    elements.append(Spacer(1, 10))
+    elements.append(Spacer(1, 12))
+    elements.append(Paragraph("<b>New Values:</b>", styles['Heading2']))
+    if new_values:
+        try:
+            new_text = json.dumps(new_values, indent=2) if isinstance(new_values, dict) else str(new_values)
+        except:
+            new_text = str(new_values)
+    else:
+        new_text = "-"
+    elements.append(Paragraph(new_text.replace('\n', '<br/>'), styles['Normal']))
 
-    elements.append(Paragraph(
-        f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
-        styles['Italic']
-    ))
+    # Footer
+    elements.append(Spacer(1, 20))
+    elements.append(Paragraph(f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", styles['Italic']))
 
-    doc.build(elements)
+    try:
+        doc.build(elements)
+    except Exception as e:
+        # Debugging: write error to response (remove in production)
+        response = HttpResponse(f"PDF generation failed: {e}", content_type='text/plain')
+        return response
 
     pdf = buffer.getvalue()
     buffer.close()
-
     response.write(pdf)
     return response
