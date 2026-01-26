@@ -136,6 +136,11 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+AUTHENTICATION_BACKENDS = [
+    'accounts.backends.EmailOrUsernameBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
@@ -173,3 +178,19 @@ LOGOUT_REDIRECT_URL = '/accounts/login/'  # Optional: redirect after logout
 
 
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
+
+# ======================
+# EMAIL CONFIGURATION
+# ======================
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+
+EMAIL_HOST_USER = 'emmawolfgang90@gmail.com'
+EMAIL_HOST_PASSWORD = 'piagxpvoatfnealy'
+
+DEFAULT_FROM_EMAIL = 'Cornel Simba System <yourgmail@gmail.com>'
