@@ -4,6 +4,18 @@ from audit.models import AuditLog
 from django.utils import timezone
 from django.db.models import Count
 
+from accounts.constants import (
+    GROUP_ADMIN,
+    GROUP_MANAGER,
+    GROUP_HR,
+    GROUP_FINANCE,
+    GROUP_INVENTORY,
+    GROUP_PROCUREMENT,
+    GROUP_SALES,
+    GROUP_AUDITOR,
+)
+
+
 # Import your HR models
 try:
     from hr.models import Employee, LeaveRequest, LeaveType
@@ -40,29 +52,38 @@ def main_dashboard(request):
             'module_activity': module_activity,
             'recent_audit_logs': recent_audit_logs,
         }
-
-    # Determine access based on groups - FIXED GROUP NAMES (no spaces)
-    if user.is_superuser or user.groups.filter(name='Administrator').exists():
-        modules = ['HR', 'Finance', 'Inventory', 'Procurement', 'Sales', 'Audit']
-
+    
+    # ===============================
+    # DASHBOARD MODULE ACCESS CONTROL
+    # ===============================
+    
+    if user.is_superuser or user.groups.filter(name=GROUP_ADMIN).exists():
+        modules.update([
+            'HR',
+            'Finance',
+            'Inventory',
+            'Procurement',
+            'Sales',
+            'Audit',
+        ])
     else:
-     if user.groups.filter(name='HR').exists():
-        modules.add('HR')
+        if user.groups.filter(name=GROUP_HR).exists():
+            modules.add('HR')
 
-    if user.groups.filter(name='Finance').exists():
-        modules.update(['Finance'])
+        if user.groups.filter(name=GROUP_FINANCE).exists():
+            modules.add('Finance')
 
-    if user.groups.filter(name='Procurement').exists():
-        modules.add('Procurement')
+        if user.groups.filter(name=GROUP_INVENTORY).exists():
+            modules.add('Inventory')
 
-    if user.groups.filter(name='Inventory').exists():
-        modules.add('Inventory')
+        if user.groups.filter(name=GROUP_PROCUREMENT).exists():
+            modules.add('Procurement')
 
-    if user.groups.filter(name='Sales').exists():
-        modules.add('Sales')
+        if user.groups.filter(name=GROUP_SALES).exists():
+            modules.add('Sales')
 
-    if user.groups.filter(name='Auditor').exists():
-        modules.add('Auditor')
+        if user.groups.filter(name=GROUP_AUDITOR).exists():
+            modules.add('Audit')
 
     # --- LEAVE MANAGEMENT INTEGRATION ---
     user_has_employee = False
