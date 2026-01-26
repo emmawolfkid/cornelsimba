@@ -191,44 +191,43 @@
         </form>
     </section>
 
- <!-- Export Section -->
-<section class="export-section">
-    <div class="export-header">
-        <h2>
-            <i class="fas fa-file-export"></i>
-            Export Options
-        </h2>
-        <div class="export-options">
-            <button class="export-btn pdf" onclick="downloadCurrentView()">
-                <i class="fas fa-file-pdf"></i>
-                <span>Download PDF</span>
-            </button>
-            <button class="export-btn print" onclick="printReport()">
-                <i class="fas fa-print"></i>
-                <span>Print</span>
-            </button>
-        </div>
-    </div>
-
-    
-    <!-- Export Information -->
-    <div class="export-info">
-        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
-            <i class="fas fa-info-circle"></i>
-            <strong>Download Information:</strong>
-        </div>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; font-size: 0.85rem;">
-            <div>
-                <i class="fas fa-file-pdf" style="color: #e74c3c;"></i>
-                <strong>PDF Download:</strong> Downloads all filtered records as PDF
-            </div>
-            <div>
-                <i class="fas fa-print" style="color: #f39c12;"></i>
-                <strong>Print:</strong> Prints current page view
+    <!-- Export Section -->
+    <section class="export-section">
+        <div class="export-header">
+            <h2>
+                <i class="fas fa-file-export"></i>
+                Export Options
+            </h2>
+            <div class="export-options">
+                <button class="export-btn pdf" onclick="downloadCurrentView()">
+                    <i class="fas fa-file-pdf"></i>
+                    <span>Download PDF</span>
+                </button>
+                <button class="export-btn print" onclick="printReport()">
+                    <i class="fas fa-print"></i>
+                    <span>Print</span>
+                </button>
             </div>
         </div>
-    </div>
-</section>
+        
+        <!-- Export Information -->
+        <div class="export-info">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+                <i class="fas fa-info-circle"></i>
+                <strong>Download Information:</strong>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; font-size: 0.85rem;">
+                <div>
+                    <i class="fas fa-file-pdf" style="color: #e74c3c;"></i>
+                    <strong>PDF Download:</strong> Downloads all filtered records as PDF
+                </div>
+                <div>
+                    <i class="fas fa-print" style="color: #f39c12;"></i>
+                    <strong>Print:</strong> Prints current page view
+                </div>
+            </div>
+        </div>
+    </section>
 
     <!-- Audit Logs -->
     <section class="logs-container">
@@ -530,8 +529,7 @@
     }
 </style>
 
-
-{{% block extra_js %}
+{% block extra_js %}
 <script>
     // Filter toggle for mobile
     document.getElementById('filterToggle').addEventListener('click', function() {
@@ -600,3 +598,5 @@
     });
 </script>
 {% endblock %}
+
+{% endblock %}  <!-- ADD THIS LINE -->
