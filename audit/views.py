@@ -297,31 +297,48 @@ def export_audit_logs_pdf(request, queryset):
     return response
 
 def download_audit_log_pdf(request, log, old_values, new_values):
-    """Download single audit log as PDF"""
+    """Download single audit log as PDF (Render-safe)"""
+
     response = HttpResponse(content_type='application/pdf')
     filename = f"audit_log_{log.id}_{datetime.now().strftime('%Y%m%d')}.pdf"
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
-    
-    # Create context for template
-    context = {
-        'log': log,
-        'old_values': old_values,
-        'new_values': new_values,
-        'generated_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-    }
-    
-    # Render HTML template
-    html_string = render_to_string('audit/audit_log_pdf.html', context)
-    
-    # Create PDF
-    pdf = BytesIO()
-    pisa_status = pisa.CreatePDF(html_string, dest=pdf)
-    
-    if pisa_status.err:
-        return HttpResponse('We had some errors <pre>' + html_string + '</pre>')
-    
-    pdf.seek(0)
-    response.write(pdf.getvalue())
-    pdf.close()
-    
+
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
+
+    styles = getSampleStyleSheet()
+    elements = []
+
+    elements.append(Paragraph("Audit Log Detail - Cornel Simba", styles['Heading1']))
+    elements.append(Spacer(1, 12))
+
+    elements.append(Paragraph(f"<b>Log ID:</b> {log.id}", styles['Normal']))
+    elements.append(Paragraph(f"<b>Date:</b> {log.timestamp}", styles['Normal']))
+    elements.append(Paragraph(f"<b>User:</b> {log.user.username if log.user else 'System'}", styles['Normal']))
+    elements.append(Paragraph(f"<b>Action:</b> {log.get_action_display()}", styles['Normal']))
+    elements.append(Paragraph(f"<b>Module:</b> {log.get_module_display()}", styles['Normal']))
+    elements.append(Paragraph(f"<b>Description:</b> {log.description}", styles['Normal']))
+    elements.append(Spacer(1, 12))
+
+    # Old values
+    elements.append(Paragraph("Old Values", styles['Heading3']))
+    elements.append(Paragraph(str(old_values) if old_values else "-", styles['Normal']))
+    elements.append(Spacer(1, 10))
+
+    # New values
+    elements.append(Paragraph("New Values", styles['Heading3']))
+    elements.append(Paragraph(str(new_values) if new_values else "-", styles['Normal']))
+    elements.append(Spacer(1, 10))
+
+    elements.append(Paragraph(
+        f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+        styles['Italic']
+    ))
+
+    doc.build(elements)
+
+    pdf = buffer.getvalue()
+    buffer.close()
+
+    response.write(pdf)
     return response
