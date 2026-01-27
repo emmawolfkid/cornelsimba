@@ -197,3 +197,49 @@
 .sidebar-collapsed .main-content {
     margin-left: var(--sidebar-collapsed-width);
 }
+
+/* ============================================
+   MOBILE SIDEBAR STYLES
+   ============================================ */
+
+@media (max-width: 575.98px) {
+    .sidebar {
+        position: fixed;
+        left: -100%;
+        top: 0;
+        bottom: 0;
+        width: 280px !important;
+        max-width: 280px;
+        z-index: 1050;
+        transition: left 0.3s ease;
+        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.2);
+    }
+    
+    .sidebar.active {
+        left: 0;
+    }
+    
+    .sidebar-header {
+        padding: 15px;
+    }
+    
+    .logo h2 {
+        font-size: 1.2rem;
+    }
+    
+    .user-info {
+        padding: 15px;
+    }
+    
+    .sidebar-menu {
+        padding: 10px 0;
+    }
+    
+    .menu-item a {
+        padding: 12px 15px;
+    }
+    
+    .sidebar-footer {
+        padding: 15px;
+    }
+}

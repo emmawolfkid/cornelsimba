@@ -6,6 +6,80 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Finance System{% endblock %}</title>
     
+    <!-- EMERGENCY FIX FOR DARK CARDS -->
+    <style>
+        /* NUCLEAR OPTION - KILL ALL DARK MODE */
+        body.finance-body,
+        body.finance-body * {
+            background-color: white !important;
+            color: #333 !important;
+        }
+        
+        /* Force cards to be white */
+        body.finance-body .stat-card,
+        body.finance-body .card,
+        body.finance-body .dashboard-card {
+            background: white !important;
+            background-color: white !important;
+            color: #333 !important;
+            border: 1px solid #e0e0e0 !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+        }
+        
+        /* Force text colors */
+        body.finance-body .stat-card h3,
+        body.finance-body .amount,
+        body.finance-body .subtext,
+        body.finance-body .card-title {
+            color: #333 !important;
+        }
+        
+        /* Force financial colors */
+        body.finance-body .tsh-amount.income {
+            color: #27ae60 !important;
+        }
+        
+        body.finance-body .tsh-amount.expense {
+            color: #e74c3c !important;
+        }
+        
+        /* Mobile sidebar fix */
+        @media (max-width: 576px) {
+            .sidebar {
+                position: fixed !important;
+                left: -100% !important;
+                top: 0 !important;
+                bottom: 0 !important;
+                width: 280px !important;
+                z-index: 9999 !important;
+                transition: left 0.3s ease !important;
+            }
+            
+            .sidebar.active {
+                left: 0 !important;
+            }
+            
+            .sidebar-toggle-mobile {
+                position: fixed !important;
+                top: 15px !important;
+                left: 15px !important;
+                z-index: 10000 !important;
+                background: #3498db !important;
+                color: white !important;
+                border: none !important;
+                width: 44px !important;
+                height: 44px !important;
+                border-radius: 50% !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                font-size: 1.2rem !important;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.2) !important;
+                cursor: pointer !important;
+            }
+        }
+    </style>
+    
     <!-- External CSS - IMPORTANT ORDER -->
     <link rel="stylesheet" href="{% static 'finance/css/base.css' %}">
     <link rel="stylesheet" href="{% static 'finance/css/sidebar.css' %}">
@@ -21,10 +95,6 @@
     <!-- Mobile Sidebar Overlay -->
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
     
-    <!-- Mobile Menu Toggle Button -->
-    <button class="sidebar-toggle-mobile" id="mobileMenuToggle">
-        <i class="fas fa-bars"></i>
-    </button>
 
     <!-- Notification System -->
     {% if messages %}
@@ -78,69 +148,61 @@
     <script src="{% static 'finance/js/base.js' %}"></script>
     {% block extra_js %}{% endblock %}
     
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Mobile sidebar toggle
-        const mobileToggle = document.getElementById('mobileMenuToggle');
-        const sidebar = document.querySelector('.sidebar');
-        const overlay = document.getElementById('sidebarOverlay');
-        
-        // Show mobile toggle on page load for mobile
-        if (window.innerWidth <= 575.98 && mobileToggle) {
-            mobileToggle.style.display = 'flex';
-        }
-        
-        if (mobileToggle && sidebar) {
-            mobileToggle.addEventListener('click', function() {
+   <script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Finance Dashboard Loaded');
+    
+    // Use the navbar toggle button
+    const mobileToggle = document.getElementById('sidebarToggleMobile');
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    
+    console.log('Elements found:', {
+        mobileToggle: !!mobileToggle,
+        sidebar: !!sidebar,
+        overlay: !!overlay
+    });
+    
+    // Toggle sidebar when navbar button is clicked
+    if (mobileToggle && sidebar) {
+        mobileToggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Navbar toggle clicked');
+            
+            if (sidebar.classList.contains('active')) {
+                sidebar.classList.remove('active');
+                if (overlay) overlay.classList.remove('active');
+                document.body.style.overflow = 'auto';
+            } else {
                 sidebar.classList.add('active');
                 if (overlay) overlay.classList.add('active');
-                document.body.style.overflow = 'hidden'; // Prevent scrolling
-            });
-        }
-        
-        if (overlay) {
-            overlay.addEventListener('click', function() {
-                sidebar.classList.remove('active');
-                overlay.classList.remove('active');
-                document.body.style.overflow = 'auto'; // Re-enable scrolling
-            });
-        }
-        
-        // Close sidebar when clicking menu items on mobile
-        document.querySelectorAll('.menu-item a').forEach(link => {
-            link.addEventListener('click', function() {
-                if (window.innerWidth <= 575.98) {
-                    sidebar.classList.remove('active');
-                    if (overlay) overlay.classList.remove('active');
-                    document.body.style.overflow = 'auto';
-                }
-            });
+                document.body.style.overflow = 'hidden';
+            }
         });
-        
-        // Close sidebar on ESC key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && sidebar && sidebar.classList.contains('active')) {
-                sidebar.classList.remove('active');
+    }
+    
+    // Close sidebar when clicking overlay
+    if (overlay) {
+        overlay.addEventListener('click', function() {
+            console.log('Overlay clicked');
+            if (sidebar) sidebar.classList.remove('active');
+            overlay.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        });
+    }
+    
+    // Close sidebar when clicking menu items
+    document.querySelectorAll('.menu-item a').forEach(link => {
+        link.addEventListener('click', function() {
+            if (window.innerWidth <= 575.98) {
+                if (sidebar) sidebar.classList.remove('active');
                 if (overlay) overlay.classList.remove('active');
                 document.body.style.overflow = 'auto';
             }
         });
     });
-    
-    // Auto-hide notifications after 5 seconds
-    setTimeout(function() {
-        document.querySelectorAll('.notification').forEach(notification => {
-            notification.style.opacity = '0';
-            setTimeout(() => notification.remove(), 500);
-        });
-    }, 5000);
-    
-    // Close notification on button click
-    document.addEventListener('click', function(e) {
-        if (e.target.closest('.notification-close')) {
-            e.target.closest('.notification').remove();
-        }
-    });
-    </script>
+});
+</script>
 </body>
 </html>
