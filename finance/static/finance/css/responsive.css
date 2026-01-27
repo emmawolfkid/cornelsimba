@@ -309,19 +309,14 @@
 }
 
 /* Dark mode support */
-@media (prefers-color-scheme: dark) {
-    :root {
-        --primary-color: #4da6ff;
-        --secondary-color: #1a2530;
-        --light-color: #2c3e50;
-        --border-color: #34495e;
-    }
-    
+/* Dark mode support (DESKTOP ONLY – MOBILE DISABLED) */
+@media (prefers-color-scheme: dark) and (min-width: 992px) {
+
     body {
         background-color: #1a252f;
         color: #ecf0f1;
     }
-    
+
     .card,
     .stat-card,
     .table,
@@ -329,27 +324,28 @@
         background: #2c3e50;
         color: #ecf0f1;
     }
-    
+
     .table th {
         background: #34495e;
         color: #ecf0f1;
     }
-    
+
     .table td {
         border-color: #34495e;
     }
-    
+
     .form-control {
         background: #34495e;
         border-color: #4da6ff;
         color: #ecf0f1;
     }
-    
+
     .notification {
         background: #34495e;
         color: #ecf0f1;
     }
 }
+
 
 /* High contrast mode */
 @media (prefers-contrast: high) {
