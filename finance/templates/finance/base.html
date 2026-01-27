@@ -6,9 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Finance System{% endblock %}</title>
     
-    <!-- External CSS -->
+    <!-- External CSS - IMPORTANT ORDER -->
     <link rel="stylesheet" href="{% static 'finance/css/base.css' %}">
     <link rel="stylesheet" href="{% static 'finance/css/sidebar.css' %}">
+    <!-- LOAD RESPONSIVE CSS LAST -->
     <link rel="stylesheet" href="{% static 'finance/css/responsive.css' %}">
     
     <!-- Font Awesome for icons -->
@@ -16,12 +17,15 @@
     
     {% block extra_css %}{% endblock %}
 </head>
-<body>
-
+<body class="finance-body">
+    <!-- Mobile Sidebar Overlay -->
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    
+    <!-- Mobile Menu Toggle Button -->
     <button class="sidebar-toggle-mobile" id="mobileMenuToggle">
         <i class="fas fa-bars"></i>
     </button>
+
     <!-- Notification System -->
     {% if messages %}
     <div class="notification-container">
@@ -44,7 +48,9 @@
         
         <!-- Main Content -->
         <div class="main-content">
-          
+            <!-- ADD NAVBAR HERE -->
+            {% include 'finance/includes/navbar.html' %}
+            
             <!-- Content Area -->
             <div class="content-wrapper">
                 <div class="container-fluid">
@@ -73,59 +79,68 @@
     {% block extra_js %}{% endblock %}
     
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-    // Mobile sidebar toggle
-    const mobileToggle = document.getElementById('mobileMenuToggle');
-    const sidebar = document.querySelector('.sidebar');
-    const overlay = document.getElementById('sidebarOverlay');
-    const sidebarToggle = document.getElementById('sidebarToggle');
-    
-    if (mobileToggle) {
-        mobileToggle.addEventListener('click', function() {
-            sidebar.classList.add('active');
-            overlay.classList.add('active');
-        });
-    }
-    
-    if (overlay) {
-        overlay.addEventListener('click', function() {
-            sidebar.classList.remove('active');
-            overlay.classList.remove('active');
-        });
-    }
-    
-    // Desktop sidebar toggle (if exists)
-    if (sidebarToggle) {
-        sidebarToggle.addEventListener('click', function() {
-            sidebar.classList.toggle('sidebar-collapsed');
-        });
-    }
-    
-    // Close sidebar when clicking menu items on mobile
-    document.querySelectorAll('.menu-item a').forEach(link => {
-        link.addEventListener('click', function() {
-            if (window.innerWidth <= 575.98) {
+    document.addEventListener('DOMContentLoaded', function() {
+        // Mobile sidebar toggle
+        const mobileToggle = document.getElementById('mobileMenuToggle');
+        const sidebar = document.querySelector('.sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        
+        // Show mobile toggle on page load for mobile
+        if (window.innerWidth <= 575.98 && mobileToggle) {
+            mobileToggle.style.display = 'flex';
+        }
+        
+        if (mobileToggle && sidebar) {
+            mobileToggle.addEventListener('click', function() {
+                sidebar.classList.add('active');
+                if (overlay) overlay.classList.add('active');
+                document.body.style.overflow = 'hidden'; // Prevent scrolling
+            });
+        }
+        
+        if (overlay) {
+            overlay.addEventListener('click', function() {
                 sidebar.classList.remove('active');
                 overlay.classList.remove('active');
+                document.body.style.overflow = 'auto'; // Re-enable scrolling
+            });
+        }
+        
+        // Close sidebar when clicking menu items on mobile
+        document.querySelectorAll('.menu-item a').forEach(link => {
+            link.addEventListener('click', function() {
+                if (window.innerWidth <= 575.98) {
+                    sidebar.classList.remove('active');
+                    if (overlay) overlay.classList.remove('active');
+                    document.body.style.overflow = 'auto';
+                }
+            });
+        });
+        
+        // Close sidebar on ESC key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && sidebar && sidebar.classList.contains('active')) {
+                sidebar.classList.remove('active');
+                if (overlay) overlay.classList.remove('active');
+                document.body.style.overflow = 'auto';
             }
         });
     });
-});
-        // Auto-hide notifications after 5 seconds
-        setTimeout(function() {
-            document.querySelectorAll('.notification').forEach(notification => {
-                notification.style.opacity = '0';
-                setTimeout(() => notification.remove(), 500);
-            });
-        }, 5000);
-        
-        // Close notification on button click
-        document.addEventListener('click', function(e) {
-            if (e.target.closest('.notification-close')) {
-                e.target.closest('.notification').remove();
-            }
+    
+    // Auto-hide notifications after 5 seconds
+    setTimeout(function() {
+        document.querySelectorAll('.notification').forEach(notification => {
+            notification.style.opacity = '0';
+            setTimeout(() => notification.remove(), 500);
         });
-        
+    }, 5000);
+    
+    // Close notification on button click
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.notification-close')) {
+            e.target.closest('.notification').remove();
+        }
+    });
     </script>
 </body>
 </html>

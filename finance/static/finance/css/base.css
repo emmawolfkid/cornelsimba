@@ -631,24 +631,180 @@ body {
     color: var(--danger-color);
 }
 
-/* ================================
-   FORCE LIGHT MODE ON MOBILE
-   Finance Dashboard Fix
-================================ */
+/* ============================================
+   COMPLETELY DISABLE DARK MODE FOR FINANCE
+   ============================================ */
+
+/* Force light mode on ALL finance pages */
+body.finance-body,
+body.finance-body .content-wrapper,
+body.finance-body .container-fluid,
+body.finance-body .main-content-area,
+body.finance-body .card,
+body.finance-body .stat-card,
+body.finance-body .stats-grid,
+body.finance-body .table,
+body.finance-body .table th,
+body.finance-body .table td {
+    background-color: #ffffff !important;
+    color: #333 !important;
+}
+
+/* Ensure table styling */
+body.finance-body .table th {
+    background-color: #f8f9fa !important;
+    color: #555 !important;
+    border-color: #e9ecef !important;
+}
+
+body.finance-body .table td {
+    border-color: #eee !important;
+}
+
+/* Ensure all text is visible */
+body.finance-body h1,
+body.finance-body h2,
+body.finance-body h3,
+body.finance-body h4,
+body.finance-body h5,
+body.finance-body h6,
+body.finance-body .card-title,
+body.finance-body .stat-card h3,
+body.finance-body .amount,
+body.finance-body .subtext,
+body.finance-body .text-muted,
+body.finance-body .breadcrumb,
+body.finance-body .breadcrumb a {
+    color: #333 !important;
+}
+
+/* Force financial colors */
+body.finance-body .tsh-amount.income {
+    color: #27ae60 !important;
+}
+
+body.finance-body .tsh-amount.expense {
+    color: #e74c3c !important;
+}
+
+body.finance-body .tsh-amount.neutral {
+    color: var(--primary-color) !important;
+}
+
+/* Override any dark mode media queries */
 @media (prefers-color-scheme: dark) {
-
-    body {
-        background-color: #f5f7fa !important;
-        color: #333 !important;
-    }
-
-    .content-wrapper,
-    .container-fluid,
-    .card,
-    .stat-card,
-    .table,
-    .stats-grid {
+    body.finance-body,
+    body.finance-body .content-wrapper,
+    body.finance-body .container-fluid,
+    body.finance-body .main-content-area,
+    body.finance-body .card,
+    body.finance-body .stat-card,
+    body.finance-body .stats-grid,
+    body.finance-body .table,
+    body.finance-body .table th,
+    body.finance-body .table td {
         background-color: #ffffff !important;
         color: #333 !important;
+    }
+    
+    body.finance-body .table th {
+        background-color: #f8f9fa !important;
+        color: #555 !important;
+    }
+}
+
+/* ===== NAVBAR STYLES ===== */
+.top-navbar {
+    background: white;
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: var(--shadow-sm);
+}
+
+.navbar-left,
+.navbar-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.navbar-toggle {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: var(--secondary-color);
+    cursor: pointer;
+    display: none;
+}
+
+.navbar-brand {
+    font-weight: 600;
+    color: var(--secondary-color);
+    font-size: 1.1rem;
+}
+
+.user-menu {
+    position: relative;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--light-color);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.user-info:hover {
+    background: var(--gray-light);
+}
+
+.user-name {
+    font-weight: 500;
+    color: var(--dark-color);
+}
+
+/* Mobile navbar */
+@media (max-width: 575.98px) {
+    .navbar-toggle {
+        display: block;
+    }
+    
+    .navbar-brand {
+        font-size: 1rem;
+    }
+    
+    .user-name {
+        display: none;
+    }
+    
+    .user-info {
+        padding: 8px;
+    }
+    
+    /* Ensure mobile sidebar toggle is visible */
+    .sidebar-toggle-mobile {
+        position: fixed !important;
+        top: 15px !important;
+        left: 15px !important;
+        z-index: 1060 !important;
+        background: var(--primary-color) !important;
+        color: white !important;
+        border: none !important;
+        width: 44px !important;
+        height: 44px !important;
+        border-radius: 50% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 1.2rem !important;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2) !important;
+        cursor: pointer !important;
     }
 }
