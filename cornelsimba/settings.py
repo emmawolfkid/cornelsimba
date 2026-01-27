@@ -76,10 +76,12 @@ MIDDLEWARE = [
 ]
 
 
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-CSRF_COOKIE_SECURE = True
-SESSION_COOKIE_SECURE = True
-SECURE_SSL_REDIRECT = True
+ON_RENDER = os.environ.get("RENDER", "") == "true"
+
+SECURE_SSL_REDIRECT = ON_RENDER
+CSRF_COOKIE_SECURE = ON_RENDER
+SESSION_COOKIE_SECURE = ON_RENDER
+
 
 ROOT_URLCONF = 'cornelsimba.urls'
 
@@ -174,13 +176,10 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 # Build paths inside the project
-BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),
-]
+
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 
