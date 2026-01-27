@@ -257,3 +257,10 @@
         text-decoration: none !important;
     }
 }
+
+/* ===== MOBILE FIX: REMOVE GRADIENT BACKGROUND ===== */
+@media (max-width: 768px) {
+    body {
+        background: #f5f7fa !important;
+    }
+}

@@ -11,18 +11,21 @@
     }
     
     .sidebar {
-        position: fixed;
-        left: -100%;
-        top: 0;
-        bottom: 0;
-        width: 85%;
-        z-index: 1050;
-        transition: left 0.3s ease;
-    }
-    
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 85%;
+    max-width: 280px;
+    transform: translateX(-100%);
+    z-index: 1050;
+    transition: transform 0.3s ease;
+}
+
     .sidebar.active {
-        left: 0;
-    }
+    transform: translateX(0);
+}
+
     
     .sidebar-overlay {
         position: fixed;
@@ -40,9 +43,11 @@
     }
     
     .main-content {
-        margin-left: 0 !important;
-        width: 100%;
-    }
+    margin-left: 0 !important;
+    width: 100%;
+    overflow-x: hidden;
+}
+
     
     .content-wrapper {
         padding: 12px;
