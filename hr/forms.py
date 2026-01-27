@@ -7,12 +7,9 @@ DEPARTMENT_CHOICES = [
     ('', '--- Select Department ---'),
     ('HR', 'Human Resources'),
     ('Finance', 'Finance'),
-    ('Marketing', 'Marketing'),
     ('Procurement', 'Procurement'),
     ('Inventory', 'Inventory/Warehouse'),
-    ('Safety', 'Safety & Compliance'),
-    ('IT', 'Information Technology'),
-    ('Operations', 'Operations'),
+    ('Auditor', 'Auditing'),
     ('Sales', 'Sales'),
     ('Administration', 'Administration'),
 ]

@@ -630,3 +630,25 @@ body {
     content: " *";
     color: var(--danger-color);
 }
+
+/* ================================
+   FORCE LIGHT MODE ON MOBILE
+   Finance Dashboard Fix
+================================ */
+@media (prefers-color-scheme: dark) {
+
+    body {
+        background-color: #f5f7fa !important;
+        color: #333 !important;
+    }
+
+    .content-wrapper,
+    .container-fluid,
+    .card,
+    .stat-card,
+    .table,
+    .stats-grid {
+        background-color: #ffffff !important;
+        color: #333 !important;
+    }
+}

@@ -26,31 +26,43 @@ document.addEventListener('DOMContentLoaded', function() {
 function initSidebar() {
     const sidebar = document.querySelector('.sidebar');
     const sidebarToggle = document.getElementById('sidebarToggle');
+const sidebarToggleMobile = document.getElementById('sidebarToggleMobile');
 
-    if (!sidebar || !sidebarToggle) return;
+
+    if (!sidebar || (!sidebarToggle && !sidebarToggleMobile)) return;
+
 
     // Create overlay for mobile
     const sidebarOverlay = document.createElement('div');
     sidebarOverlay.className = 'sidebar-overlay';
     document.body.appendChild(sidebarOverlay);
 
-    sidebarToggle.addEventListener('click', function (e) {
-        e.stopPropagation();
+    const toggleHandler = function (e) {
+    e.stopPropagation();
 
-        // MOBILE
-        if (window.innerWidth <= 768) {
-            sidebar.classList.toggle('active');
-            sidebarOverlay.classList.toggle('active');
-        }
-        // DESKTOP
-        else {
-            sidebar.classList.toggle('sidebar-collapsed');
-            localStorage.setItem(
-                'sidebarCollapsed',
-                sidebar.classList.contains('sidebar-collapsed')
-            );
-        }
-    });
+    // MOBILE
+    if (window.innerWidth <= 768) {
+        sidebar.classList.toggle('active');
+        sidebarOverlay.classList.toggle('active');
+    }
+    // DESKTOP
+    else {
+        sidebar.classList.toggle('sidebar-collapsed');
+        localStorage.setItem(
+            'sidebarCollapsed',
+            sidebar.classList.contains('sidebar-collapsed')
+        );
+    }
+};
+
+if (sidebarToggle) {
+    sidebarToggle.addEventListener('click', toggleHandler);
+}
+
+if (sidebarToggleMobile) {
+    sidebarToggleMobile.addEventListener('click', toggleHandler);
+}
+
 
     // Restore desktop collapsed state
     const savedState = localStorage.getItem('sidebarCollapsed');
