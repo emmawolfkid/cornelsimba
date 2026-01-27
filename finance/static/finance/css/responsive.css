@@ -139,24 +139,15 @@
         display: block;
     }
     
-    /* Mobile toggle button */
+       /* Mobile toggle button in navbar */
     .sidebar-toggle-mobile {
-        position: fixed !important;
-        top: 15px !important;
-        left: 15px !important;
-        z-index: 1060 !important;
-        background: var(--primary-color) !important;
-        color: white !important;
+        display: block !important;
+        background: none !important;
         border: none !important;
-        width: 44px !important;
-        height: 44px !important;
-        border-radius: 50% !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
+        color: var(--secondary-color) !important;
         font-size: 1.2rem !important;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.2) !important;
         cursor: pointer !important;
+        padding: 5px !important;
     }
     
     /* Ensure text colors are visible on mobile */
