@@ -9,6 +9,32 @@
     <!-- EMERGENCY FIX FOR DARK CARDS -->
     <style>
         /* NUCLEAR OPTION - KILL ALL DARK MODE */
+            /* SIDEBAR EMERGENCY FIX - DO NOT REMOVE */
+    .sidebar {
+        background: linear-gradient(180deg, #1a237e 0%, #283593 100%) !important;
+    }
+    
+    .menu-item.active a {
+        background: linear-gradient(90deg, #2196f3 0%, #1976d2 100%) !important;
+    }
+    
+    /* DASHBOARD BUTTON EMERGENCY FIX */
+    .dashboard-quick-actions a.btn {
+        background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%) !important;
+        color: white !important;
+    }
+    
+    .dashboard-quick-actions a.btn-success {
+        background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%) !important;
+    }
+    
+    .dashboard-quick-actions a.btn-purple {
+        background: linear-gradient(135deg, #9C27B0 0%, #7B1FA2 100%) !important;
+    }
+    
+    .dashboard-quick-actions a.btn-dark-bg {
+        background: linear-gradient(135deg, #2c3e50 0%, #1a252f 100%) !important;
+    }
         body.finance-body,
         body.finance-body * {
             background-color: white !important;
@@ -81,10 +107,13 @@
     </style>
     
     <!-- External CSS - IMPORTANT ORDER -->
-    <link rel="stylesheet" href="{% static 'finance/css/base.css' %}">
-    <link rel="stylesheet" href="{% static 'finance/css/sidebar.css' %}">
-    <!-- LOAD RESPONSIVE CSS LAST -->
-    <link rel="stylesheet" href="{% static 'finance/css/responsive.css' %}">
+   <!-- External CSS - IMPORTANT ORDER -->
+<link rel="stylesheet" href="{% static 'finance/css/base.css' %}">
+<link rel="stylesheet" href="{% static 'finance/css/sidebar.css' %}">
+<!-- DASHBOARD CSS MUST LOAD BEFORE RESPONSIVE -->
+<link rel="stylesheet" href="{% static 'finance/css/dashboard.css' %}">
+<!-- LOAD RESPONSIVE CSS LAST -->
+<link rel="stylesheet" href="{% static 'finance/css/responsive.css' %}">
     
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
