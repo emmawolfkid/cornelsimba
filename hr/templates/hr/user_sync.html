@@ -16,8 +16,43 @@
     <!-- Our HR CSS Files -->
     <link rel="stylesheet" href="{% static 'css/hr-main.css' %}">
     <link rel="stylesheet" href="{% static 'css/hr-components.css' %}">
+     <link rel="stylesheet" href="{% static 'css/hr-responsive.css' %}">
 </head>
 <body>
+    <!-- Add this right after opening body tag -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- Add this button for mobile menu toggle -->
+<button class="mobile-menu-toggle" id="mobileMenuToggle">
+    <i class="fas fa-bars"></i>
+</button>
+
+<!-- Add this script at the bottom, before closing body tag -->
+<script>
+$(document).ready(function() {
+    // Mobile sidebar toggle
+    $('#mobileMenuToggle').click(function() {
+        $('.sidebar').toggleClass('mobile-open');
+        $('#sidebarOverlay').toggleClass('active');
+    });
+    
+    // Close sidebar when clicking overlay
+    $('#sidebarOverlay').click(function() {
+        $('.sidebar').removeClass('mobile-open');
+        $(this).removeClass('active');
+    });
+    
+    // Make tables more mobile-friendly
+    $('.table-container').each(function() {
+        $(this).addClass('table-responsive');
+    });
+    
+    // Fix header button width on mobile
+    if ($(window).width() <= 767) {
+        $('.header .btn').addClass('btn-block');
+    }
+});
+</script>
     <!-- Sidebar -->
     <div class="sidebar">
         <div class="logo">
