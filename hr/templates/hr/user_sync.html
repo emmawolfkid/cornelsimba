@@ -23,36 +23,11 @@
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
 <!-- Add this button for mobile menu toggle -->
-<button class="mobile-menu-toggle" id="mobileMenuToggle">
-    <i class="fas fa-bars"></i>
-</button>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <button class="mobile-menu-toggle" id="mobileMenuToggle">
+        <i class="fas fa-bars"></i>
+    </button>
 
-<!-- Add this script at the bottom, before closing body tag -->
-<script>
-$(document).ready(function() {
-    // Mobile sidebar toggle
-    $('#mobileMenuToggle').click(function() {
-        $('.sidebar').toggleClass('mobile-open');
-        $('#sidebarOverlay').toggleClass('active');
-    });
-    
-    // Close sidebar when clicking overlay
-    $('#sidebarOverlay').click(function() {
-        $('.sidebar').removeClass('mobile-open');
-        $(this).removeClass('active');
-    });
-    
-    // Make tables more mobile-friendly
-    $('.table-container').each(function() {
-        $(this).addClass('table-responsive');
-    });
-    
-    // Fix header button width on mobile
-    if ($(window).width() <= 767) {
-        $('.header .btn').addClass('btn-block');
-    }
-});
-</script>
     <!-- Sidebar -->
     <div class="sidebar">
         <div class="logo">
@@ -273,7 +248,33 @@ $(document).ready(function() {
     </div>
 
     <!-- JavaScript -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="{% static 'js/hr-main.js' %}"></script>
+   <!-- JavaScript -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="{% static 'js/hr-main.js' %}"></script>
+
+<!-- ADD THIS SCRIPT: -->
+<script>
+$(document).ready(function() {
+    // Mobile sidebar toggle
+    $('#mobileMenuToggle').click(function() {
+        $('.sidebar').toggleClass('mobile-open');
+        $('#sidebarOverlay').toggleClass('active');
+    });
+    
+    // Close sidebar when clicking overlay
+    $('#sidebarOverlay').click(function() {
+        $('.sidebar').removeClass('mobile-open');
+        $(this).removeClass('active');
+    });
+    
+    // Close sidebar when clicking nav items on mobile
+    $('.nav-item').click(function() {
+        if ($(window).width() <= 767) {
+            $('.sidebar').removeClass('mobile-open');
+            $('#sidebarOverlay').removeClass('active');
+        }
+    });
+});
+</script>
 </body>
 </html>

@@ -204,3 +204,117 @@
         color: #ff6b6b;
     }
 }
+/* ============================================
+   MOBILE DARK MODE OVERRIDE - FORCE LIGHT MODE
+   This fixes dark cards on mobile
+============================================ */
+
+@media (max-width: 767px) {
+    /* Force light background and text for mobile */
+    body {
+        background-color: #f5f7fa !important;
+        color: #333 !important;
+    }
+    
+    .stat-card, 
+    .card,
+    .table,
+    .stats-grid,
+    .dashboard-card {
+        background-color: white !important;
+        color: #333 !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .table th {
+        background-color: #f8f9fa !important;
+        color: #555 !important;
+    }
+    
+    .table td {
+        background-color: white !important;
+        color: #333 !important;
+        border-color: #eee !important;
+    }
+    
+    /* Ensure text colors are visible */
+    .tsh-amount.income {
+        color: #27ae60 !important;
+    }
+    
+    .tsh-amount.expense {
+        color: #e74c3c !important;
+    }
+    
+    .profit {
+        color: #27ae60 !important;
+    }
+    
+    .loss {
+        color: #e74c3c !important;
+    }
+    
+    .ratio-good { color: #27ae60 !important; }
+    .ratio-warning { color: #f39c12 !important; }
+    .ratio-danger { color: #e74c3c !important; }
+    
+    /* Remove any dark mode styles on mobile */
+    .dashboard-card,
+    .stat-card {
+        background: white !important;
+    }
+    
+    .text-muted {
+        color: #666 !important;
+    }
+}
+
+/* Completely disable dark mode for mobile */
+@media (prefers-color-scheme: dark) and (max-width: 767px) {
+    :root {
+        --primary-color: #3498db;
+        --secondary-color: #2c3e50;
+        --success-color: #27ae60;
+        --danger-color: #e74c3c;
+        --warning-color: #f39c12;
+    }
+    
+    body {
+        background-color: #f5f7fa !important;
+        color: #333 !important;
+    }
+    
+    .content-wrapper,
+    .container-fluid,
+    .card,
+    .stat-card,
+    .stats-grid,
+    .table,
+    .table th,
+    .table td {
+        background-color: #ffffff !important;
+        color: #333 !important;
+    }
+    
+    .table th {
+        background-color: #f8f9fa !important;
+        border-color: #e9ecef !important;
+    }
+    
+    .table td {
+        border-color: #eee !important;
+    }
+    
+    .btn {
+        color: white !important;
+    }
+    
+    /* Ensure all text is visible */
+    h1, h2, h3, h4, h5, h6,
+    .card-title,
+    .stat-card h3,
+    .amount,
+    .subtext {
+        color: #333 !important;
+    }
+}
