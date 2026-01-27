@@ -1,12 +1,12 @@
 /* ===== BASE STYLES ===== */
 :root {
-    /* Colors */
-    --primary-color: #3498db;
-    --secondary-color: #2c3e50;
-    --success-color: #27ae60;
-    --danger-color: #e74c3c;
-    --warning-color: #f39c12;
-    --info-color: #17a2b8;
+    /* Colors - Updated for better contrast */
+    --primary-color: #2196F3;
+    --secondary-color: #1a237e;  /* Dark blue for sidebar */
+    --success-color: #4CAF50;
+    --danger-color: #F44336;
+    --warning-color: #FF9800;
+    --info-color: #00BCD4;
     --light-color: #f8f9fa;
     --dark-color: #343a40;
     
@@ -271,7 +271,99 @@ body {
     background: var(--primary-color);
     color: white;
 }
+/* ===== SIDEBAR SPECIFIC BUTTONS ===== */
+/* These override the default buttons for sidebar actions */
+.btn-sidebar-action {
+    background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 12px 20px !important;
+    font-weight: 600 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3) !important;
+    transition: all 0.3s ease !important;
+    min-width: 160px;
+    text-align: center;
+}
 
+.btn-sidebar-action:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 6px 12px rgba(76, 175, 80, 0.4) !important;
+    color: white !important;
+}
+
+/* Specific sidebar action colors */
+.btn-sidebar-new-income {
+    background: linear-gradient(135deg, #2196F3 0%, #0D47A1 100%) !important;
+    box-shadow: 0 4px 8px rgba(33, 150, 243, 0.3) !important;
+}
+
+.btn-sidebar-new-expense {
+    background: linear-gradient(135deg, #F44336 0%, #B71C1C 100%) !important;
+    box-shadow: 0 4px 8px rgba(244, 67, 54, 0.3) !important;
+}
+
+.btn-sidebar-new-payroll {
+    background: linear-gradient(135deg, #9C27B0 0%, #6A1B9A 100%) !important;
+    box-shadow: 0 4px 8px rgba(156, 39, 176, 0.3) !important;
+}
+
+/* Button container for sidebar actions */
+.sidebar-actions-container {
+    display: flex;
+    gap: 10px;
+    margin: 15px 0;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    flex-wrap: wrap;
+}
+
+/* Dashboard main buttons */
+.dashboard-main-button {
+    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 10px !important;
+    padding: 15px 25px !important;
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    box-shadow: 0 4px 10px rgba(33, 150, 243, 0.25) !important;
+    transition: all 0.3s ease !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    min-width: 180px !important;
+    justify-content: center !important;
+}
+
+.dashboard-main-button:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 6px 15px rgba(33, 150, 243, 0.35) !important;
+    color: white !important;
+}
+
+.dashboard-main-button.danger {
+    background: linear-gradient(135deg, #F44336 0%, #D32F2F 100%) !important;
+    box-shadow: 0 4px 10px rgba(244, 67, 54, 0.25) !important;
+}
+
+.dashboard-main-button.success {
+    background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%) !important;
+    box-shadow: 0 4px 10px rgba(76, 175, 80, 0.25) !important;
+}
+
+.dashboard-main-button.warning {
+    background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%) !important;
+    box-shadow: 0 4px 10px rgba(255, 152, 0, 0.25) !important;
+}
+
+/* Icon styling for buttons */
+.dashboard-main-button i {
+    font-size: 1.2rem !important;
+}
 /* Badges */
 .badge {
     display: inline-block;
@@ -722,6 +814,8 @@ body.finance-body .card {
         width: 280px !important;
         z-index: 1050 !important;
         transition: left 0.3s ease !important;
+        background: linear-gradient(180deg, #1a237e 0%, #283593 100%) !important;
+        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3) !important;
     }
     
     .sidebar.active {
@@ -734,9 +828,10 @@ body.finance-body .card {
         left: 0 !important;
         right: 0 !important;
         bottom: 0 !important;
-        background: rgba(0, 0, 0, 0.5) !important;
+        background: rgba(0, 0, 0, 0.7) !important;
         z-index: 1040 !important;
         display: none !important;
+        animation: fadeIn 0.3s ease;
     }
     
     .sidebar-overlay.active {
@@ -749,10 +844,28 @@ body.finance-body .card {
     
     .sidebar-toggle-mobile {
         display: block !important;
+        background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%) !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 6px !important;
+        padding: 10px 15px !important;
+        font-size: 1.2rem !important;
+        box-shadow: 0 2px 5px rgba(33, 150, 243, 0.3) !important;
     }
     
     .search-box {
         display: none;
+    }
+    
+    /* Mobile buttons adjustment */
+    .dashboard-quick-actions {
+        flex-direction: column !important;
+    }
+    
+    .dashboard-main-button {
+        width: 100% !important;
+        min-width: auto !important;
+        padding: 12px 15px !important;
     }
 }
 
@@ -768,4 +881,22 @@ body.finance-body .card {
         background: white !important;
         color: #333 !important;
     }
+
+    /* Animation for overlay */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Active menu item highlight */
+.menu-item.active a {
+    background: linear-gradient(90deg, rgba(33, 150, 243, 0.2) 0%, rgba(33, 150, 243, 0.4) 100%) !important;
+    border-left: 4px solid #2196F3 !important;
+    color: white !important;
+    font-weight: 600 !important;
+}
 }

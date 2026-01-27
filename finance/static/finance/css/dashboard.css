@@ -1,5 +1,83 @@
 /* ===== DASHBOARD SPECIFIC STYLES ===== */
+/* ===== DASHBOARD BUTTON FIXES ===== */
+/* Quick Action Buttons - Add gradient backgrounds */
+.btn-new-income,
+.btn-new-expense,
+.btn-new-payroll,
+.btn-reports,
+.btn-cash-flow,
+.btn-balance-sheet {
+    background: linear-gradient(90deg, #2196f3 0%, #1976d2 100%) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 12px 24px !important;
+    font-weight: 600 !important;
+    transition: all 0.2s !important;
+    box-shadow: 0 2px 5px rgba(33, 150, 243, 0.2) !important;
+    text-decoration: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+}
 
+.btn-new-income:hover,
+.btn-new-expense:hover,
+.btn-new-payroll:hover,
+.btn-reports:hover,
+.btn-cash-flow:hover,
+.btn-balance-sheet:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 10px rgba(33, 150, 243, 0.3) !important;
+    color: white !important;
+}
+
+/* Specific button colors */
+.btn-new-expense {
+    background: linear-gradient(90deg, #f44336 0%, #d32f2f 100%) !important;
+    box-shadow: 0 2px 5px rgba(244, 67, 54, 0.2) !important;
+}
+
+.btn-new-expense:hover {
+    box-shadow: 0 4px 10px rgba(244, 67, 54, 0.3) !important;
+}
+
+.btn-new-payroll {
+    background: linear-gradient(90deg, #4caf50 0%, #388e3c 100%) !important;
+    box-shadow: 0 2px 5px rgba(76, 175, 80, 0.2) !important;
+}
+
+.btn-new-payroll:hover {
+    box-shadow: 0 4px 10px rgba(76, 175, 80, 0.3) !important;
+}
+
+.btn-purple {
+    background: linear-gradient(90deg, #9b59b6 0%, #8e44ad 100%) !important;
+    box-shadow: 0 2px 5px rgba(155, 89, 182, 0.2) !important;
+}
+
+.btn-purple:hover {
+    background: linear-gradient(90deg, #8e44ad 0%, #7d3c98 100%) !important;
+    box-shadow: 0 4px 10px rgba(155, 89, 182, 0.3) !important;
+}
+
+/* Dashboard action buttons */
+.dashboard-quick-actions .btn {
+    min-width: 140px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+/* Button icons */
+.btn-new-income i,
+.btn-new-expense i,
+.btn-new-payroll i,
+.btn-reports i,
+.btn-cash-flow i,
+.btn-balance-sheet i {
+    font-size: 1.1rem;
+}
 /* Section Headers */
 /* Dashboard card background fix */
 .dashboard-card,
@@ -27,11 +105,14 @@
 /* Quick Actions */
 .dashboard-quick-actions {
     display: flex;
-    gap: 12px;
+    gap: 15px;
     margin-bottom: 30px;
     flex-wrap: wrap;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    border: 1px solid #e0e0e0;
 }
-
 .btn-purple {
     background: #9b59b6;
     color: white;
