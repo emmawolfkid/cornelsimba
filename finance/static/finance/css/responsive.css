@@ -431,3 +431,27 @@
         grid-column: auto;
     }
 }
+
+/* =========================================
+   FORCE LIGHT MODE FOR FINANCE (MOBILE)
+   Fix dark cards & dark background
+========================================= */
+@media (prefers-color-scheme: dark) {
+
+    body {
+        background-color: #f5f7fa !important;
+        color: #333 !important;
+    }
+
+    .content-wrapper,
+    .container-fluid,
+    .card,
+    .stat-card,
+    .stats-grid,
+    .table,
+    .table th,
+    .table td {
+        background-color: #ffffff !important;
+        color: #333 !important;
+    }
+}
