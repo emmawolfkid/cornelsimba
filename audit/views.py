@@ -16,6 +16,9 @@ from reportlab.lib.units import inch
 from django.template.loader import render_to_string
 from xhtml2pdf import pisa
 import logging
+from audit.utils import audit_log
+
+
 
 # Add logging for debugging
 logger = logging.getLogger(__name__)
@@ -30,7 +33,7 @@ def audit_logs(request):
     """
     View all audit logs with filters
     """
-    logs = AuditLog.objects.all()
+    logs = AuditLog.objects.select_related('user').all()
     
     # Get filter parameters
     user_filter = request.GET.get('user', '')
@@ -60,7 +63,8 @@ def audit_logs(request):
             logs = logs.filter(timestamp__date__gte=quarter_ago)
         elif time_period == 'year':
             year_ago = today - timedelta(days=365)
-            logs = logs.filter(timestamp__date__date__gte=year_ago)
+            logs = logs.filter(timestamp__date__gte=year_ago)
+
     
     # Apply filters
     if user_filter:
@@ -176,7 +180,15 @@ def audit_log_detail(request, log_id):
 
 def export_audit_logs_pdf_simple(request, queryset):
     """Simple and reliable PDF export for production"""
-    try:
+    try: 
+        audit_log(
+    user=request.user,
+    action='EXPORT',
+    module='AUDIT',
+    description='Exported audit logs to PDF',
+    request=request
+)
+
         # Log for debugging
         logger.info(f"PDF export requested, {queryset.count()} records")
         

@@ -1,0 +1,11 @@
+/* ============================================
+   AUDIT SYSTEM - MAIN CSS IMPORT
+   ============================================ */
+
+@import url('audit/base.css');
+@import url('audit/components.css');
+@import url('audit/notifications.css');
+@import url('audit/tables.css');
+@import url('audit/forms.css');
+@import url('audit/responsive.css');
+@import url('audit/print.css');

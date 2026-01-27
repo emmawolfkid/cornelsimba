@@ -18,6 +18,9 @@ from io import BytesIO
 from xhtml2pdf import pisa
 from django.template.loader import get_template
 from django.contrib.humanize.templatetags.humanize import intcomma
+import logging
+logger = logging.getLogger(__name__)
+
 
 # Helper function to restrict access by group
 def group_required(group_name):
@@ -1347,7 +1350,8 @@ def download_general_ledger_pdf(request):
             response['Content-Disposition'] = f'attachment; filename="{filename}"'
             return response
     except Exception as e:
-        print(f"PDF Error: {e}")
+        logger.warning(f"PDF Error: {e}")
+
     
     return HttpResponse("Error generating PDF", status=500)
 @login_required
@@ -1511,7 +1515,8 @@ def download_income_statement_pdf(request):
             response['Content-Disposition'] = f'attachment; filename="{filename}"'
             return response
     except Exception as e:
-        print(f"PDF Error: {e}")
+        logger.warning(f"PDF Error: {e}")
+
     
     return HttpResponse("Error generating PDF", status=500)
 @login_required
@@ -1607,7 +1612,8 @@ def download_cash_flow_pdf(request):
             response['Content-Disposition'] = f'attachment; filename="{filename}"'
             return response
     except Exception as e:
-        print(f"PDF Error: {e}")
+        logger.warning(f"PDF Error: {e}")
+
     
     return HttpResponse("Error generating PDF", status=500)
 @login_required
@@ -1680,7 +1686,8 @@ def download_financial_report_pdf(request):
             response['Content-Disposition'] = f'attachment; filename="{filename}"'
             return response
     except Exception as e:
-        print(f"PDF Error: {e}")
+        logger.warning(f"PDF Error: {e}")
+
     
     return HttpResponse("Error generating PDF", status=500)
 @login_required
@@ -1791,6 +1798,7 @@ def download_balance_sheet_pdf(request):
             response['Content-Disposition'] = f'attachment; filename="{filename}"'
             return response
     except Exception as e:
-        print(f"PDF Error: {e}")
+        logger.warning(f"PDF Error: {e}")
+
     
     return HttpResponse("Error generating PDF", status=500)

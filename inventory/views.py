@@ -639,7 +639,8 @@ def stock_report(request):
                 'items': []
             }
         category_summary[category]['count'] += 1
-        category_summary[category]['total_quantity'] += float(item.quantity)
+        category_summary[category]['total_quantity'] += item.quantity
+
         category_summary[category]['items'].append(item)
     
     recent_history = StockHistory.objects.select_related('item').all().order_by('-created_at')[:100]
@@ -676,13 +677,15 @@ def procurement_stock(request):
                 'items': set()
             }
         supplier_summary[supplier]['count'] += 1
-        supplier_summary[supplier]['total_quantity'] += float(stock_in.quantity)
+        supplier_summary[supplier]['total_quantity'] += stock_in.quantity
+
         supplier_summary[supplier]['items'].add(stock_in.item.name)
     
     context = {
         'procurement_stock': procurement_stock,
         'supplier_summary': supplier_summary,
-        'usd_to_tsH': USD_TO_TSH,
+        'usd_to_tsh': USD_TO_TSH,
+
     }
     return render(request, 'inventory/procurement_stock.html', context)
 

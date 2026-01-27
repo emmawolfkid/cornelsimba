@@ -1,0 +1,198 @@
+/* ============================================
+   AUDIT SYSTEM - NOTIFICATION SYSTEM
+   ============================================ */
+
+.notification-container {
+    position: fixed;
+    top: var(--space-lg);
+    right: var(--space-lg);
+    z-index: 9999;
+    max-width: 400px;
+    width: 90%;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.notification {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-md);
+    animation: slideInRight var(--transition-normal);
+    border-left: 4px solid var(--audit-primary);
+    max-width: 100%;
+}
+
+.notification.success {
+    border-left-color: var(--audit-success);
+}
+
+.notification.error {
+    border-left-color: var(--audit-danger);
+}
+
+.notification.warning {
+    border-left-color: var(--audit-warning);
+}
+
+.notification.info {
+    border-left-color: var(--audit-info);
+}
+
+.notification-icon {
+    font-size: 1.2rem;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.notification.success .notification-icon {
+    color: var(--audit-success);
+}
+
+.notification.error .notification-icon {
+    color: var(--audit-danger);
+}
+
+.notification.warning .notification-icon {
+    color: var(--audit-warning);
+}
+
+.notification.info .notification-icon {
+    color: var(--audit-info);
+}
+
+.notification-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.notification-title {
+    font-weight: 600;
+    color: var(--audit-primary);
+    margin-bottom: var(--space-xs);
+    font-size: 1rem;
+}
+
+.notification-message {
+    color: #666;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.notification-close {
+    background: none;
+    border: none;
+    color: #999;
+    cursor: pointer;
+    font-size: 1rem;
+    padding: var(--space-xs);
+    flex-shrink: 0;
+    transition: color var(--transition-fast);
+}
+
+.notification-close:hover {
+    color: var(--audit-danger);
+}
+
+/* Progress bar for auto-dismiss */
+.notification-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: rgba(0,0,0,0.1);
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    overflow: hidden;
+}
+
+.notification-progress-bar {
+    height: 100%;
+    width: 100%;
+    background: currentColor;
+    opacity: 0.3;
+    animation: progressBar linear forwards;
+}
+
+@keyframes progressBar {
+    from { transform: translateX(0); }
+    to { transform: translateX(-100%); }
+}
+
+/* Stacked notifications */
+.notification.stacked {
+    margin-top: -40px;
+    opacity: 0.9;
+    transform: scale(0.95);
+}
+
+/* Action buttons in notifications */
+.notification-actions {
+    margin-top: var(--space-md);
+    display: flex;
+    gap: var(--space-sm);
+}
+
+.notification-btn {
+    padding: var(--space-xs) var(--space-md);
+    border-radius: var(--radius-sm);
+    border: none;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.notification-btn.primary {
+    background: var(--audit-primary);
+    color: white;
+}
+
+.notification-btn.secondary {
+    background: #f8f9fa;
+    color: var(--audit-primary);
+    border: 1px solid #ddd;
+}
+
+/* Notification counter */
+.notification-counter {
+    position: fixed;
+    top: var(--space-sm);
+    right: var(--space-sm);
+    background: var(--audit-danger);
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 0.7rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    z-index: 10000;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+/* Mobile notifications */
+@media (max-width: 768px) {
+    .notification-container {
+        width: calc(100% - 30px);
+        max-width: none;
+        left: 15px;
+        right: 15px;
+        top: 70px;
+    }
+    
+    .notification {
+        width: 100%;
+    }
+}

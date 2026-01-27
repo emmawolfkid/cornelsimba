@@ -160,7 +160,12 @@ class StockIn(models.Model):
     reference = models.CharField(max_length=100, blank=True, null=True, help_text="PO Number, GRN, etc.")
     
     # Approval tracking
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='approved')
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='pending'
+    )
+
     approved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='approved_stock_ins')
     approved_at = models.DateTimeField(null=True, blank=True)
     
@@ -257,7 +262,12 @@ class StockOut(models.Model):
                                    null=True, blank=True, related_name='stock_outs')
     
     # Approval tracking
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='approved')
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='pending'  # ✅ FIX 1 - Already implemented
+    )
+
     approved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='approved_stock_outs')
     approved_at = models.DateTimeField(null=True, blank=True)
     
@@ -282,46 +292,15 @@ class StockOut(models.Model):
                 })
     
     def save(self, *args, **kwargs):
-        # Validate before saving
+        # ✅ FIX 2 - Validate only — stock is updated during approval (in approve_stockout() view)
+        # Do NOT update stock here to prevent double deduction
+        
         self.full_clean()
-        
-        is_new = self.pk is None
-        
-        # Only update stock if approved
-        if self.status == 'approved':
-            if not is_new:
-                # This is an update - need to adjust stock properly
-                old_stock_out = StockOut.objects.get(pk=self.pk)
-                old_quantity = old_stock_out.quantity
-                
-                # Calculate the difference (add back old, subtract new)
-                quantity_diff = old_quantity - self.quantity
-                
-                # If item changed, handle both old and new items
-                if old_stock_out.item.id != self.item.id:
-                    # Add back to old item
-                    old_stock_out.item.quantity += old_quantity
-                    old_stock_out.item.save()
-                    
-                    # Subtract from new item
-                    self.item.quantity -= self.quantity
-                else:
-                    # Same item, adjust by the difference
-                    self.item.quantity += quantity_diff
-            else:
-                # New record - subtract from item
-                self.item.quantity -= self.quantity
-            
-            # Save the item
-            self.item.save()
-        
         super().save(*args, **kwargs)
     
     def delete(self, *args, **kwargs):
-        # When deleting, add stock back to item if approved
-        if self.status == 'approved':
-            self.item.quantity += self.quantity
-            self.item.save()
+        # ⚠️ Important: Since stock is only updated in approve_stockout() view,
+        # we should NOT add stock back here when deleting
         super().delete(*args, **kwargs)
     
     def __str__(self):

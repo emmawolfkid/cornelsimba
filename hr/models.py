@@ -164,11 +164,7 @@ class LeaveRequest(models.Model):
     class Meta:
         ordering = ['-submitted_date']
 
-@property
-def is_paid_leave(self):
-        """Check if this leave type is paid"""
-        paid_leave_types = ['Annual Leave', 'Sick Leave', 'Maternity Leave']  # Add your paid types
-        return self.leave_type.name in paid_leave_types if self.leave_type else True
+
 
 
 class LeaveBalance(models.Model):

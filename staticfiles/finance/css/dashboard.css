@@ -1,6 +1,13 @@
 /* ===== DASHBOARD SPECIFIC STYLES ===== */
 
 /* Section Headers */
+/* Dashboard card background fix */
+.dashboard-card,
+.stat-card {
+    background: white;
+    border-radius: 10px;
+}
+
 .dashboard-section-header {
     color: var(--secondary-color);
     margin: 40px 0 20px;
@@ -149,7 +156,7 @@
 /* Recent Transactions Grid */
 .recent-transactions-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 25px;
     margin-bottom: 30px;
 }
@@ -172,5 +179,28 @@
     
     .ratio-display {
         font-size: 2rem;
+    }
+}
+
+/* Dark mode dashboard support */
+@media (prefers-color-scheme: dark) {
+    .dashboard-card,
+    .stat-card {
+        background: #1f2a35;
+        color: #ecf0f1;
+    }
+
+    .text-muted {
+        color: #b0b0b0;
+    }
+
+    .balance-sheet-assets {
+        background: #223344;
+        color: #4da3ff;
+    }
+
+    .balance-sheet-liabilities {
+        background: #3a1f1f;
+        color: #ff6b6b;
     }
 }

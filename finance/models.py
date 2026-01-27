@@ -6,6 +6,9 @@ from django.core.validators import MinValueValidator
 from decimal import Decimal
 from django.utils import timezone
 from django.conf import settings  # Added import for settings
+import logging
+logger = logging.getLogger(__name__)
+
 
 class Income(models.Model):
     INCOME_TYPES = [
@@ -104,7 +107,8 @@ class Income(models.Model):
                     income=self
                 )
         except Exception as e:
-            print(f"Reversal transaction failed: {e}")
+            logger.warning(f"Reversal transaction failed: {e}")
+
         
         return self
     
@@ -168,7 +172,8 @@ class Income(models.Model):
             )
         except Exception as e:
             # If transaction fails, still keep the income record
-            print(f"Transaction creation failed: {e}")
+            logger.warning(f"Transaction creation failed: {e}")
+
         
         return income
 
@@ -280,6 +285,16 @@ class Payroll(models.Model):
 
     is_paid = models.BooleanField(default=False)
     payment_date = models.DateField(null=True, blank=True)
+    currency = models.CharField(
+        max_length=10,
+        default='Tsh',
+        choices=[
+            ('Tsh', 'Tanzanian Shillings'),
+            ('USD', 'US Dollars'),
+            ('EUR', 'Euros'),
+        ]
+    )
+
 
     approved_by = models.ForeignKey(
         Employee, on_delete=models.SET_NULL,
@@ -301,6 +316,11 @@ class Payroll(models.Model):
             self.leave_deductions
         )
         return self.gross_salary() - total_deductions
+        
+    @property
+    def net_salary_display(self):
+        return f"Tsh {self.net_salary():,.2f}"
+
 
     def __str__(self):
         return f"{self.employee.full_name} - {self.month}/{self.year}"

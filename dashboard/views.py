@@ -3,6 +3,9 @@ from django.contrib.auth.decorators import login_required
 from audit.models import AuditLog
 from django.utils import timezone
 from django.db.models import Count
+import logging
+logger = logging.getLogger(__name__)
+
 
 from accounts.constants import (
     GROUP_ADMIN,
@@ -32,10 +35,16 @@ def main_dashboard(request):
     
     # Add audit data for managers and admins
     audit_data = None
-    if user.is_superuser or user.groups.filter(name__in=['Administrator', 'Manager', 'Auditor']).exists():
+    if user.is_superuser or user.groups.filter(
+    name__in=[GROUP_ADMIN, GROUP_MANAGER, GROUP_AUDITOR]
+).exists():
+
         # Get today's audit statistics
         today = timezone.now().date()
-        today_logs = AuditLog.objects.filter(timestamp__date=today).count()
+        today_logs = AuditLog.objects.filter(
+    timestamp__date=today
+).only('id').count()
+
         
         # Get most active modules today
         module_activity = AuditLog.objects.filter(
@@ -45,7 +54,8 @@ def main_dashboard(request):
         ).order_by('-count')[:5]
         
         # Get recent audit logs
-        recent_audit_logs = AuditLog.objects.all().order_by('-timestamp')[:5]
+        recent_audit_logs = AuditLog.objects.select_related('user').order_by('-timestamp')[:5]
+
         
         audit_data = {
             'today_logs': today_logs,
@@ -133,7 +143,8 @@ def main_dashboard(request):
                 
         except Exception as e:
             # Log error but don't crash the dashboard
-            print(f"Error loading leave data: {e}")
+            logger.warning(f"Dashboard leave data error: {e}")
+
             user_has_employee = False
     
     # Default values for non-HR users

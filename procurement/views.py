@@ -354,11 +354,11 @@ def mark_delivered(request, order_id):
         StockIn.objects.create(
             item=item.item,
             quantity=item.quantity,
-            unit_price=item.unit_price,
             supplier=purchase_order.supplier.name,
             reference=f"PO-{purchase_order.po_number}",
             purchase_order=purchase_order,  # FIXED: Link to PO
             source='Purchase',
+            status='approved',
             received_by=request.user.get_full_name() or request.user.username
         )
     

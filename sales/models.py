@@ -136,8 +136,8 @@ class Sale(models.Model):
     def __str__(self):
         return f"Sale {self.sale_number} - {self.customer.name} - Tsh {self.net_amount:,.2f}"
     
-    class Meta:
-     ordering = ['-created_at']
+class Meta:
+    ordering = ['-created_at']
     verbose_name = 'Sale'
     verbose_name_plural = 'Sales'
     indexes = [
@@ -146,6 +146,7 @@ class Sale(models.Model):
         models.Index(fields=['created_at']),
         models.Index(fields=['customer']),
     ]
+
 
     def clean(self):
         """Validate sale before saving"""
@@ -378,16 +379,16 @@ class SaleItem(models.Model):
     def __str__(self):
         return f"{self.item.name} x {self.quantity} in Sale {self.sale.sale_number}"
     
-class Meta:
-    ordering = ['-created_at']
-    verbose_name = 'Sale Item'
-    verbose_name_plural = 'Sale Items'
-    unique_together = ['sale', 'item']
-    indexes = [
-        models.Index(fields=['item']),
-        models.Index(fields=['sale']),
-        models.Index(fields=['created_at']),
-    ]
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Sale Item'
+        verbose_name_plural = 'Sale Items'
+        unique_together = ['sale', 'item']
+        indexes = [
+            models.Index(fields=['item']),
+            models.Index(fields=['sale']),
+            models.Index(fields=['created_at']),
+        ]
 
     
     def clean(self):
@@ -485,53 +486,34 @@ class Payment(models.Model):
     def __str__(self):
         return f"Payment Tsh {self.amount:,.2f} for {self.sale.sale_number}"
     
-    class Meta:
-     ordering = ['-payment_date']
-    verbose_name = 'Payment'
-    verbose_name_plural = 'Payments'
-    indexes = [
-        models.Index(fields=['payment_date']),
-        models.Index(fields=['payment_status']),
-        models.Index(fields=['sale']),
-    ]
 
-    
-def clean(self):
-        """Validate payment"""
+
+    class Meta:
+        ordering = ['-payment_date']
+        verbose_name = 'Payment'
+        verbose_name_plural = 'Payments'
+        indexes = [
+            models.Index(fields=['payment_date']),
+            models.Index(fields=['payment_status']),
+            models.Index(fields=['sale']),
+        ]
+
+    def clean(self):
         if self.amount <= 0:
             raise ValidationError('Payment amount must be greater than 0')
-        
-        # FIX: Check if sale_id exists (database field) instead of sale object
-        # This works even when the sale object isn't loaded yet
+
         if self.sale_id and self.amount > self.sale.balance_due:
             raise ValidationError(
                 f'Payment amount cannot exceed balance due (Tsh {self.sale.balance_due:,.2f})'
             )
-    
-def save(self, *args, **kwargs):
-        # Ensure amount is positive
+
+    def save(self, *args, **kwargs):
         if self.amount < 0:
             self.amount = abs(self.amount)
-        
         super().save(*args, **kwargs)
-        
-        # Update sale payment status if payment is completed
-        if self.payment_status == 'COMPLETED' and self.sale:
-            # Recalculate to avoid race conditions
-            from django.db.models import Sum
-            sale = Sale.objects.get(pk=self.sale.pk)
-            total_paid = sale.payments.filter(payment_status='COMPLETED').aggregate(
-                total=Sum('amount')
-            )['total'] or Decimal('0')
-            
-            sale.amount_paid = total_paid
-            sale.balance_due = sale.net_amount - total_paid
-            sale.is_paid = sale.balance_due <= Decimal('0.01')
-            sale.save(update_fields=['amount_paid', 'balance_due', 'is_paid', 'updated_at'])
-    
-@property
-def amount_display(self):
-        """Display amount with Tsh symbol"""
+
+    @property
+    def amount_display(self):
         return f"Tsh {self.amount:,.2f}"
 
 
