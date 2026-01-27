@@ -230,35 +230,43 @@ body {
 }
 
 .btn-success {
-    background: var(--success-color);
+    background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%);
+    box-shadow: 0 2px 5px rgba(76, 175, 80, 0.2);
 }
 
 .btn-success:hover {
-    background: #219653;
+    background: linear-gradient(135deg, #388E3C 0%, #2E7D32 100%);
+    box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
 }
 
 .btn-danger {
-    background: var(--danger-color);
+    background: linear-gradient(135deg, #F44336 0%, #D32F2F 100%);
+    box-shadow: 0 2px 5px rgba(244, 67, 54, 0.2);
 }
 
 .btn-danger:hover {
-    background: #c0392b;
+    background: linear-gradient(135deg, #D32F2F 0%, #B71C1C 100%);
+    box-shadow: 0 4px 8px rgba(244, 67, 54, 0.3);
 }
 
 .btn-warning {
-    background: var(--warning-color);
+    background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+    box-shadow: 0 2px 5px rgba(255, 152, 0, 0.2);
 }
 
 .btn-warning:hover {
-    background: #e67e22;
+    background: linear-gradient(135deg, #F57C00 0%, #EF6C00 100%);
+    box-shadow: 0 4px 8px rgba(255, 152, 0, 0.3);
 }
 
 .btn-info {
-    background: var(--info-color);
+    background: linear-gradient(135deg, #00BCD4 0%, #0097A7 100%);
+    box-shadow: 0 2px 5px rgba(0, 188, 212, 0.2);
 }
 
 .btn-info:hover {
-    background: #138496;
+    background: linear-gradient(135deg, #0097A7 0%, #00838F 100%);
+    box-shadow: 0 4px 8px rgba(0, 188, 212, 0.3);
 }
 
 .btn-outline {
@@ -271,6 +279,7 @@ body {
     background: var(--primary-color);
     color: white;
 }
+
 /* ===== SIDEBAR SPECIFIC BUTTONS ===== */
 /* These override the default buttons for sidebar actions */
 .btn-sidebar-action {
@@ -364,6 +373,7 @@ body {
 .dashboard-main-button i {
     font-size: 1.2rem !important;
 }
+
 /* Badges */
 .badge {
     display: inline-block;
@@ -881,8 +891,9 @@ body.finance-body .card {
         background: white !important;
         color: #333 !important;
     }
+}
 
-    /* Animation for overlay */
+/* Animation for overlay */
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -898,5 +909,4 @@ body.finance-body .card {
     border-left: 4px solid #2196F3 !important;
     color: white !important;
     font-weight: 600 !important;
-}
 }
