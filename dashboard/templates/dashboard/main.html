@@ -183,31 +183,6 @@
         transform: translateY(-2px);
         box-shadow: 0 6px 15px rgba(231, 76, 60, 0.3);
     }
-/* ===== RIGHT PANEL FULL LOGO ===== */
-.right-panel-logo {
-    width: 260px;
-    background: white;
-    padding: 15px;
-    border-radius: 18px;
-    margin-bottom: 15px;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.12);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.right-panel-logo img {
-    width: 100%;
-    height: auto;
-    object-fit: contain;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .right-panel-logo {
-        width: 100%;
-    }
-}
 
     /* Quick Stats */
     .stats-row {
@@ -728,26 +703,21 @@
                 </div>
             </div>
 
-          <div class="user-section">
+            <div class="user-section">
+                <div class="user-details">
+                    <div class="welcome-text">
+                        Welcome, {{ request.user.get_full_name|default:request.user.username }}
+                    </div>
+                    {% if request.user.groups.all %}
+                    <div class="user-role">{{ request.user.groups.first }}</div>
+                    {% endif %}
+                    <div class="live-time" id="liveTime"></div>
+                </div>
+                <div class="user-avatar-big">
+                    <i class="fas fa-user"></i>
+                </div>
 
-    <!-- FULL LOGO (RIGHT PANEL) -->
-    <div class="right-panel-logo">
-        <img src="{% static 'images/cornelsimba-logo.jpeg' %}"
-             alt="Cornel Simba Logo">
-    </div>
-
-    <!-- USER INFO -->
-    <div class="user-details">
-        <div class="welcome-text">
-            Welcome, {{ request.user.get_full_name|default:request.user.username }}
-        </div>
-        {% if request.user.groups.all %}
-        <div class="user-role">{{ request.user.groups.first }}</div>
-        {% endif %}
-        <div class="live-time" id="liveTime"></div>
-    </div>
-
-    <!-- ADMIN PANEL (STAFF ONLY) -->
+                <!-- Add Admin Panel Button Here -->
     {% if request.user.is_staff %}
     <div class="admin-panel-section">
         <a href="/admin/" target="_blank" class="admin-btn">
@@ -755,15 +725,21 @@
         </a>
     </div>
     {% endif %}
-
-    <!-- LOGOUT -->
-    <div class="logout-section">
-        <button class="logout-btn" onclick="logoutUser()">
-            <i class="fas fa-sign-out-alt"></i> Logout
-        </button>
-    </div>
-
-</div>
+                <!-- Add Logout Button Here -->
+                <div class="logout-section">
+                    <!-- Hidden logout form for POST request -->
+                    <form id="logoutForm" action="{% url 'logout' %}" method="post" style="display: none;">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="/">
+                    </form>
+                    
+                    <!-- Logout Button -->
+                    <button class="logout-btn" onclick="logoutUser()">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </div>
+            </div>
+        </div>
 
         <!-- Quick Stats -->
         <div class="stats-row">
