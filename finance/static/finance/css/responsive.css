@@ -1,438 +1,280 @@
-/* ===== RESPONSIVE STYLES ===== */
+/* responsive.css - Focus on mobile optimization */
 
-/* Extra small devices (phones, less than 576px) */
+/* ========== MOBILE FIRST APPROACH ========== */
+
+/* Small devices (landscape phones, 576px and up) */
 @media (max-width: 575.98px) {
-    :root {
-        --sidebar-width: 0;
-    }
-    
-    .layout-wrapper {
-        flex-direction: column;
-    }
-    
-    .sidebar {
-        position: fixed;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        width: 85%;
-        max-width: 280px;
-        transform: translateX(-100%);
-        z-index: 1050;
-        transition: transform 0.3s ease;
-        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.2);
-    }
-
-    .sidebar.active {
-        transform: translateX(0);
-    }
-    
-    .sidebar-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.5);
-        z-index: 1040;
-        display: none;
-    }
-    
-    .sidebar-overlay.active {
-        display: block;
-    }
-    
+    /* Layout adjustments */
     .main-content {
         margin-left: 0 !important;
-        width: 100%;
-        overflow-x: hidden;
+        width: 100% !important;
     }
     
     .content-wrapper {
-        padding: 12px;
+        padding: 15px;
+        padding-top: 80px;
     }
     
     .container-fluid {
-        padding: 0;
+        padding: 0 15px;
     }
     
+    /* Top navbar mobile adjustments */
+    .top-navbar {
+        left: 0 !important;
+        right: 0;
+        padding: 0 15px;
+        height: 60px;
+    }
+    
+    .sidebar-toggle-mobile {
+        display: flex !important;
+        width: 40px;
+        height: 40px;
+        font-size: 1.1rem;
+    }
+    
+    .navbar-center {
+        display: none;
+    }
+    
+    .user-btn .user-name {
+        display: none;
+    }
+    
+    .user-btn {
+        padding: 8px;
+        min-width: 44px;
+        justify-content: center;
+    }
+    
+    /* Sidebar mobile behavior */
+    .sidebar {
+        transform: translateX(-100%) !important;
+        width: 280px !important;
+        z-index: 1000 !important;
+        transition: transform 0.3s ease !important;
+    }
+    
+    .sidebar.active {
+        transform: translateX(0) !important;
+    }
+    
+    .sidebar-overlay {
+        display: block;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        pointer-events: none;
+    }
+    
+    .sidebar-overlay.active {
+        opacity: 1;
+        pointer-events: all;
+    }
+    
+    /* Content adjustments */
     .content-header h1 {
-        font-size: 1.3rem;
+        font-size: 1.4rem;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
     }
     
+    .content-header h1::before {
+        height: 4px;
+        width: 50px;
+        border-radius: 2px;
+    }
+    
+    /* Card adjustments */
+    .card {
+        margin-bottom: 20px;
+        border-radius: 12px;
+    }
+    
+    .card-header,
+    .card-body,
+    .card-footer {
+        padding: 15px;
+    }
+    
+    .table th,
+    .table td {
+        padding: 10px;
+        font-size: 0.9rem;
+    }
+    
+    /* Dashboard specific */
     .stats-grid {
-        grid-template-columns: 1fr;
-        gap: 12px;
+        gap: 15px;
     }
     
     .stat-card {
-        padding: 15px;
-        background: white !important;
-        color: #333 !important;
-        border: 1px solid #e0e0e0 !important;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+        padding: 20px;
     }
     
-    .stat-card .amount {
-        font-size: 1.5rem;
-    }
-    
-    .quick-actions {
-        gap: 8px;
-        margin-bottom: 20px;
-    }
-    
-    .btn {
-        padding: 8px 12px;
-        font-size: 0.85rem;
-        flex: 1;
-        justify-content: center;
-        min-width: 0;
-    }
-    
-    .table-responsive {
-        margin: 0 -12px;
-        width: calc(100% + 24px);
-    }
-    
-    .table th,
-    .table td {
-        padding: 10px 8px;
-        font-size: 0.85rem;
-    }
-    
-    .card {
-        padding: 15px;
-        margin-bottom: 15px;
-        background: white !important;
-        color: #333 !important;
-    }
-    
-    .filter-row {
-        grid-template-columns: 1fr;
-        gap: 10px;
-    }
-    
-    .filter-actions {
-        flex-direction: column;
-    }
-    
-    .pagination-container {
-        flex-direction: column;
-        gap: 10px;
-        text-align: center;
-    }
-    
-    .pagination {
-        justify-content: center;
-    }
-    
-    .summary-value {
+    .amount {
         font-size: 1.8rem;
     }
     
-    .summary-icon {
+    .ratio-display {
         font-size: 2rem;
+        padding: 8px;
     }
     
-    .sidebar-toggle {
-        display: block;
+    .dashboard-quick-actions {
+        padding: 20px;
+        gap: 10px;
     }
     
-       /* Mobile toggle button in navbar */
-    .sidebar-toggle-mobile {
-        display: block !important;
-        background: none !important;
-        border: none !important;
-        color: var(--secondary-color) !important;
-        font-size: 1.2rem !important;
-        cursor: pointer !important;
-        padding: 5px !important;
+    .dashboard-quick-actions a.btn {
+        padding: 12px 20px;
+        font-size: 0.95rem;
     }
     
-    /* Ensure text colors are visible on mobile */
-    .stat-card h3,
-    .amount,
-    .subtext,
-    .card-title,
-    .dashboard-section-header,
-    h1, h2, h3, h4 {
-        color: #333 !important;
+    /* Hide complex elements on mobile */
+    .dashboard-section-header .subtitle {
+        display: none;
     }
     
-    .tsh-amount.income {
-        color: #27ae60 !important;
-    }
-    
-    .tsh-amount.expense {
-        color: #e74c3c !important;
-    }
-    
-    .profit {
-        color: #27ae60 !important;
-    }
-    
-    .loss {
-        color: #e74c3c !important;
-    }
-}
-
-/* Small devices (tablets, 576px and up) */
-@media (min-width: 576px) and (max-width: 767.98px) {
-    .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .filter-row {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .quick-actions .btn {
-        min-width: 140px;
-    }
-    
-    .table th,
-    .table td {
-        padding: 12px 10px;
-    }
-    
-    .content-wrapper {
-        padding: 15px;
-    }
-    
-    .sidebar {
-        width: var(--sidebar-collapsed-width);
-    }
-    
-    .sidebar-collapsed .main-content {
-        margin-left: var(--sidebar-collapsed-width);
-    }
-    
-    .sidebar-toggle {
-        display: block;
-    }
-    
-    .sidebar-toggle-mobile {
-        display: none !important;
+    /* Notification dropdown adjustments */
+    .user-dropdown-content {
+        position: fixed;
+        top: 60px;
+        left: 15px;
+        right: 15px;
+        width: auto;
     }
 }
 
 /* Medium devices (tablets, 768px and up) */
-@media (min-width: 768px) and (max-width: 991.98px) {
+@media (min-width: 576px) and (max-width: 991.98px) {
     .sidebar {
-        width: 200px;
+        transform: translateX(-100%);
+        width: 280px;
+    }
+    
+    .sidebar.active {
+        transform: translateX(0);
     }
     
     .main-content {
-        margin-left: 200px;
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+    
+    .top-navbar {
+        left: 0 !important;
+        padding: 0 20px;
+    }
+    
+    .sidebar-toggle-mobile {
+        display: flex !important;
+    }
+    
+    .navbar-center {
+        flex: 1;
+        margin: 0 15px;
     }
     
     .stats-grid {
         grid-template-columns: repeat(2, 1fr);
     }
     
-    .filter-row {
-        grid-template-columns: repeat(2, 1fr);
+    .recent-transactions-grid {
+        grid-template-columns: 1fr;
     }
     
-    .sidebar-toggle {
-        display: none;
-    }
-    
-    .sidebar-toggle-mobile {
-        display: none !important;
+    .dashboard-quick-actions {
+        justify-content: center;
     }
 }
 
 /* Large devices (desktops, 992px and up) */
-@media (min-width: 992px) and (max-width: 1199.98px) {
-    .sidebar {
-        width: var(--sidebar-width);
-    }
-    
-    .main-content {
-        margin-left: var(--sidebar-width);
-    }
-    
-    .stats-grid {
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    }
-    
-    .sidebar-toggle {
-        display: none;
-    }
-    
+@media (min-width: 992px) {
     .sidebar-toggle-mobile {
+        display: none !important;
+    }
+    
+    .sidebar-overlay {
         display: none !important;
     }
 }
 
 /* Extra large devices (large desktops, 1200px and up) */
 @media (min-width: 1200px) {
-    .sidebar {
-        width: var(--sidebar-width);
+    .stats-grid {
+        grid-template-columns: repeat(4, 1fr);
     }
     
-    .main-content {
-        margin-left: var(--sidebar-width);
+    .recent-transactions-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
     
-    .sidebar-toggle {
-        display: none;
-    }
-    
-    .sidebar-toggle-mobile {
-        display: none !important;
+    .container-fluid {
+        max-width: 1400px;
     }
 }
 
-/* Print Styles */
+/* ========== PRINT STYLES ========== */
 @media print {
     .sidebar,
     .top-navbar,
+    .dashboard-quick-actions,
     .btn,
-    .quick-actions,
-    .action-buttons,
-    .filter-form,
-    .pagination,
     .notification-container {
         display: none !important;
     }
     
     .main-content {
         margin-left: 0 !important;
-        width: 100%;
+        width: 100% !important;
     }
     
     .content-wrapper {
         padding: 0;
+        padding-top: 0;
     }
     
-    .table {
-        border: 1px solid #000;
-    }
-    
-    .table th {
-        background: #ddd !important;
-        color: #000 !important;
-    }
-    
+    .stat-card,
     .card {
+        break-inside: avoid;
         box-shadow: none !important;
-        border: 1px solid #000;
+        border: 1px solid #000 !important;
     }
 }
 
-/* ============================================
-   DISABLE DARK MODE COMPLETELY FOR FINANCE
-   ============================================ */
-
-/* Force light mode on ALL screens */
-body.finance-body {
-    background-color: #f5f7fa !important;
-    color: #333 !important;
-}
-
-.finance-body .content-wrapper,
-.finance-body .container-fluid,
-.finance-body .main-content-area {
-    background-color: #f5f7fa !important;
-    color: #333 !important;
-}
-
-.finance-body .card,
-.finance-body .stat-card {
-    background-color: #ffffff !important;
-    color: #333 !important;
-    border: 1px solid #e0e0e0 !important;
-}
-
-.finance-body .stats-grid {
-    background-color: transparent !important;
-}
-
-.finance-body .table {
-    background-color: #ffffff !important;
-    color: #333 !important;
-}
-
-.finance-body .table th {
-    background-color: #f8f9fa !important;
-    color: #555 !important;
-}
-
-.finance-body .table td {
-    background-color: #ffffff !important;
-    color: #333 !important;
-    border-color: #eee !important;
-}
-
-/* Ensure all text is visible */
-.finance-body h1,
-.finance-body h2,
-.finance-body h3,
-.finance-body h4,
-.finance-body h5,
-.finance-body h6,
-.finance-body .card-title,
-.finance-body .stat-card h3,
-.finance-body .amount,
-.finance-body .subtext,
-.finance-body .dashboard-section-header,
-.finance-body .text-muted {
-    color: #333 !important;
-}
-
-/* Force financial colors */
-.finance-body .tsh-amount.income {
-    color: #27ae60 !important;
-}
-
-.finance-body .tsh-amount.expense {
-    color: #e74c3c !important;
-}
-
-.finance-body .profit {
-    color: #27ae60 !important;
-}
-
-.finance-body .loss {
-    color: #e74c3c !important;
-}
-
-/* Mobile-specific dark mode override */
-@media (prefers-color-scheme: dark) and (max-width: 991.98px) {
-    body.finance-body,
-    .finance-body .content-wrapper,
-    .finance-body .container-fluid,
-    .finance-body .main-content-area,
-    .finance-body .card,
-    .finance-body .stat-card,
-    .finance-body .table,
-    .finance-body .table th,
-    .finance-body .table td {
-        background-color: #ffffff !important;
-        color: #333 !important;
-    }
-}
-
-/* High contrast mode */
-@media (prefers-contrast: high) {
-    .btn {
-        border: 2px solid currentColor;
+/* ========== DARK MODE SUPPORT ========== */
+@media (prefers-color-scheme: dark) {
+    .finance-body {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%) !important;
+        color: #e0e0e0 !important;
     }
     
+    .card,
     .stat-card {
-        border: 2px solid currentColor;
+        background: #2d3748 !important;
+        color: #e0e0e0 !important;
+        border-color: #4a5568 !important;
+    }
+    
+    .card-header {
+        background: #2d3748 !important;
+        border-color: #4a5568 !important;
     }
     
     .table th,
     .table td {
-        border: 2px solid currentColor;
+        color: #e0e0e0 !important;
+        border-color: #4a5568 !important;
+    }
+    
+    .table-striped tbody tr:nth-child(odd) {
+        background: rgba(255, 255, 255, 0.05) !important;
     }
 }
 
-/* Reduced motion */
+/* ========== ACCESSIBILITY ========== */
 @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
@@ -443,56 +285,19 @@ body.finance-body {
     }
 }
 
-/* Touch device optimizations */
-@media (hover: none) and (pointer: coarse) {
-    .btn,
-    .action-btn,
-    .page-link {
-        min-height: 44px;
-        min-width: 44px;
+/* ========== HIGH CONTRAST MODE ========== */
+@media (prefers-contrast: high) {
+    .stat-card,
+    .card {
+        border: 2px solid #000 !important;
+    }
+    
+    .btn {
+        border: 2px solid #000 !important;
     }
     
     .table th,
     .table td {
-        padding: 16px 12px;
-    }
-    
-    .filter-row select,
-    .filter-row input {
-        min-height: 44px;
-    }
-}
-
-/* Form Responsive Styles */
-@media (max-width: 768px) {
-    .form-container {
-        padding: 0 10px;
-    }
-    
-    .form-card {
-        padding: 20px;
-        margin: 0 -10px;
-        width: calc(100% + 20px);
-        border-radius: 0;
-        box-shadow: none;
-        border: 1px solid var(--border-color);
-    }
-    
-    .form-row {
-        grid-template-columns: 1fr;
-        gap: 15px;
-    }
-    
-    .form-actions {
-        flex-direction: column;
-    }
-    
-    .form-actions .btn {
-        width: 100%;
-        margin-bottom: 10px;
-    }
-    
-    .form-group.full-width {
-        grid-column: auto;
+        border: 1px solid #000 !important;
     }
 }

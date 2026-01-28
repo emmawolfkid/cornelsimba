@@ -1,66 +1,441 @@
-/* ===== DASHBOARD BUTTON FIXES ===== */
+/* dashboard.css - Updated with attractive card designs */
+
+/* ========== DASHBOARD SECTIONS ========== */
+.dashboard-section-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin: 40px 0 25px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.dashboard-section-header i {
+    font-size: 1.8rem;
+    color: var(--primary-color);
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.dashboard-section-header h2 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--dark-color);
+    margin: 0;
+}
+
+/* Special header for financial position */
+.dashboard-section-header.finance {
+    border-bottom: 3px solid var(--primary-color);
+}
+
+.dashboard-section-header.payables {
+    border-bottom: 3px solid var(--warning-color);
+}
+
+/* ========== STATS GRID ========== */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
+    margin-bottom: 40px;
+}
+
+.stat-card {
+    background: white;
+    border-radius: var(--border-radius);
+    padding: 25px;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border-color);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: var(--shadow-lg);
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+}
+
+.stat-card h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--gray-dark);
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.stat-card h3 i {
+    font-size: 1.2rem;
+}
+
+/* Card color variations */
+.stat-card-cash::before {
+    background: linear-gradient(90deg, #2196f3, #21cbf3);
+}
+
+.stat-card-working::before {
+    background: linear-gradient(90deg, #4caf50, #8bc34a);
+}
+
+.stat-card-ratio::before {
+    background: linear-gradient(90deg, #ff9800, #ff5722);
+}
+
+.stat-card-profit::before {
+    background: linear-gradient(90deg, #9c27b0, #e91e63);
+}
+
+.stat-card-income::before {
+    background: linear-gradient(90deg, #4caf50, #00bcd4);
+}
+
+.stat-card-expense::before {
+    background: linear-gradient(90deg, #f44336, #ff9800);
+}
+
+.stat-card-payroll::before {
+    background: linear-gradient(90deg, #2196f3, #9c27b0);
+}
+
+.stat-card-unpaid-expense::before {
+    background: linear-gradient(90deg, #ff5722, #f44336);
+}
+
+.stat-card-unpaid-payroll::before {
+    background: linear-gradient(90deg, #ff9800, #ff5722);
+}
+
+.stat-card-total-payables::before {
+    background: linear-gradient(90deg, #ff5722, #9c27b0);
+}
+
+.stat-card-paid-out::before {
+    background: linear-gradient(90deg, #4caf50, #2196f3);
+}
+
+/* ========== AMOUNT DISPLAY ========== */
+.amount {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin: 15px 0;
+    line-height: 1;
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #2c3e50, #4a6278);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.tsh-amount {
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.5px;
+}
+
+.tsh-amount.income {
+    background: linear-gradient(135deg, #27ae60, #2ecc71) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+}
+
+.tsh-amount.expense {
+    background: linear-gradient(135deg, #e74c3c, #c0392b) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+}
+
+.tsh-amount.neutral {
+    background: linear-gradient(135deg, #7f8c8d, #95a5a6) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+}
+
+/* Profit/Loss styling */
+.profit {
+    background: linear-gradient(135deg, #27ae60, #2ecc71) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+}
+
+.loss {
+    background: linear-gradient(135deg, #e74c3c, #c0392b) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+}
+
+/* ========== RATIO DISPLAY ========== */
+.ratio-display {
+    font-size: 2.8rem;
+    font-weight: 900;
+    margin: 15px 0;
+    line-height: 1;
+    font-family: 'Arial', sans-serif;
+    text-align: center;
+    padding: 10px;
+    border-radius: var(--border-radius-sm);
+    background: rgba(0, 0, 0, 0.03);
+    border: 2px dashed;
+}
+
+.ratio-good {
+    color: #27ae60;
+    border-color: rgba(39, 174, 96, 0.3);
+}
+
+.ratio-warning {
+    color: #f39c12;
+    border-color: rgba(243, 156, 18, 0.3);
+}
+
+.ratio-danger {
+    color: #e74c3c;
+    border-color: rgba(231, 76, 60, 0.3);
+}
+
+/* ========== SUBTEXT ========== */
+.subtext {
+    font-size: 0.9rem;
+    color: var(--gray);
+    margin-top: 10px;
+    line-height: 1.5;
+}
+
+/* ========== HEALTH INDICATORS ========== */
+.health-indicator {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.health-good {
+    background: linear-gradient(135deg, #27ae60, #2ecc71);
+    color: white;
+}
+
+.health-warning {
+    background: linear-gradient(135deg, #f39c12, #f1c40f);
+    color: white;
+}
+
+.health-danger {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    color: white;
+}
+
+/* ========== QUICK ACTIONS ========== */
 .dashboard-quick-actions {
     display: flex;
-    gap: 12px;
-    margin-bottom: 30px;
     flex-wrap: wrap;
+    gap: 15px;
+    margin: 40px 0;
+    padding: 25px;
+    background: linear-gradient(135deg, #f8fafc, #ffffff);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
 }
 
-/* Force ALL dashboard buttons to have colors */
-.dashboard-quick-actions .btn {
-    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%) !important;
-    color: white !important;
-    border: none !important;
-    border-radius: 8px !important;
-    padding: 12px 20px !important;
-    font-weight: 600 !important;
-    box-shadow: 0 4px 8px rgba(33, 150, 243, 0.2) !important;
-    min-width: 140px;
-    text-align: center;
-    transition: all 0.3s !important;
+.dashboard-quick-actions a.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 24px;
+    border-radius: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: none;
+    font-size: 1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
 }
 
-.dashboard-quick-actions .btn:hover {
-    transform: translateY(-3px) !important;
-    box-shadow: 0 6px 12px rgba(33, 150, 243, 0.3) !important;
+.dashboard-quick-actions a.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.6s;
 }
 
-/* Specific button colors */
-.dashboard-quick-actions .btn-success {
-    background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%) !important;
-    box-shadow: 0 4px 8px rgba(76, 175, 80, 0.2) !important;
+.dashboard-quick-actions a.btn:hover::before {
+    left: 100%;
 }
 
-.dashboard-quick-actions .btn-primary {
-    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%) !important;
+.dashboard-quick-actions a.btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
 
-.dashboard-quick-actions .btn-purple {
-    background: linear-gradient(135deg, #9C27B0 0%, #7B1FA2 100%) !important;
-    box-shadow: 0 4px 8px rgba(156, 39, 176, 0.2) !important;
+.dashboard-quick-actions a.btn i {
+    font-size: 1.2rem;
 }
 
-.dashboard-quick-actions .btn-dark-bg {
-    background: linear-gradient(135deg, #2c3e50 0%, #1a252f 100%) !important;
-    box-shadow: 0 4px 8px rgba(44, 62, 80, 0.2) !important;
+/* Button color variations */
+.dashboard-quick-actions a.btn-primary {
+    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+    color: white;
 }
 
-/* Stat card borders */
-.stat-card-cash { border-left: 5px solid #4CAF50; }
-.stat-card-working { border-left: 5px solid #2196F3; }
-.stat-card-ratio { border-left: 5px solid #FF9800; }
-.stat-card-income { border-left: 5px solid #4CAF50; }
-.stat-card-expense { border-left: 5px solid #F44336; }
-.stat-card-payroll { border-left: 5px solid #2196F3; }
+.dashboard-quick-actions a.btn-success {
+    background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%);
+    color: white;
+}
 
-/* Mobile fixes */
+.dashboard-quick-actions a.btn-purple {
+    background: linear-gradient(135deg, #9C27B0 0%, #7B1FA2 100%);
+    color: white;
+}
+
+.dashboard-quick-actions a.btn-dark-bg {
+    background: linear-gradient(135deg, #2c3e50 0%, #1a252f 100%);
+    color: white;
+}
+
+.dashboard-quick-actions a.btn-warning {
+    background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+    color: white;
+}
+
+.dashboard-quick-actions a.btn-info {
+    background: linear-gradient(135deg, #00bcd4 0%, #0097a7 100%);
+    color: white;
+}
+
+/* Outline button */
+.dashboard-quick-actions a.btn-outline {
+    background: white;
+    color: var(--primary-color);
+    border: 2px solid var(--primary-color);
+}
+
+.dashboard-quick-actions a.btn-outline:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+/* ========== RECENT TRANSACTIONS GRID ========== */
+.recent-transactions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 30px;
+    margin: 40px 0;
+}
+
+.recent-transactions-grid .card {
+    border-top: 4px solid;
+    transition: var(--transition);
+}
+
+.recent-transactions-grid .card:hover {
+    transform: translateY(-5px);
+}
+
+.recent-transactions-grid .card:nth-child(1) {
+    border-top-color: var(--success-color);
+}
+
+.recent-transactions-grid .card:nth-child(2) {
+    border-top-color: var(--danger-color);
+}
+
+.recent-transactions-grid .card-footer {
+    display: flex;
+    justify-content: flex-end;
+    background: transparent;
+    border-top: 1px solid var(--border-color);
+}
+
+.recent-transactions-grid .card-footer a.btn-sm {
+    padding: 8px 20px;
+    font-size: 0.9rem;
+}
+
+/* ========== FINANCIAL HEALTH TABLE ========== */
+.card.mt-4 {
+    border-top: 4px solid var(--info-color);
+}
+
+.card.mt-4 .card-header {
+    background: linear-gradient(135deg, #e1f5fe, #f3f9ff);
+}
+
+/* ========== RESPONSIVE ADJUSTMENTS ========== */
 @media (max-width: 768px) {
-    .dashboard-quick-actions {
-        gap: 8px;
+    .stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
     }
     
-    .dashboard-quick-actions .btn {
-        flex: 1;
-        min-width: 0;
+    .amount {
+        font-size: 2rem;
+    }
+    
+    .ratio-display {
+        font-size: 2.2rem;
+    }
+    
+    .dashboard-quick-actions {
+        flex-direction: column;
+    }
+    
+    .dashboard-quick-actions a.btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .recent-transactions-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .dashboard-section-header h2 {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .amount {
+        font-size: 1.8rem;
+    }
+    
+    .content-header h1 {
+        font-size: 1.5rem;
+    }
+    
+    .dashboard-section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
     }
 }
