@@ -1,109 +1,174 @@
 /* ==================================================
-   SIDEBAR.CSS – CLEAN, MODERN, STABLE
-   Works with base.css (NO CONFLICTS)
+   SIDEBAR.CSS – ENHANCED, MODERN, ATTRACTIVE
+   Professional Finance System Sidebar - 2026 Edition
    ================================================== */
 
-/* ========== SIDEBAR BASE ========== */
+/* ========== SIDEBAR BASE - ENHANCED ========== */
 .sidebar {
     width: 280px;
     height: 100vh;
     position: fixed;
     top: 0;
     left: 0;
-    background: linear-gradient(180deg, #1a237e 0%, #283593 35%, #3949ab 100%);
+    background: linear-gradient(180deg, #0d47a1 0%, #1565c0 25%, #1976d2 50%, #1e88e5 75%, #2196f3 100%);
     color: #ffffff;
     display: flex;
     flex-direction: column;
     z-index: 1000;
-    box-shadow: 4px 0 18px rgba(0,0,0,0.2);
-    transition: transform .3s ease;
+    box-shadow: 4px 0 20px rgba(0,0,0,0.15), 0 0 40px rgba(13, 71, 161, 0.2);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     overflow: hidden;
+    border-right: 1px solid rgba(255,255,255,0.1);
 }
 
-/* ========== HEADER ========== */
+/* Animated background overlay */
+.sidebar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        radial-gradient(circle at 20% 20%, rgba(255,255,255,0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(255,255,255,0.05) 0%, transparent 50%),
+        radial-gradient(circle at 40% 60%, rgba(33,150,243,0.3) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.sidebar > * {
+    position: relative;
+    z-index: 2;
+}
+
+/* ========== HEADER - ENHANCED ========== */
 .sidebar-header {
-    padding: 20px;
+    padding: 24px 20px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid rgba(255,255,255,.12);
-    background: rgba(0,0,0,.15);
+    border-bottom: 1px solid rgba(255,255,255,0.15);
+    background: rgba(0,0,0,0.2);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 
 .logo {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 14px;
 }
 
 .logo i {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
-    background: rgba(255,255,255,.15);
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1));
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.6rem;
+    font-size: 1.8rem;
+    color: #81d4fa;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.2);
+    transition: all 0.3s ease;
+}
+
+.logo i:hover {
+    transform: scale(1.05);
     color: #4fc3f7;
 }
 
 .logo h2 {
-    font-size: 1.35rem;
-    font-weight: 700;
+    font-size: 1.4rem;
+    font-weight: 800;
     color: #fff;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    letter-spacing: -0.5px;
 }
 
 .sidebar-toggle {
     display: none;
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
-    background: rgba(255,255,255,.15);
-    border: none;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2);
     color: #fff;
     cursor: pointer;
+    transition: all 0.3s ease;
 }
 
-/* ========== USER INFO ========== */
+.sidebar-toggle:hover {
+    background: rgba(255,255,255,0.25);
+    transform: scale(1.05);
+}
+
+/* ========== USER INFO - ENHANCED ========== */
 .user-info {
-    padding: 18px 20px;
+    padding: 20px;
     display: flex;
     align-items: center;
-    gap: 12px;
-    border-bottom: 1px solid rgba(255,255,255,.12);
+    gap: 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 
 .user-avatar {
-    width: 48px;
-    height: 48px;
+    width: 52px;
+    height: 52px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #1e88e5, #42a5f5);
+    background: linear-gradient(135deg, #1e88e5, #42a5f5, #81d4fa);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.6rem;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2), 0 0 20px rgba(30,136,229,0.3);
+    border: 2px solid rgba(255,255,255,0.2);
+    transition: all 0.3s ease;
+}
+
+.user-avatar:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.3), 0 0 30px rgba(30,136,229,0.4);
 }
 
 .user-details h4 {
-    font-size: .95rem;
-    font-weight: 600;
-    margin-bottom: 2px;
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
 
 .user-role {
-    font-size: .75rem;
-    opacity: .8;
-    background: rgba(255,255,255,.15);
-    padding: 4px 10px;
+    font-size: 0.8rem;
+    opacity: 0.9;
+    background: linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1));
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: 6px 12px;
     border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.2);
+    font-weight: 600;
 }
 
-/* ========== MENU ========== */
+/* ========== MENU - ENHANCED ========== */
 .sidebar-menu {
     flex: 1;
     overflow-y: auto;
-    padding: 12px 0;
+    padding: 16px 0;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.3) transparent;
 }
 
 .sidebar-menu ul {
@@ -111,119 +176,244 @@
 }
 
 .menu-header {
-    padding: 14px 20px 6px;
-    font-size: .7rem;
-    letter-spacing: 1px;
+    padding: 16px 20px 8px;
+    font-size: 0.7rem;
+    letter-spacing: 1.5px;
     text-transform: uppercase;
-    color: rgba(255,255,255,.55);
+    color: rgba(255,255,255,0.6);
+    font-weight: 700;
+    position: relative;
 }
 
-/* MENU ITEM */
+.menu-header::after {
+    content: '';
+    position: absolute;
+    bottom: 4px;
+    left: 20px;
+    right: 20px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+}
+
+/* ========== MENU ITEM - ENHANCED ========== */
 .menu-item {
-    padding: 4px 12px;
+    padding: 3px 16px;
+    margin-bottom: 2px;
 }
 
 .menu-item a {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 12px 14px;
-    border-radius: 12px;
+    gap: 14px;
+    padding: 14px 16px;
+    border-radius: 14px;
     text-decoration: none;
-    color: rgba(255,255,255,.85);
-    transition: all .25s ease;
+    color: rgba(255,255,255,0.9);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
+    font-weight: 500;
+    font-size: 0.95rem;
+    overflow: hidden;
+}
+
+.menu-item a::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    transition: left 0.5s;
+}
+
+.menu-item a:hover::before {
+    left: 100%;
 }
 
 .menu-item a i {
-    width: 22px;
-    font-size: 1.05rem;
+    width: 24px;
+    font-size: 1.2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+/* Hover Effects */
+.menu-item a:hover {
+    background: linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.08));
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: #fff;
+    transform: translateX(6px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+.menu-item a:hover i {
+    transform: scale(1.1);
+    color: #81d4fa;
+}
+
+/* Active State - Enhanced */
+.menu-item.active a {
+    background: linear-gradient(135deg, #1e88e5, #42a5f5);
+    color: #fff;
+    box-shadow: 
+        0 6px 20px rgba(30,136,229,0.4),
+        0 2px 10px rgba(0,0,0,0.2),
+        inset 0 1px 0 rgba(255,255,255,0.2);
+    transform: translateX(6px);
+    border: 1px solid rgba(255,255,255,0.3);
+    font-weight: 600;
+}
+
+.menu-item.active a i {
+    color: #fff;
+    transform: scale(1.1);
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.menu-item.active a::after {
+    content: '';
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 6px;
+    height: 6px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 0 10px rgba(255,255,255,0.8);
+}
+
+/* Badge - Enhanced */
+.menu-item .badge {
+    margin-left: auto;
+    background: linear-gradient(135deg, #ff6f00, #ff8f00);
+    color: #fff;
+    font-size: 0.7rem;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(255,111,0,0.3);
+    border: 1px solid rgba(255,255,255,0.2);
+    min-width: 20px;
     text-align: center;
 }
 
-/* Hover */
-.menu-item a:hover {
-    background: rgba(255,255,255,.12);
-    color: #fff;
-    transform: translateX(4px);
-}
-
-/* Active */
-.menu-item.active a {
-    background: linear-gradient(90deg, #1e88e5, #42a5f5);
-    color: #fff;
-    box-shadow: 0 4px 14px rgba(30,136,229,.35);
-    transform: translateX(4px);
-}
-
-/* Badge */
-.menu-item .badge {
-    margin-left: auto;
-    background: #ffb300;
-    color: #000;
-    font-size: .7rem;
-    padding: 3px 8px;
-    border-radius: 20px;
-    font-weight: 700;
-}
-
-/* ========== FOOTER ========== */
+/* ========== FOOTER - ENHANCED ========== */
 .sidebar-footer {
-    padding: 18px 20px;
-    border-top: 1px solid rgba(255,255,255,.12);
+    padding: 20px;
+    border-top: 1px solid rgba(255,255,255,0.15);
+    background: rgba(0,0,0,0.2);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 
 .btn-logout {
     width: 100%;
-    padding: 12px;
-    border-radius: 12px;
-    background: rgba(255,255,255,.15);
+    padding: 14px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.08));
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     text-decoration: none;
     color: #fff;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap: 12px;
     font-weight: 600;
-    transition: all .25s ease;
+    font-size: 0.95rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(255,255,255,0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-logout::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    transition: left 0.5s;
+}
+
+.btn-logout:hover::before {
+    left: 100%;
 }
 
 .btn-logout:hover {
-    background: rgba(255,255,255,.25);
+    background: linear-gradient(135deg, rgba(255,255,255,0.25), rgba(255,255,255,0.15));
     transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+    border-color: rgba(255,255,255,0.3);
 }
 
-/* ========== OVERLAY ========== */
+.btn-logout i {
+    font-size: 1.1rem;
+    transition: transform 0.3s ease;
+}
+
+.btn-logout:hover i {
+    transform: scale(1.1);
+}
+
+/* ========== OVERLAY - ENHANCED ========== */
 .sidebar-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,.45);
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
     display: none;
     z-index: 999;
+    transition: all 0.3s ease;
 }
 
 .sidebar-overlay.active {
     display: block;
+    animation: overlayFadeIn 0.3s ease;
 }
 
-/* ========== SCROLLBAR ========== */
+@keyframes overlayFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* ========== SCROLLBAR - ENHANCED ========== */
 .sidebar-menu::-webkit-scrollbar {
     width: 6px;
 }
 
-.sidebar-menu::-webkit-scrollbar-thumb {
-    background: rgba(255,255,255,.25);
-    border-radius: 6px;
+.sidebar-menu::-webkit-scrollbar-track {
+    background: rgba(255,255,255,0.1);
+    border-radius: 3px;
 }
 
-/* ========== MOBILE ========== */
+.sidebar-menu::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(255,255,255,0.3), rgba(255,255,255,0.2));
+    border-radius: 3px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.sidebar-menu::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, rgba(255,255,255,0.4), rgba(255,255,255,0.3));
+}
+
+/* ========== MOBILE RESPONSIVE - ENHANCED ========== */
 @media (max-width: 992px) {
     .sidebar {
         transform: translateX(-100%);
+        box-shadow: none;
     }
 
     .sidebar.active {
         transform: translateX(0);
+        box-shadow: 4px 0 30px rgba(0,0,0,0.3);
     }
 
     .sidebar-toggle {
@@ -231,4 +421,95 @@
         align-items: center;
         justify-content: center;
     }
+}
+
+@media (max-width: 576px) {
+    .sidebar {
+        width: 100%;
+        max-width: 320px;
+    }
+    
+    .sidebar-header {
+        padding: 20px;
+    }
+    
+    .logo h2 {
+        font-size: 1.3rem;
+    }
+    
+    .user-info {
+        padding: 18px 20px;
+    }
+    
+    .menu-item a {
+        padding: 12px 16px;
+        font-size: 0.9rem;
+    }
+    
+    .sidebar-footer {
+        padding: 18px 20px;
+    }
+}
+
+/* ========== ACCESSIBILITY ========== */
+@media (prefers-reduced-motion: reduce) {
+    .sidebar,
+    .menu-item a,
+    .btn-logout,
+    .user-avatar,
+    .logo i {
+        transition: none;
+    }
+    
+    .sidebar-overlay {
+        animation: none;
+    }
+}
+
+/* ========== HIGH CONTRAST MODE ========== */
+@media (prefers-contrast: high) {
+    .sidebar {
+        border-right: 2px solid #fff;
+    }
+    
+    .menu-item a {
+        border: 1px solid transparent;
+    }
+    
+    .menu-item a:hover,
+    .menu-item.active a {
+        border-color: #fff;
+    }
+    
+    .btn-logout {
+        border: 2px solid rgba(255,255,255,0.5);
+    }
+}
+
+/* ========== LOADING STATE ========== */
+.sidebar.loading {
+    opacity: 0.7;
+}
+
+.sidebar.loading .menu-item a {
+    pointer-events: none;
+}
+
+/* ========== ANIMATION CLASSES ========== */
+.sidebar-slide-in {
+    animation: slideInLeft 0.3s ease;
+}
+
+.sidebar-slide-out {
+    animation: slideOutLeft 0.3s ease;
+}
+
+@keyframes slideInLeft {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(0); }
+}
+
+@keyframes slideOutLeft {
+    from { transform: translateX(0); }
+    to { transform: translateX(-100%); }
 }
