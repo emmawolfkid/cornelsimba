@@ -292,3 +292,35 @@ body.finance-body {
         justify-content: center;
     }
 }
+
+/* ==================================================
+   FORCE LIGHT MODE (FIX MOBILE DARK MODE BUG)
+   ================================================== */
+
+html {
+    color-scheme: light;
+}
+
+body.finance-body {
+    background-color: #f6f8fb !important;
+    color: #263238 !important;
+}
+
+/* Force cards to stay light */
+.card,
+.stat-card {
+    background-color: #ffffff !important;
+    color: #263238 !important;
+}
+
+/* Ensure text inside cards stays readable */
+.card *,
+.stat-card * {
+    color: inherit;
+}
+
+/* Force sidebar to remain visible on mobile */
+.sidebar {
+    background: linear-gradient(180deg, #1a237e 0%, #283593 35%, #3949ab 100%) !important;
+    color: #ffffff !important;
+}
