@@ -25,55 +25,49 @@ document.addEventListener('DOMContentLoaded', function() {
 // ===== SIDEBAR FUNCTIONS =====
 function initSidebar() {
     const sidebar = document.querySelector('.sidebar');
-    const sidebarToggle = document.getElementById('sidebarToggle');
-const sidebarToggleMobile = document.getElementById('sidebarToggleMobile');
+    const toggleBtn = document.getElementById('sidebarToggleMobile');
+    const overlay = document.getElementById('sidebarOverlay');
 
-
-    if (!sidebar || (!sidebarToggle && !sidebarToggleMobile)) return;
-
-
-    // Create overlay for mobile
-    const sidebarOverlay = document.createElement('div');
-    sidebarOverlay.className = 'sidebar-overlay';
-    document.body.appendChild(sidebarOverlay);
-
-    const toggleHandler = function (e) {
-    e.stopPropagation();
-
-    // MOBILE
-    if (window.innerWidth <= 768) {
-        sidebar.classList.toggle('active');
-        sidebarOverlay.classList.toggle('active');
-    }
-    // DESKTOP
-    else {
-        sidebar.classList.toggle('sidebar-collapsed');
-        localStorage.setItem(
-            'sidebarCollapsed',
-            sidebar.classList.contains('sidebar-collapsed')
-        );
-    }
-};
-
-if (sidebarToggle) {
-    sidebarToggle.addEventListener('click', toggleHandler);
-}
-
-if (sidebarToggleMobile) {
-    sidebarToggleMobile.addEventListener('click', toggleHandler);
-}
-
-
-    // Restore desktop collapsed state
-    const savedState = localStorage.getItem('sidebarCollapsed');
-    if (savedState === 'true' && window.innerWidth > 768) {
-        sidebar.classList.add('sidebar-collapsed');
+    if (!sidebar || !toggleBtn || !overlay) {
+        console.warn('Sidebar elements missing');
+        return;
     }
 
-    // Close sidebar when clicking overlay
-    sidebarOverlay.addEventListener('click', function () {
+    // OPEN sidebar
+    toggleBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        sidebar.classList.add('active');
+        overlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    });
+
+    // CLOSE when clicking overlay
+    overlay.addEventListener('click', function () {
         sidebar.classList.remove('active');
-        sidebarOverlay.classList.remove('active');
+        overlay.classList.remove('active');
+        document.body.style.overflow = '';
+    });
+
+    // CLOSE when clicking a menu item (mobile)
+    sidebar.querySelectorAll('.menu-item a').forEach(link => {
+        link.addEventListener('click', function () {
+            if (window.innerWidth < 992) {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        });
+    });
+
+    // SAFETY: reset on resize
+    window.addEventListener('resize', function () {
+        if (window.innerWidth >= 992) {
+            sidebar.classList.remove('active');
+            overlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
     });
 }
 

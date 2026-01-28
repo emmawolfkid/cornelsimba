@@ -4,6 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+<meta name="theme-color" content="#f5f7fa">
+
     <title>{% block title %}Finance System{% endblock %}</title>
     
     <!-- External CSS - IMPORTANT ORDER -->
@@ -19,6 +22,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     {% block extra_css %}{% endblock %}
+    <style>
+  html { color-scheme: light !important; }
+</style>
+
 </head>
 <body class="finance-body">
     <!-- Mobile Sidebar Overlay -->
@@ -76,61 +83,6 @@
     <script src="{% static 'finance/js/base.js' %}"></script>
     {% block extra_js %}{% endblock %}
     
-   <script>
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Finance Dashboard Loaded');
-    
-    // Use the navbar toggle button
-    const mobileToggle = document.getElementById('sidebarToggleMobile');
-    const sidebar = document.querySelector('.sidebar');
-    const overlay = document.getElementById('sidebarOverlay');
-    
-    console.log('Elements found:', {
-        mobileToggle: !!mobileToggle,
-        sidebar: !!sidebar,
-        overlay: !!overlay
-    });
-    
-    // Toggle sidebar when navbar button is clicked
-    if (mobileToggle && sidebar) {
-        mobileToggle.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            console.log('Navbar toggle clicked');
-            
-            if (sidebar.classList.contains('active')) {
-                sidebar.classList.remove('active');
-                if (overlay) overlay.classList.remove('active');
-                document.body.style.overflow = 'auto';
-            } else {
-                sidebar.classList.add('active');
-                if (overlay) overlay.classList.add('active');
-                document.body.style.overflow = 'hidden';
-            }
-        });
-    }
-    
-    // Close sidebar when clicking overlay
-    if (overlay) {
-        overlay.addEventListener('click', function() {
-            console.log('Overlay clicked');
-            if (sidebar) sidebar.classList.remove('active');
-            overlay.classList.remove('active');
-            document.body.style.overflow = 'auto';
-        });
-    }
-    
-    // Close sidebar when clicking menu items
-    document.querySelectorAll('.menu-item a').forEach(link => {
-        link.addEventListener('click', function() {
-            if (window.innerWidth <= 575.98) {
-                if (sidebar) sidebar.classList.remove('active');
-                if (overlay) overlay.classList.remove('active');
-                document.body.style.overflow = 'auto';
-            }
-        });
-    });
-});
-</script>
+   
 </body>
 </html>
