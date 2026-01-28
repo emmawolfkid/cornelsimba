@@ -1,143 +1,134 @@
-/* responsive.css - Focus on mobile optimization */
+/* ==================================================
+   RESPONSIVE.CSS – CLEAN & SAFE
+   Handles layout adjustments ONLY
+   ================================================== */
 
-/* ========== MOBILE FIRST APPROACH ========== */
-
-/* Small devices (landscape phones, 576px and up) */
+/* ========== SMALL DEVICES (phones) ========== */
 @media (max-width: 575.98px) {
-    /* Layout adjustments */
+
+    /* Layout */
     .main-content {
-        margin-left: 0 !important;
-        width: 100% !important;
+        margin-left: 0;
+        width: 100%;
     }
-    
+
     .content-wrapper {
-        padding: 15px;
-        padding-top: 80px;
+        padding: 80px 15px 15px;
     }
-    
+
     .container-fluid {
-        padding: 0 15px;
+        padding: 0 10px;
     }
-    
-    /* Top navbar mobile adjustments */
+
+    /* Top navbar */
     .top-navbar {
-        left: 0 !important;
-        right: 0;
-        padding: 0 15px;
+        left: 0;
         height: 60px;
+        padding: 0 15px;
     }
-    
+
     .sidebar-toggle-mobile {
-        display: flex !important;
+        display: flex;
         width: 40px;
         height: 40px;
         font-size: 1.1rem;
     }
-    
+
     .navbar-center {
         display: none;
     }
-    
+
     .user-btn .user-name {
         display: none;
     }
-    
+
     .user-btn {
         padding: 8px;
         min-width: 44px;
         justify-content: center;
     }
-    
-    /* Sidebar mobile behavior */
+
+    /* Sidebar behaviour */
     .sidebar {
-        transform: translateX(-100%) !important;
-        width: 280px !important;
-        z-index: 1000 !important;
-        transition: transform 0.3s ease !important;
+        transform: translateX(-100%);
     }
-    
+
     .sidebar.active {
-        transform: translateX(0) !important;
+        transform: translateX(0);
     }
-    
+
     .sidebar-overlay {
         display: block;
         opacity: 0;
-        transition: opacity 0.3s ease;
         pointer-events: none;
+        transition: opacity .3s ease;
     }
-    
+
     .sidebar-overlay.active {
         opacity: 1;
         pointer-events: all;
     }
-    
-    /* Content adjustments */
+
+    /* Content header */
     .content-header h1 {
         font-size: 1.4rem;
         flex-direction: column;
         align-items: flex-start;
         gap: 8px;
     }
-    
+
     .content-header h1::before {
-        height: 4px;
         width: 50px;
+        height: 4px;
         border-radius: 2px;
     }
-    
-    /* Card adjustments */
+
+    /* Cards & tables */
     .card {
-        margin-bottom: 20px;
-        border-radius: 12px;
+        margin-bottom: 18px;
     }
-    
+
     .card-header,
     .card-body,
     .card-footer {
         padding: 15px;
     }
-    
+
     .table th,
     .table td {
         padding: 10px;
-        font-size: 0.9rem;
+        font-size: .9rem;
     }
-    
-    /* Dashboard specific */
+
+    /* Dashboard */
     .stats-grid {
-        gap: 15px;
+        gap: 16px;
     }
-    
+
     .stat-card {
         padding: 20px;
     }
-    
+
     .amount {
         font-size: 1.8rem;
     }
-    
+
     .ratio-display {
         font-size: 2rem;
         padding: 8px;
     }
-    
+
     .dashboard-quick-actions {
-        padding: 20px;
+        padding: 18px;
         gap: 10px;
     }
-    
-    .dashboard-quick-actions a.btn {
-        padding: 12px 20px;
-        font-size: 0.95rem;
+
+    .dashboard-quick-actions .btn {
+        width: 100%;
+        justify-content: center;
     }
-    
-    /* Hide complex elements on mobile */
-    .dashboard-section-header .subtitle {
-        display: none;
-    }
-    
-    /* Notification dropdown adjustments */
+
+    /* Dropdown */
     .user-dropdown-content {
         position: fixed;
         top: 60px;
@@ -147,157 +138,122 @@
     }
 }
 
-/* Medium devices (tablets, 768px and up) */
+/* ========== MEDIUM DEVICES (tablets) ========== */
 @media (min-width: 576px) and (max-width: 991.98px) {
+
     .sidebar {
         transform: translateX(-100%);
-        width: 280px;
     }
-    
+
     .sidebar.active {
         transform: translateX(0);
     }
-    
+
     .main-content {
-        margin-left: 0 !important;
-        width: 100% !important;
+        margin-left: 0;
+        width: 100%;
     }
-    
+
     .top-navbar {
-        left: 0 !important;
+        left: 0;
         padding: 0 20px;
     }
-    
+
     .sidebar-toggle-mobile {
-        display: flex !important;
+        display: flex;
     }
-    
-    .navbar-center {
-        flex: 1;
-        margin: 0 15px;
-    }
-    
+
     .stats-grid {
         grid-template-columns: repeat(2, 1fr);
     }
-    
+
     .recent-transactions-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .dashboard-quick-actions {
         justify-content: center;
     }
 }
 
-/* Large devices (desktops, 992px and up) */
+/* ========== LARGE DEVICES (desktop) ========== */
 @media (min-width: 992px) {
+
     .sidebar-toggle-mobile {
-        display: none !important;
+        display: none;
     }
-    
+
     .sidebar-overlay {
-        display: none !important;
+        display: none;
     }
 }
 
-/* Extra large devices (large desktops, 1200px and up) */
+/* ========== EXTRA LARGE DEVICES ========== */
 @media (min-width: 1200px) {
+
     .stats-grid {
         grid-template-columns: repeat(4, 1fr);
     }
-    
+
     .recent-transactions-grid {
         grid-template-columns: repeat(2, 1fr);
     }
-    
+
     .container-fluid {
         max-width: 1400px;
     }
 }
 
-/* ========== PRINT STYLES ========== */
+/* ========== PRINT SUPPORT ========== */
 @media print {
+
     .sidebar,
     .top-navbar,
     .dashboard-quick-actions,
     .btn,
     .notification-container {
-        display: none !important;
+        display: none;
     }
-    
+
     .main-content {
-        margin-left: 0 !important;
-        width: 100% !important;
+        margin-left: 0;
+        width: 100%;
     }
-    
+
     .content-wrapper {
         padding: 0;
-        padding-top: 0;
     }
-    
+
     .stat-card,
     .card {
         break-inside: avoid;
-        box-shadow: none !important;
-        border: 1px solid #000 !important;
-    }
-}
-
-/* ========== DARK MODE SUPPORT ========== */
-@media (prefers-color-scheme: dark) {
-    .finance-body {
-        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%) !important;
-        color: #e0e0e0 !important;
-    }
-    
-    .card,
-    .stat-card {
-        background: #2d3748 !important;
-        color: #e0e0e0 !important;
-        border-color: #4a5568 !important;
-    }
-    
-    .card-header {
-        background: #2d3748 !important;
-        border-color: #4a5568 !important;
-    }
-    
-    .table th,
-    .table td {
-        color: #e0e0e0 !important;
-        border-color: #4a5568 !important;
-    }
-    
-    .table-striped tbody tr:nth-child(odd) {
-        background: rgba(255, 255, 255, 0.05) !important;
+        box-shadow: none;
+        border: 1px solid #000;
     }
 }
 
 /* ========== ACCESSIBILITY ========== */
 @media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
+    * {
+        animation: none !important;
+        transition: none !important;
     }
 }
 
-/* ========== HIGH CONTRAST MODE ========== */
+/* ========== HIGH CONTRAST ========== */
 @media (prefers-contrast: high) {
-    .stat-card,
-    .card {
-        border: 2px solid #000 !important;
+
+    .card,
+    .stat-card {
+        border: 2px solid #000;
     }
-    
+
     .btn {
-        border: 2px solid #000 !important;
+        border: 2px solid #000;
     }
-    
+
     .table th,
     .table td {
-        border: 1px solid #000 !important;
+        border: 1px solid #000;
     }
 }
