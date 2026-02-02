@@ -5,33 +5,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="color-scheme" content="light">
-<meta name="theme-color" content="#f5f7fa">
+    <meta name="theme-color" content="#f5f7fa">
 
     <title>{% block title %}Finance System{% endblock %}</title>
     
     <!-- External CSS - IMPORTANT ORDER -->
-   <!-- External CSS - IMPORTANT ORDER -->
-<link rel="stylesheet" href="{% static 'finance/css/base.css' %}">
-<link rel="stylesheet" href="{% static 'finance/css/sidebar.css' %}">
-<!-- DASHBOARD CSS MUST LOAD BEFORE RESPONSIVE -->
-<link rel="stylesheet" href="{% static 'finance/css/dashboard.css' %}">
-<!-- LOAD RESPONSIVE CSS LAST -->
-<link rel="stylesheet" href="{% static 'finance/css/responsive.css' %}">
+    <link rel="stylesheet" href="{% static 'finance/css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'finance/css/sidebar.css' %}">
+    <link rel="stylesheet" href="{% static 'finance/css/dashboard.css' %}">
     
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     {% block extra_css %}{% endblock %}
     <style>
-  html { color-scheme: light !important; }
-</style>
-
+        html { color-scheme: light !important; }
+    </style>
 </head>
 <body class="finance-body">
     <!-- Mobile Sidebar Overlay -->
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
     
-
     <!-- Notification System -->
     {% if messages %}
     <div class="notification-container">
@@ -47,6 +41,17 @@
     </div>
     {% endif %}
 
+    <!-- Mobile Navigation Header -->
+    <div class="mobile-nav-header" id="mobileNavHeader">
+        <button class="sidebar-toggle-mobile" id="sidebarToggleMobile">
+            <i class="fas fa-bars"></i>
+        </button>
+        <div class="mobile-logo">
+            <i class="fas fa-chart-line"></i>
+            <span>Finance</span>
+        </div>
+    </div>
+
     <!-- Main Layout -->
     <div class="layout-wrapper">
         <!-- Sidebar -->
@@ -54,8 +59,6 @@
         
         <!-- Main Content -->
         <div class="main-content">
-           
-            
             <!-- Content Area -->
             <div class="content-wrapper">
                 <div class="container-fluid">
@@ -82,7 +85,5 @@
     <!-- JavaScript -->
     <script src="{% static 'finance/js/base.js' %}"></script>
     {% block extra_js %}{% endblock %}
-    
-   
 </body>
 </html>

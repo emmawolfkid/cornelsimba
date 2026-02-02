@@ -69,6 +69,77 @@ function initSidebar() {
             document.body.style.overflow = '';
         }
     });
+    // ===== SIDEBAR FUNCTIONS =====
+function initSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    const toggleBtn = document.getElementById('sidebarToggleMobile');
+    const overlay = document.getElementById('sidebarOverlay');
+
+    if (!sidebar || !toggleBtn || !overlay) {
+        console.warn('Sidebar elements missing');
+        return;
+    }
+
+    // OPEN sidebar on mobile toggle click
+    toggleBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        sidebar.classList.add('active');
+        overlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    });
+
+    // CLOSE when clicking overlay
+    overlay.addEventListener('click', function () {
+        sidebar.classList.remove('active');
+        overlay.classList.remove('active');
+        document.body.style.overflow = '';
+    });
+
+    // CLOSE when clicking the X button in sidebar header (mobile)
+    const closeSidebar = function() {
+        sidebar.classList.remove('active');
+        overlay.classList.remove('active');
+        document.body.style.overflow = '';
+    };
+    
+    // Add close button event if using CSS pseudo-element
+    document.addEventListener('click', function(e) {
+        if (window.innerWidth <= 768 && 
+            sidebar.classList.contains('active') &&
+            e.target.closest('.sidebar-header')) {
+            const headerRect = document.querySelector('.sidebar-header').getBoundingClientRect();
+            // Check if click is in the close button area (top-right corner)
+            if (e.clientX > headerRect.right - 50 && e.clientY < headerRect.top + 50) {
+                closeSidebar();
+            }
+        }
+    });
+
+    // CLOSE when clicking a menu item (mobile)
+    sidebar.querySelectorAll('.menu-item a').forEach(link => {
+        link.addEventListener('click', function () {
+            if (window.innerWidth < 992) {
+                closeSidebar();
+            }
+        });
+    });
+
+    // SAFETY: reset on resize
+    window.addEventListener('resize', function () {
+        if (window.innerWidth >= 992) {
+            closeSidebar();
+        }
+    });
+    
+    // ESC key to close sidebar
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && sidebar.classList.contains('active')) {
+            closeSidebar();
+        }
+    });
+}
 }
 
 

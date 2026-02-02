@@ -2,6 +2,10 @@
    SIDEBAR.CSS - Navigation Sidebar
    ============================================ */
 
+:root {
+    --sidebar-width: 280px;
+}
+
 .sidebar {
     position: fixed;
     left: 0;
@@ -9,18 +13,13 @@
     bottom: 0;
     width: var(--sidebar-width);
     background: linear-gradient(180deg, #1a202c 0%, #2d3748 100%);
-    color: white !important;
+    color: white;
     z-index: 1000;
     display: flex;
     flex-direction: column;
-    transform: translateX(-100%); /* Hidden by default on mobile */
+    transform: translateX(-100%);
     transition: transform 0.3s ease;
     box-shadow: 2px 0 8px rgba(0,0,0,0.1);
-}
-
-/* Sidebar when active */
-.sidebar.active {
-    transform: translateX(0);
 }
 
 /* Sidebar Header */
@@ -31,6 +30,7 @@
     align-items: center;
     justify-content: space-between;
     background: rgba(0,0,0,0.2);
+    position: relative;
 }
 
 .logo {
@@ -52,41 +52,6 @@
     font-weight: 700;
     color: white;
     margin: 0;
-}
-
-/* Sidebar Toggle Buttons */
-.sidebar-toggle, .sidebar-toggle-mobile {
-    background: rgba(255,255,255,0.1);
-    border: none;
-    color: white;
-    width: 40px;
-    height: 40px;
-    border-radius: 6px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-    font-size: 1.25rem;
-}
-
-.sidebar-toggle:hover, .sidebar-toggle-mobile:hover {
-    background: rgba(255,255,255,0.2);
-}
-
-/* Mobile toggle - visible on mobile */
-.sidebar-toggle-mobile {
-    position: fixed;
-    top: 1rem;
-    left: 1rem;
-    z-index: 1001;
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-    display: none; /* Hidden by default, shown on mobile */
-}
-
-/* Desktop toggle */
-.sidebar-toggle {
-    display: none;
 }
 
 /* Sidebar Content */
@@ -177,7 +142,7 @@
 }
 
 .menu-item.active a {
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    background: linear-gradient(135deg, #4299e1, #3182ce);
     color: white;
 }
 
@@ -241,7 +206,7 @@
     transform: translateY(-50%);
     width: 4px;
     height: 24px;
-    background: var(--success-color);
+    background: #48bb78;
     border-radius: 0 2px 2px 0;
 }
 
@@ -271,7 +236,6 @@
 @media (max-width: 768px) {
     .sidebar {
         width: 280px;
-        transform: translateX(-100%);
     }
     
     .sidebar.active {
@@ -283,51 +247,57 @@
         display: block;
     }
     
-    .sidebar-toggle-mobile {
-        display: flex !important;
+    /* Add close button to sidebar header on mobile */
+    .sidebar-header::after {
+        content: '\f00d';
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        width: 40px;
+        height: 40px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 1.25rem;
+        transition: all 0.2s;
     }
     
-    /* Prevent body scrolling when sidebar is open */
-    body.sidebar-open {
-        overflow: hidden;
+    .sidebar-header::after:hover {
+        background: rgba(255,255,255,0.2);
     }
 }
+
+/* ============================================
+   TABLET STYLES (769px to 991px)
+   ============================================ */
 
 @media (min-width: 769px) and (max-width: 991px) {
     .sidebar {
         width: 250px;
-        transform: translateX(0); /* Always visible on tablet */
+        transform: translateX(0);
     }
     
     .main-content {
         margin-left: 250px;
     }
-    
-    .sidebar-toggle-mobile {
-        display: none !important;
-    }
 }
 
 /* ============================================
-   DESKTOP STYLES
+   DESKTOP STYLES (992px and above)
    ============================================ */
 
 @media (min-width: 992px) {
     .sidebar {
-        transform: translateX(0); /* Always visible on desktop */
         width: var(--sidebar-width);
+        transform: translateX(0);
     }
     
     .main-content {
         margin-left: var(--sidebar-width);
-    }
-    
-    .sidebar-toggle-mobile {
-        display: none !important;
-    }
-    
-    /* Desktop sidebar doesn't need overlay */
-    .sidebar-overlay {
-        display: none !important;
     }
 }
