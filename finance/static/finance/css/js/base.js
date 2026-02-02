@@ -675,3 +675,59 @@ window.addEventListener('load', function() {
     // Ensure currency formatting is applied after all content loads
     setTimeout(formatAllCurrencyElements, 100);
 });
+
+// Add this to your base.js after all other code
+document.addEventListener('DOMContentLoaded', function() {
+    // Force light theme
+    document.documentElement.setAttribute('data-theme', 'light');
+    document.body.classList.add('finance-body');
+    
+    // Remove any dark theme classes
+    document.body.classList.remove('dark', 'dark-mode', 'theme-dark');
+    
+    // Fix sidebar positioning on desktop
+    function fixSidebarPosition() {
+        const sidebar = document.querySelector('.sidebar');
+        const mainContent = document.querySelector('.main-content');
+        
+        if (window.innerWidth >= 992) {
+            // Desktop: show sidebar, add margin to main content
+            if (sidebar) {
+                sidebar.classList.add('active');
+                sidebar.style.transform = 'translateX(0)';
+            }
+            if (mainContent) {
+                mainContent.style.marginLeft = '280px';
+            }
+        } else {
+            // Mobile: hide sidebar, no margin
+            if (sidebar) {
+                sidebar.classList.remove('active');
+                sidebar.style.transform = 'translateX(-100%)';
+            }
+            if (mainContent) {
+                mainContent.style.marginLeft = '0';
+            }
+        }
+    }
+    
+    // Run on load and resize
+    fixSidebarPosition();
+    window.addEventListener('resize', fixSidebarPosition);
+    
+    // Ensure all text is visible (fix dark text on dark background)
+    document.querySelectorAll('.stat-card, .card, .alert, .notification, .table').forEach(element => {
+        element.style.color = '#2d3748';
+        element.style.backgroundColor = 'white';
+    });
+    
+    // Fix button colors
+    document.querySelectorAll('.btn').forEach(btn => {
+        if (btn.classList.contains('btn-outline')) {
+            btn.style.color = '#4a5568';
+            btn.style.backgroundColor = 'transparent';
+        } else {
+            btn.style.color = 'white';
+        }
+    });
+});

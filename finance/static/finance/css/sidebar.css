@@ -9,16 +9,16 @@
     bottom: 0;
     width: var(--sidebar-width);
     background: linear-gradient(180deg, #1a202c 0%, #2d3748 100%);
-    color: white;
+    color: white !important;
     z-index: 1000;
     display: flex;
     flex-direction: column;
-    transform: translateX(0);
+    transform: translateX(-100%); /* Hidden by default on mobile */
     transition: transform 0.3s ease;
     box-shadow: 2px 0 8px rgba(0,0,0,0.1);
 }
 
-/* Sidebar when active (mobile) */
+/* Sidebar when active */
 .sidebar.active {
     transform: translateX(0);
 }
@@ -74,17 +74,19 @@
     background: rgba(255,255,255,0.2);
 }
 
-.sidebar-toggle {
-    display: none; /* Hidden by default, shown on mobile */
-}
-
+/* Mobile toggle - visible on mobile */
 .sidebar-toggle-mobile {
     position: fixed;
     top: 1rem;
     left: 1rem;
     z-index: 1001;
     background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-    display: flex; /* Show on mobile */
+    display: none; /* Hidden by default, shown on mobile */
+}
+
+/* Desktop toggle */
+.sidebar-toggle {
+    display: none;
 }
 
 /* Sidebar Content */
@@ -177,7 +179,6 @@
 .menu-item.active a {
     background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
     color: white;
-    box-shadow: 0 4px 12px rgba(66, 153, 225, 0.3);
 }
 
 .menu-item a i {
@@ -273,10 +274,6 @@
         transform: translateX(-100%);
     }
     
-    .sidebar-toggle-mobile {
-        display: flex;
-    }
-    
     .sidebar.active {
         transform: translateX(0);
         box-shadow: 4px 0 20px rgba(0,0,0,0.2);
@@ -285,20 +282,52 @@
     .sidebar-overlay.active {
         display: block;
     }
+    
+    .sidebar-toggle-mobile {
+        display: flex !important;
+    }
+    
+    /* Prevent body scrolling when sidebar is open */
+    body.sidebar-open {
+        overflow: hidden;
+    }
 }
 
 @media (min-width: 769px) and (max-width: 991px) {
     .sidebar {
         width: 250px;
+        transform: translateX(0); /* Always visible on tablet */
     }
     
     .main-content {
         margin-left: 250px;
     }
+    
+    .sidebar-toggle-mobile {
+        display: none !important;
+    }
 }
 
+/* ============================================
+   DESKTOP STYLES
+   ============================================ */
+
 @media (min-width: 992px) {
+    .sidebar {
+        transform: translateX(0); /* Always visible on desktop */
+        width: var(--sidebar-width);
+    }
+    
+    .main-content {
+        margin-left: var(--sidebar-width);
+    }
+    
     .sidebar-toggle-mobile {
-        display: none;
+        display: none !important;
+    }
+    
+    /* Desktop sidebar doesn't need overlay */
+    .sidebar-overlay {
+        display: none !important;
     }
 }
