@@ -51,24 +51,22 @@ function initSidebar() {
     // Set initial state based on screen size
     if (window.innerWidth >= 992) {
         // Desktop: show sidebar
-        sidebar.style.transform = 'translateX(0)';
+        
         document.querySelector('.main-content').style.marginLeft = '280px';
     } else {
         // Mobile: hide sidebar
-        sidebar.style.transform = 'translateX(-100%)';
         document.querySelector('.main-content').style.marginLeft = '0';
     }
 
     // OPEN sidebar on mobile toggle click
-    toggleBtn.addEventListener('click', function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        console.log('Mobile toggle button clicked');
+    toggleBtn.addEventListener('click', function () {
+    sidebar.classList.toggle('active');
+    overlay.classList.toggle('active');
 
-        sidebar.classList.add('active');
-        overlay.classList.add('active');
-        document.body.style.overflow = 'hidden';
-    });
+    document.body.style.overflow =
+        sidebar.classList.contains('active') ? 'hidden' : '';
+});
+
 
     // CLOSE when clicking overlay
     overlay.addEventListener('click', function () {
@@ -126,14 +124,13 @@ function initSidebar() {
         
         if (window.innerWidth >= 992) {
             // On desktop: show sidebar, remove overlay
-            sidebar.style.transform = 'translateX(0)';
+        
             document.querySelector('.main-content').style.marginLeft = '280px';
             sidebar.classList.remove('active');
             overlay.classList.remove('active');
             document.body.style.overflow = '';
         } else {
             // On mobile: hide sidebar, ensure no margin
-            sidebar.style.transform = 'translateX(-100%)';
             document.querySelector('.main-content').style.marginLeft = '0';
             sidebar.classList.remove('active');
             overlay.classList.remove('active');

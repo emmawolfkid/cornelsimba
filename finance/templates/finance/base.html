@@ -24,7 +24,10 @@
 </head>
 <body class="finance-body">
     <!-- Mobile Sidebar Overlay -->
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+   <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    {% include "finance/includes/sidebar.html" %}
+    {% block content %}{% endblock %}
     
     <!-- Notification System -->
     {% if messages %}
