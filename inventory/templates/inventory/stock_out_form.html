@@ -293,7 +293,7 @@
         itemSelect.addEventListener('change', function() {
             const itemId = this.value;
             if (itemId) {
-                fetch(`/inventory/api/item/${itemId}/`)
+                fetch("{% url 'inventory:item_details_api' pk=0 %}".replace('0', itemId))
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {

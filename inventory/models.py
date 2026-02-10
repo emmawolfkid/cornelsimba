@@ -4,7 +4,7 @@ from django.core.validators import MinValueValidator
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
 from django.utils import timezone 
-
+from decimal import Decimal
 User = get_user_model()
 
 class Item(models.Model):
@@ -22,9 +22,9 @@ class Item(models.Model):
     unit_of_measure = models.CharField(max_length=20, default='kg', help_text="e.g., kg, pcs, liter, box")
     
     # Stock tracking
-    quantity = models.DecimalField(max_digits=15, decimal_places=3, default=0)
-    reorder_level = models.DecimalField(max_digits=15, decimal_places=3, default=10)
-    minimum_stock = models.DecimalField(max_digits=15, decimal_places=3, default=5)
+    quantity = models.DecimalField(max_digits=15, decimal_places=3, default=Decimal('0.000'))
+    reorder_level = models.DecimalField(max_digits=15, decimal_places=3, default=Decimal('10.000'))
+    minimum_stock = models.DecimalField(max_digits=15, decimal_places=3, default=Decimal('5.000'))
     
     # Pricing (for sales integration)
     purchase_price = models.DecimalField(max_digits=12, decimal_places=2, default=0, help_text="Cost price in Tsh")
@@ -94,16 +94,6 @@ class Item(models.Model):
         # Save
         super().save(*args, **kwargs)
     
-    def update_quantity(self):
-        """Recalculate quantity based on all transactions"""
-        stock_in_total = self.stock_ins.aggregate(total=models.Sum('quantity'))['total'] or 0
-        stock_out_total = self.stock_outs.aggregate(total=models.Sum('quantity'))['total'] or 0
-        adjustment_total = self.stock_adjustments.filter(is_approved=True).aggregate(
-            total=models.Sum('adjustment_quantity')
-        )['total'] or 0
-        
-        self.quantity = stock_in_total - stock_out_total + adjustment_total
-        self.save(update_fields=['quantity'])
     
     @property
     def is_low_stock(self):
@@ -176,54 +166,35 @@ class StockIn(models.Model):
     received_by = models.CharField(max_length=100, blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
     
+
     def clean(self):
-        """Validate before saving"""
         if self.quantity <= 0:
             raise ValidationError({'quantity': 'Quantity must be greater than 0.'})
-    
+
     def save(self, *args, **kwargs):
         is_new = self.pk is None
-        
-        # Only update stock if approved
-        if self.status == 'approved':
-            if not is_new:
-                # This is an update - need to adjust stock properly
-                old_stock_in = StockIn.objects.get(pk=self.pk)
-                old_quantity = old_stock_in.quantity
-                
-                # Calculate the difference
-                quantity_diff = self.quantity - old_quantity
-                
-                # If item changed, handle both old and new items
-                if old_stock_in.item.id != self.item.id:
-                    # Remove from old item
-                    old_stock_in.item.quantity -= old_quantity
-                    old_stock_in.item.save()
-                    
-                    # Add to new item
-                    self.item.quantity += self.quantity
-                else:
-                    # Same item, adjust by the difference
-                    self.item.quantity += quantity_diff
-            else:
-                # New record - just add to item
-                self.item.quantity += self.quantity
-            
-            # Save the item
-            self.item.save()
-        
+
+        # AUTO-APPROVE STOCK IN
+        self.status = 'approved'
+        if not self.approved_at:
+            self.approved_at = timezone.now()
+
         super().save(*args, **kwargs)
-    
+
+        # Update item stock ONLY once
+        if is_new:
+            self.item.quantity = (self.item.quantity + self.quantity).quantize(Decimal('0.001'))
+            self.item.save(update_fields=['quantity'])
+
     def delete(self, *args, **kwargs):
-        # When deleting, remove stock from item if approved
         if self.status == 'approved':
             self.item.quantity -= self.quantity
-            self.item.save()
+            self.item.save(update_fields=['quantity'])
         super().delete(*args, **kwargs)
-    
+
     def __str__(self):
         return f"{self.item.name} - {self.quantity} in from {self.supplier or self.source}"
-    
+
     class Meta:
         ordering = ['-date']
         verbose_name = 'Stock In'

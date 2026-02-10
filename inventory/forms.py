@@ -3,14 +3,14 @@ from django import forms
 from .models import Item, StockIn, StockOut, StockAdjustment
 from django.core.exceptions import ValidationError
 from django.utils import timezone
+from decimal import Decimal, ROUND_HALF_UP
 
 class ItemForm(forms.ModelForm):
     class Meta:
         model = Item
         fields = [
-            'name', 'sku', 'category', 'description', 
-            'unit_of_measure', 'reorder_level', 'minimum_stock',
-            'is_active'
+            'name', 'sku', 'category', 'description',
+            'unit_of_measure', 'reorder_level', 'minimum_stock'
         ]
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Item Name'}),
@@ -20,56 +20,53 @@ class ItemForm(forms.ModelForm):
             'unit_of_measure': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'kg, pcs, liter'}),
             'reorder_level': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'step': '0.001'}),
             'minimum_stock': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'step': '0.001'}),
-            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
         help_texts = {
             'sku': 'Leave blank to auto-generate',
             'reorder_level': 'Alert when stock reaches this level',
             'minimum_stock': 'Critical level - take immediate action',
         }
-    
+
     def clean_name(self):
         name = self.cleaned_data.get('name', '').strip()
-        
         if not name:
             raise ValidationError("Item name is required.")
-        
-        # Normalize: Proper capitalization for ALL words
+
         name = ' '.join(word.strip().title() for word in name.split())
-        
-        # Check for existing items (case-insensitive)
+
         query = Item.objects.filter(name__iexact=name, is_active=True)
-        
-        if self.instance and self.instance.pk:
+        if self.instance.pk:
             query = query.exclude(pk=self.instance.pk)
-        
+
         if query.exists():
             existing_item = query.first()
             raise ValidationError(
-                f"Item '{name}' already exists as '{existing_item.name}' (ID: {existing_item.id}). "
-                f"Current stock: {existing_item.quantity} {existing_item.unit_of_measure}. "
-                f"Please use the existing item or choose a different name."
+                f"Item '{name}' already exists. "
+                f"Current stock: {existing_item.quantity} {existing_item.unit_of_measure}."
             )
-        
         return name
-    
+
     def clean_sku(self):
-        sku = self.cleaned_data['sku']
+        sku = self.cleaned_data.get('sku')
         if not sku:
             from datetime import datetime
             sku = f"ITEM-{datetime.now().strftime('%Y%m%d%H%M%S')}"
         return sku
-    
+
     def clean(self):
         cleaned_data = super().clean()
         reorder_level = cleaned_data.get('reorder_level')
         minimum_stock = cleaned_data.get('minimum_stock')
-        
-        if reorder_level and minimum_stock:
-            if minimum_stock >= reorder_level:
-                raise ValidationError('Minimum stock should be less than reorder level.')
-        
+        if reorder_level and minimum_stock and minimum_stock >= reorder_level:
+            raise ValidationError('Minimum stock should be less than reorder level.')
         return cleaned_data
+
+    def save(self, commit=True):
+        item = super().save(commit=False)
+        item.is_active = True  # ✅ FORCE ACTIVE
+        if commit:
+            item.save()
+        return item
 
 
 class StockInForm(forms.ModelForm):
@@ -96,6 +93,10 @@ class StockInForm(forms.ModelForm):
         # Make sure we don't accidentally include category field
         if 'category' in self.fields:
             del self.fields['category']
+
+    def clean_quantity(self):
+        qty = self.cleaned_data['quantity']
+        return Decimal(qty).quantize(Decimal('0.001'), rounding=ROUND_HALF_UP)
     
     def save(self, commit=True):
         instance = super().save(commit=False)
@@ -125,12 +126,18 @@ class StockOutForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
-        self.fields['item'].queryset = Item.objects.filter(is_active=True, quantity__gt=0).order_by('name')
+        self.fields['item'].queryset = Item.objects.filter(
+    is_active=True,
+    quantity__gt=0
+).order_by('name')
         self.fields['quantity'].help_text = 'Enter quantity to issue'
         
         # Make sure we don't accidentally include category field
         if 'category' in self.fields:
             del self.fields['category']
+    def clean_quantity(self):
+        qty = self.cleaned_data['quantity']
+        return Decimal(qty).quantize(Decimal('0.001'), rounding=ROUND_HALF_UP)
     
     def clean(self):
         cleaned_data = super().clean()

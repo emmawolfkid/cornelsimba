@@ -1,4 +1,4 @@
-# cornelsimba/inventory/views.py
+# cornelsimba/inventory/views.py - FIXED VERSION
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -14,6 +14,7 @@ from sales.models import Sale  # Add this import
 from audit.utils import audit_log
 from django.http import JsonResponse
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from decimal import Decimal
 
 USD_TO_TSH = getattr(settings, 'USD_TO_TSH', 2500)
 
@@ -722,9 +723,9 @@ def approve_stockout(request, pk):
         stock_out.approved_at = timezone.now()
         stock_out.save()
         
-        # Update item quantity
-        stock_out.item.quantity -= stock_out.quantity
-        stock_out.item.save()
+        # Update item quantity (FIXED – NO FLOAT DRIFT)
+        stock_out.item.quantity = (stock_out.item.quantity - stock_out.quantity).quantize(Decimal('0.001'))
+        stock_out.item.save(update_fields=['quantity'])
         
         # Create stock history
         StockHistory.objects.create(
@@ -823,6 +824,7 @@ def approve_stockout(request, pk):
         raise
     
     return redirect('inventory:stock_out_list')
+
 @login_required
 @group_required('Inventory')
 def reject_stockout(request, pk):
