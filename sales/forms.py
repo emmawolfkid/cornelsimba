@@ -128,10 +128,10 @@ class PaymentForm(forms.ModelForm):
 
 # Formset for multiple sale items
 SaleItemFormSet = forms.inlineformset_factory(
-    Sale, 
-    SaleItem, 
+    Sale,
+    SaleItem,
     form=SaleItemForm,
-    extra=1,
+    extra=0,              # 🔥 IMPORTANT CHANGE
     can_delete=True,
     min_num=1,
     validate_min=True

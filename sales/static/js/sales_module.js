@@ -308,3 +308,186 @@ function initializeSalesList() {
 // if (window.location.pathname.includes('sale_list')) {
 //     initializeSalesList();
 // }
+/* ================================
+   PROFESSIONAL SALE FORM ENGINE
+================================ */
+class SaleForm {
+    constructor(formId, itemsContainerId, addButtonId) {
+        this.form = document.getElementById(formId);
+        this.itemsContainer = document.getElementById(itemsContainerId);
+        this.addButton = document.getElementById(addButtonId);
+        
+        // ✅ FIX: More robust selector for TOTAL_FORMS
+        this.totalFormsInput = document.querySelector('#id_items-TOTAL_FORMS') || 
+                               document.querySelector('[name="items-TOTAL_FORMS"]') ||
+                               document.querySelector('[name$="TOTAL_FORMS"]');
+        
+        this.discountInput = document.getElementById('id_discount_amount');
+        
+        if (!this.form || !this.itemsContainer || !this.totalFormsInput) {
+            console.error("SaleForm initialization failed:", {
+                form: this.form,
+                itemsContainer: this.itemsContainer,
+                totalFormsInput: this.totalFormsInput
+            });
+            return;
+        }
+        
+        this.init();
+    }
+
+    init() {
+        this.attachEvents();
+        this.calculateAll();
+    }
+
+    attachEvents() {
+        // Live recalculation
+        this.itemsContainer.addEventListener('input', (e) => {
+            if (
+                e.target.name?.includes('quantity') ||
+                e.target.name?.includes('unit_price') ||
+                e.target.name?.includes('tax_rate')
+            ) {
+                this.calculateAll();
+            }
+        });
+
+        // Discount change
+        if (this.discountInput) {
+            this.discountInput.addEventListener('input', () => {
+                this.calculateAll();
+            });
+        }
+
+        // Add new item
+        if (this.addButton) {
+            this.addButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.addForm();
+            });
+        }
+
+        // Remove item - Use event delegation
+        this.itemsContainer.addEventListener('click', (e) => {
+            const btn = e.target.closest('.remove-item-btn');
+            if (btn) {
+                e.preventDefault();
+                const card = btn.closest('.item-form-card');
+                this.removeForm(card);
+            }
+        });
+
+        // Disable button on submit
+        this.form.addEventListener('submit', () => {
+            const btn = document.getElementById('submitBtn');
+            if (btn) btn.disabled = true;
+        });
+    }
+
+    addForm() {
+        const formCount = parseInt(this.totalFormsInput.value);
+        const emptyFormTemplate = document.getElementById('empty-form-template');
+        
+        if (!emptyFormTemplate) {
+            console.error("Missing empty form template.");
+            return;
+        }
+
+        const newFormHtml = emptyFormTemplate.innerHTML.replace(/__prefix__/g, formCount);
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = newFormHtml;
+        
+        const newForm = wrapper.firstElementChild;
+        this.itemsContainer.appendChild(newForm);
+        
+        this.totalFormsInput.value = formCount + 1;
+        this.calculateAll();
+    }
+
+    removeForm(formCard) {
+        if (!formCard) return;
+        
+        const deleteInput = formCard.querySelector('input[name$="DELETE"]');
+        
+        if (deleteInput) {
+            // ✅ FIX: Existing form - mark for deletion
+            deleteInput.value = 'on';
+            deleteInput.checked = true;
+            formCard.style.display = 'none';
+        } else {
+            // ✅ FIX: New form - remove from DOM
+            formCard.remove();
+            
+            // ✅ FIX: Safely update TOTAL_FORMS
+            if (this.totalFormsInput) {
+                const currentValue = parseInt(this.totalFormsInput.value) || 0;
+                this.totalFormsInput.value = Math.max(0, currentValue - 1);
+            } else {
+                // Fallback - try to find it again
+                this.totalFormsInput = document.querySelector('#id_items-TOTAL_FORMS');
+                if (this.totalFormsInput) {
+                    const currentValue = parseInt(this.totalFormsInput.value) || 0;
+                    this.totalFormsInput.value = Math.max(0, currentValue - 1);
+                }
+            }
+        }
+        
+        this.calculateAll();
+    }
+
+    calculateAll() {
+        let subtotal = 0;
+        let totalTax = 0;
+
+        const forms = this.itemsContainer.querySelectorAll('.item-form-card');
+        
+        forms.forEach((form) => {
+            if (form.style.display === 'none') return;
+
+            const quantityInput = form.querySelector('[name$="quantity"]');
+            const unitPriceInput = form.querySelector('[name$="unit_price"]');
+            const taxRateInput = form.querySelector('[name$="tax_rate"]');
+
+            const quantity = parseFloat(quantityInput?.value) || 0;
+            const unitPrice = parseFloat(unitPriceInput?.value) || 0;
+            const taxRate = parseFloat(taxRateInput?.value) || 0;
+
+            const lineTotal = this.round(quantity * unitPrice);
+            const taxAmount = this.round(lineTotal * (taxRate / 100));
+
+            subtotal += lineTotal;
+            totalTax += taxAmount;
+
+            const totalDisplay = form.querySelector('.item-total');
+            if (totalDisplay) {
+                totalDisplay.innerText = `Tsh ${this.format(lineTotal)}`;
+            }
+        });
+
+        const discount = parseFloat(this.discountInput?.value) || 0;
+        const grandTotal = this.round(subtotal + totalTax - discount);
+
+        // Update summary display
+        const subtotalEl = document.getElementById('subtotal');
+        const taxEl = document.getElementById('tax');
+        const discountEl = document.getElementById('discount');
+        const totalEl = document.getElementById('total');
+        
+        if (subtotalEl) subtotalEl.innerText = this.format(subtotal);
+        if (taxEl) taxEl.innerText = this.format(totalTax);
+        if (discountEl) discountEl.innerText = this.format(discount);
+        if (totalEl) totalEl.innerText = this.format(grandTotal);
+    }
+
+    round(value) {
+        return Math.round((value + Number.EPSILON) * 100) / 100;
+    }
+
+    format(number) {
+        return number.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
+}

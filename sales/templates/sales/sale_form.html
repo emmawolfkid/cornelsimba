@@ -45,26 +45,45 @@
                 <form method="post" id="saleForm" novalidate>
                     {% csrf_token %}
                     
-                    {% if sale_form.errors or item_formset.errors %}
-                    <div class="alert-custom alert-danger">
-                        <h6 class="alert-heading">Please fix the following errors:</h6>
-                        <ul class="mb-0">
-                            {% for field in sale_form %}
-                                {% for error in field.errors %}
-                                <li><strong>{{ field.label }}:</strong> {{ error }}</li>
-                                {% endfor %}
-                            {% endfor %}
-                            {% for form in item_formset %}
-                                {% for field in form %}
-                                    {% for error in field.errors %}
-                                    <li><strong>Item {{ forloop.parentloop.counter }} - {{ field.label }}:</strong> {{ error }}</li>
-                                    {% endfor %}
-                                {% endfor %}
-                            {% endfor %}
-                        </ul>
-                    </div>
-                    {% endif %}
-                    
+                   {% if sale_form.errors or item_formset.errors %}
+<div class="alert-custom alert-danger">
+    <h6 class="alert-heading">Please fix the following errors:</h6>
+    <ul class="mb-0">
+
+        {# Sale form field errors #}
+        {% for field in sale_form %}
+            {% for error in field.errors %}
+                <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+            {% endfor %}
+        {% endfor %}
+
+        {# Sale form non field errors #}
+        {% for error in sale_form.non_field_errors %}
+            <li><strong>Sale:</strong> {{ error }}</li>
+        {% endfor %}
+
+        {# Formset non-form errors #}
+        {% for error in item_formset.non_form_errors %}
+            <li><strong>Items:</strong> {{ error }}</li>
+        {% endfor %}
+
+        {# Individual item errors #}
+        {% for form in item_formset %}
+            {% for field in form %}
+                {% for error in field.errors %}
+                    <li><strong>Item {{ forloop.parentloop.counter }} - {{ field.label }}:</strong> {{ error }}</li>
+                {% endfor %}
+            {% endfor %}
+
+            {% for error in form.non_field_errors %}
+                <li><strong>Item {{ forloop.counter }}:</strong> {{ error }}</li>
+            {% endfor %}
+        {% endfor %}
+
+    </ul>
+</div>
+{% endif %}
+
                     <!-- Sale Information Section -->
                     <section class="form-section">
                         <h3 class="form-section-title">Sale Information</h3>
@@ -102,91 +121,108 @@
                             </div>
                         </div>
                     </section>
-                    
                     <!-- Sale Items Section -->
-                    <section class="form-section">
-                        <div class="d-flex justify-content-between align-items-center mb-4">
-                            <h3 class="form-section-title mb-0">Sale Items</h3>
-                            <button type="button" id="add-item" class="add-item-btn">
-                                <i class="bi bi-plus-lg"></i>
-                                Add Item
-                            </button>
-                        </div>
-                        
-                        {{ item_formset.management_form }}
-                        <div id="item-forms">
-                            {% for form in item_formset %}
-                            <div class="item-form-card" data-index="{{ forloop.counter0 }}">
-                                <div class="item-form-header">
-                                    <h5 class="item-form-title">Item {{ forloop.counter }}</h5>
-                                    {% if form.instance.pk or forloop.counter0 > 0 %}
-                                    <button type="button" class="remove-item-btn">
-                                        <i class="bi bi-trash"></i>
-                                        Remove
-                                    </button>
-                                    {% endif %}
-                                </div>
-                                
-                                <div class="item-form-grid">
-                                    <!-- Item Field -->
-                                    <div class="filter-group">
-                                        <label class="form-label-custom required-field">Item</label>
-                                        {{ form.item }}
-                                        {% if form.item.errors %}
-                                        <div class="invalid-feedback-custom">
-                                            {{ form.item.errors }}
-                                        </div>
-                                        {% endif %}
-                                    </div>
-                                    
-                                    <!-- Quantity Field -->
-                                    <div class="filter-group">
-                                        <label class="form-label-custom required-field">Quantity</label>
-                                        {{ form.quantity }}
-                                        {% if form.quantity.errors %}
-                                        <div class="invalid-feedback-custom">
-                                            {{ form.quantity.errors }}
-                                        </div>
-                                        {% endif %}
-                                    </div>
-                                    
-                                    <!-- Unit Price Field -->
-                                    <div class="filter-group">
-                                        <label class="form-label-custom required-field">Unit Price</label>
-                                        <div class="currency-input">
-                                            <span class="currency-prefix">Tsh</span>
-                                            {{ form.unit_price }}
-                                        </div>
-                                        <small class="text-muted">Per unit</small>
-                                        {% if form.unit_price.errors %}
-                                        <div class="invalid-feedback-custom">
-                                            {{ form.unit_price.errors }}
-                                        </div>
-                                        {% endif %}
-                                    </div>
-                                    
-                                    <!-- Tax Rate Field -->
-                                    <div class="filter-group">
-                                        <label class="form-label-custom">Tax Rate (%)</label>
-                                        {{ form.tax_rate }}
-                                    </div>
-                                </div>
-                                
-                                <!-- Item Total Display -->
-                                <div class="item-total-display">
-                                    <span class="item-total currency-display" data-index="{{ forloop.counter0 }}">
-                                        Tsh 0
-                                    </span>
-                                </div>
-                                
-                                {% for hidden in form.hidden_fields %}
-                                    {{ hidden }}
-                                {% endfor %}
-                            </div>
-                            {% endfor %}
-                        </div>
-                    </section>
-                    
+<section class="form-section">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="form-section-title mb-0">Sale Items</h3>
+        <button type="button" id="add-item" class="add-item-btn">
+            <i class="bi bi-plus-lg"></i>
+            Add Item
+        </button>
+    </div>
+
+    {{ item_formset.management_form }}
+
+    <script type="text/template" id="empty-form-template">
+        <div class="item-form-card" data-index="__prefix__">
+            <div class="item-form-header">
+                <h5 class="item-form-title">Item</h5>
+                <button type="button" class="remove-item-btn">
+                    <i class="bi bi-trash"></i>
+                    Remove
+                </button>
+            </div>
+
+            <div class="item-form-grid">
+                <div class="filter-group">
+                    <label class="form-label-custom required-field">Item</label>
+                    {{ item_formset.empty_form.item }}
+                </div>
+
+                <div class="filter-group">
+                    <label class="form-label-custom required-field">Quantity</label>
+                    {{ item_formset.empty_form.quantity }}
+                </div>
+
+                <div class="filter-group">
+                    <label class="form-label-custom required-field">Unit Price</label>
+                    <div class="currency-input">
+                        <span class="currency-prefix">Tsh</span>
+                        {{ item_formset.empty_form.unit_price }}
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <label class="form-label-custom">Tax Rate (%)</label>
+                    {{ item_formset.empty_form.tax_rate }}
+                </div>
+            </div>
+
+            {% for hidden in item_formset.empty_form.hidden_fields %}
+                {{ hidden }}
+            {% endfor %}
+            
+            <!-- ✅ CRITICAL FIX: Add DELETE field for formset -->
+            {{ item_formset.empty_form.DELETE }}
+        </div>
+    </script>
+
+    <div id="item-forms">
+        {% for form in item_formset %}
+        <div class="item-form-card" data-index="{{ forloop.counter0 }}">
+            <div class="item-form-header">
+                <h5 class="item-form-title">Item {{ forloop.counter }}</h5>
+                <button type="button" class="remove-item-btn">
+                    <i class="bi bi-trash"></i>
+                    Remove
+                </button>
+            </div>
+
+            <div class="item-form-grid">
+                <div class="filter-group">
+                    <label class="form-label-custom required-field">Item</label>
+                    {{ form.item }}
+                </div>
+
+                <div class="filter-group">
+                    <label class="form-label-custom required-field">Quantity</label>
+                    {{ form.quantity }}
+                </div>
+
+                <div class="filter-group">
+                    <label class="form-label-custom required-field">Unit Price</label>
+                    <div class="currency-input">
+                        <span class="currency-prefix">Tsh</span>
+                        {{ form.unit_price }}
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <label class="form-label-custom">Tax Rate (%)</label>
+                    {{ form.tax_rate }}
+                </div>
+            </div>
+
+            {% for hidden in form.hidden_fields %}
+                {{ hidden }}
+            {% endfor %}
+            
+            <!-- ✅ CRITICAL FIX: Add DELETE field for formset -->
+            {{ form.DELETE }}
+        </div>
+        {% endfor %}
+    </div>
+</section>
                     <!-- Delivery Information Section -->
                     <section class="form-section">
                         <h3 class="form-section-title">Delivery Information</h3>
@@ -260,6 +296,7 @@
 {% endblock %}
 {% block extra_js %}
 <script>
+    
     // This JavaScript code would be moved to an external JS file
     // Keeping it here temporarily for demonstration
     document.addEventListener('DOMContentLoaded', function() {
@@ -272,9 +309,8 @@
         });
         
         // Initialize sale form functionality
-        if (typeof SaleForm !== 'undefined') {
-            new SaleForm('saleForm', 'item-forms', 'add-item');
-        }
+        new SaleForm('saleForm', 'item-forms', 'add-item');
+
     });
 </script>
 {% endblock %}

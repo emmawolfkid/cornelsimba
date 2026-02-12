@@ -1,13 +1,17 @@
-# cornelsimba/sales/models.py - FULLY UPDATED AND CORRECTED VERSION
+# cornelsimba/sales/models.py - COMPLETELY FIXED & ROUNDING-PROOF VERSION
 from django.db import models
 from django.core.validators import MinValueValidator
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 from inventory.models import Item
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
+from django.db.models import Sum
+import logging
 
+logger = logging.getLogger(__name__)
 User = get_user_model()
+
 
 class Customer(models.Model):
     """Customer information for sales tracking"""
@@ -28,7 +32,7 @@ class Customer(models.Model):
     
     # Credit terms
     credit_limit = models.DecimalField(max_digits=15, decimal_places=2, default=0, help_text="Amount in Tsh")
-    payment_terms = models.CharField(max_length=100, blank=True, null=True, 
+    payment_terms = models.CharField(max_length=100, blank=True, null=True,
                                      help_text="e.g., Net 30, Cash on Delivery")
     
     # Status
@@ -89,15 +93,6 @@ class Sale(models.Model):
     balance_due = models.DecimalField(max_digits=15, decimal_places=2, default=0, help_text="Amount in Tsh")
     is_paid = models.BooleanField(default=False)
     
-    # Currency information
-    currency = models.CharField(max_length=10, default='Tsh', choices=[
-        ('Tsh', 'Tanzanian Shillings'),
-        ('USD', 'US Dollars'),
-        ('EUR', 'Euros'),
-    ])
-    exchange_rate = models.DecimalField(max_digits=10, decimal_places=4, default=1.0, 
-                                       help_text="Exchange rate to Tsh (1 foreign currency = X Tsh)")
-    
     # Delivery information
     delivery_address = models.TextField(blank=True, null=True)
     delivery_date = models.DateField(blank=True, null=True)
@@ -136,17 +131,16 @@ class Sale(models.Model):
     def __str__(self):
         return f"Sale {self.sale_number} - {self.customer.name} - Tsh {self.net_amount:,.2f}"
     
-class Meta:
-    ordering = ['-created_at']
-    verbose_name = 'Sale'
-    verbose_name_plural = 'Sales'
-    indexes = [
-        models.Index(fields=['sale_date']),
-        models.Index(fields=['status']),
-        models.Index(fields=['created_at']),
-        models.Index(fields=['customer']),
-    ]
-
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Sale'
+        verbose_name_plural = 'Sales'
+        indexes = [
+            models.Index(fields=['sale_date']),
+            models.Index(fields=['status']),
+            models.Index(fields=['created_at']),
+            models.Index(fields=['customer']),
+        ]
 
     def clean(self):
         """Validate sale before saving"""
@@ -161,16 +155,26 @@ class Meta:
             raise ValidationError('Cannot mark as paid when balance is due')
     
     def save(self, *args, **kwargs):
+        """Save method with proper indentation"""
         # Generate sale number if new
         if not self.sale_number:
             from datetime import datetime
             timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
             self.sale_number = f"SALE-{timestamp}"
-        
-        # Calculate balance
-        self.balance_due = self.net_amount - self.amount_paid
-        self.is_paid = self.balance_due <= Decimal('0.01')  # Allow small tolerance
-        
+
+        # Force Decimal values with ROUND_HALF_UP
+        self.net_amount = Decimal(str(self.net_amount or 0)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        self.amount_paid = Decimal(str(self.amount_paid or 0)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        self.discount_amount = Decimal(str(self.discount_amount or 0)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        self.total_amount = Decimal(str(self.total_amount or 0)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        self.tax_amount = Decimal(str(self.tax_amount or 0)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+
+        # Calculate balance with proper rounding
+        self.balance_due = (self.net_amount - self.amount_paid).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+
+        # Mark paid status - with small tolerance for floating point
+        self.is_paid = self.balance_due <= Decimal('0.0049')  # Tolerance of 0.49 cents
+
         super().save(*args, **kwargs)
     
     def calculate_totals(self):
@@ -185,15 +189,17 @@ class Meta:
                 total_amount += item.total_price or Decimal('0')
                 tax_amount += item.tax_amount or Decimal('0')
             
-            self.total_amount = total_amount
-            self.tax_amount = tax_amount
-            self.net_amount = total_amount + tax_amount - self.discount_amount
-            self.balance_due = self.net_amount - self.amount_paid
-            self.is_paid = self.balance_due <= Decimal('0.01')
-            
+            self.total_amount = total_amount.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+            self.tax_amount = tax_amount.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+            self.discount_amount = Decimal(str(self.discount_amount or 0)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+            self.net_amount = (self.total_amount + self.tax_amount - self.discount_amount).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+            self.amount_paid = Decimal(str(self.amount_paid or 0)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+            self.balance_due = (self.net_amount - self.amount_paid).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+            self.is_paid = self.balance_due <= Decimal('0.0049')
+
             # Save only the calculated fields
             self.save(update_fields=[
-                'total_amount', 'tax_amount', 'net_amount', 
+                'total_amount', 'tax_amount', 'discount_amount', 'net_amount', 
                 'balance_due', 'is_paid', 'updated_at'
             ])
             
@@ -203,11 +209,14 @@ class Meta:
     
     def calculate_totals_from_values(self, total_amount, tax_amount):
         """Calculate totals from provided values (used when sale doesn't have PK yet)"""
-        self.total_amount = total_amount or Decimal('0')
-        self.tax_amount = tax_amount or Decimal('0')
-        self.net_amount = self.total_amount + self.tax_amount - self.discount_amount
-        self.balance_due = self.net_amount - self.amount_paid
-        self.is_paid = self.balance_due <= Decimal('0.01')
+        self.total_amount = Decimal(str(total_amount or 0)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        self.tax_amount = Decimal(str(tax_amount or 0)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        self.discount_amount = Decimal(str(self.discount_amount or 0)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        self.amount_paid = Decimal(str(self.amount_paid or 0)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+
+        self.net_amount = (self.total_amount + self.tax_amount - self.discount_amount).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        self.balance_due = (self.net_amount - self.amount_paid).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        self.is_paid = self.balance_due <= Decimal('0.0049')
     
     @property
     def item_count(self):
@@ -216,15 +225,8 @@ class Meta:
     
     @property
     def net_amount_display(self):
-        """Display net amount with currency symbol"""
-        if self.currency == 'Tsh':
-            return f"Tsh {self.net_amount:,.2f}"
-        elif self.currency == 'USD':
-            usd_amount = self.net_amount / self.exchange_rate if self.exchange_rate != Decimal('0') else Decimal('0')
-            return f"${usd_amount:,.2f} (Tsh {self.net_amount:,.2f})"
-        else:
-            eur_amount = self.net_amount / self.exchange_rate if self.exchange_rate != Decimal('0') else Decimal('0')
-            return f"€{eur_amount:,.2f} (Tsh {self.net_amount:,.2f})"
+        """Display net amount with Tsh symbol"""
+        return f"Tsh {self.net_amount:,.2f}"
     
     def create_stock_out_request(self, user):
         """
@@ -246,8 +248,6 @@ class Meta:
             raise ValidationError(f"Cannot request stock out: {message}")
         
         # Create stock out record with PENDING status
-        # Note: For simplicity, we create one stock out per sale. 
-        # In a real system, you might want one stock out per item.
         first_item = self.items.first()
         stock_out = StockOut.objects.create(
             item=first_item.item,
@@ -305,7 +305,7 @@ class Meta:
         return self
     
     def mark_as_completed(self, user):
-        """Mark sale as completed (after stock out)"""
+        """Mark sale as completed and create income record"""
         if self.status != 'APPROVED' and self.status != 'STOCK_OUT_PENDING':
             raise ValidationError(f"Cannot complete sale in {self.get_status_display()} status")
         
@@ -313,13 +313,33 @@ class Meta:
         self.stock_out_processed_date = timezone.now()
         self.save(update_fields=['status', 'stock_out_processed_date', 'updated_at'])
         
+        # ✅ ADD THIS: Create income record in finance
+        try:
+            from finance.models import Income
+            Income.create_from_sale(self, user)
+        except Exception as e:
+            # Log error but don't fail the sale completion
+            logger.error(f"Failed to create income for sale {self.sale_number}: {e}")
+        
         return self
+    def create_income_record(self, user=None):
+        """Manually create income record for completed sale"""
+        from finance.models import Income
+        
+        if self.status != 'COMPLETED':
+            raise ValidationError("Can only create income for completed sales")
+        
+        # Check if income record already exists
+        # Note: You need to add a related_name='income_records' to the Income model's sale field
+        if hasattr(self, 'income_records') and self.income_records.exists():
+            return self.income_records.first()
+        
+        return Income.create_from_sale(self, user)
     
     @property
     def can_request_stock_out(self):
-     """Check if sale can request stock out - SIMPLIFIED"""
-     return self.status == 'APPROVED'
-
+        """Check if sale can request stock out - SIMPLIFIED"""
+        return self.status == 'APPROVED'
     
     @property
     def has_pending_stock_out(self):
@@ -390,14 +410,16 @@ class SaleItem(models.Model):
             models.Index(fields=['created_at']),
         ]
 
-    
     def clean(self):
         """Validate sale item"""
+        if self.quantity is None or self.unit_price is None:
+            return
+
         if self.quantity <= 0:
-            raise ValidationError('Quantity must be greater than 0')
-        
+            raise ValidationError("Quantity must be greater than zero")
+
         if self.unit_price <= 0:
-            raise ValidationError('Unit price must be greater than 0')
+            raise ValidationError("Unit price must be greater than zero")
         
         # Check stock availability if item exists and not editing
         if self.pk is None and hasattr(self, 'item'):
@@ -407,10 +429,15 @@ class SaleItem(models.Model):
                 )
     
     def save(self, *args, **kwargs):
-        # Calculate totals
-        self.total_price = (self.quantity or Decimal('0')) * (self.unit_price or Decimal('0'))
-        self.tax_amount = self.total_price * ((self.tax_rate or Decimal('0')) / Decimal('100'))
-        
+        """Save method for sale item"""
+        # Convert to Decimal with proper rounding
+        qty = Decimal(str(self.quantity))
+        price = Decimal(str(self.unit_price)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        rate = Decimal(str(self.tax_rate or 0)) / Decimal('100')
+
+        self.total_price = (qty * price).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        self.tax_amount = (self.total_price * rate).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+
         # If this is a new item and sale already has approved stock out, mark as stocked out
         if self.sale and self.sale.has_approved_stock_out:
             self.is_stocked_out = True
@@ -485,8 +512,6 @@ class Payment(models.Model):
     
     def __str__(self):
         return f"Payment Tsh {self.amount:,.2f} for {self.sale.sale_number}"
-    
-
 
     class Meta:
         ordering = ['-payment_date']
@@ -499,6 +524,7 @@ class Payment(models.Model):
         ]
 
     def clean(self):
+        """Validate payment"""
         if self.amount <= 0:
             raise ValidationError('Payment amount must be greater than 0')
 
@@ -508,12 +534,39 @@ class Payment(models.Model):
             )
 
     def save(self, *args, **kwargs):
+        """Save method for payment"""
+        # Ensure amount is positive and properly rounded
         if self.amount < 0:
             self.amount = abs(self.amount)
+        
+        self.amount = Decimal(str(self.amount)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+
         super().save(*args, **kwargs)
+
+        # Update sale payment totals
+        sale = self.sale
+        total_paid = sale.payments.filter(
+            payment_status='COMPLETED'
+        ).aggregate(
+            total=Sum('amount')
+        )['total'] or Decimal('0')
+        
+        total_paid = total_paid.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+
+        sale.amount_paid = total_paid
+        sale.balance_due = (sale.net_amount - total_paid).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        sale.is_paid = sale.balance_due <= Decimal('0.0049')
+
+        sale.save(update_fields=[
+            'amount_paid',
+            'balance_due',
+            'is_paid',
+            'updated_at'
+        ])
 
     @property
     def amount_display(self):
+        """Display amount with Tsh symbol"""
         return f"Tsh {self.amount:,.2f}"
 
 
@@ -560,10 +613,15 @@ class SaleReturn(models.Model):
         verbose_name_plural = 'Sale Returns'
     
     def save(self, *args, **kwargs):
+        """Save method for sale return"""
         if not self.return_number:
             from datetime import datetime
             timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
             self.return_number = f"RET-{timestamp}"
+        
+        # Round refund amount
+        self.refund_amount = Decimal(str(self.refund_amount or 0)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        
         super().save(*args, **kwargs)
     
     def create_stock_in_from_return(self, user):

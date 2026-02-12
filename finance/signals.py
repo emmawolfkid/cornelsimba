@@ -5,6 +5,9 @@ from inventory.models import StockOut
 from sales.models import Sale
 from .models import Income
 from django.contrib.auth import get_user_model
+from django.db.models.signals import post_migrate
+from django.dispatch import receiver
+from .models import Account
 
 User = get_user_model()
 
@@ -46,3 +49,22 @@ def handle_stock_out_approval(sender, instance, created, **kwargs):
                 
             except Exception as e:
                 print(f"❌ Error creating income from sale {sale.sale_number}: {e}")
+
+        
+@receiver(post_migrate)
+def create_default_accounts(sender, **kwargs):
+    if sender.name == 'finance':
+        default_accounts = [
+            {'code': '1000', 'name': 'Cash', 'account_type': 'Asset'},
+            {'code': '4000', 'name': 'Sales Revenue', 'account_type': 'Revenue'},
+            {'code': '5000', 'name': 'Operating Expenses', 'account_type': 'Expense'},
+            {'code': '5100', 'name': 'Salary Expense', 'account_type': 'Expense'},
+            {'code': '2000', 'name': 'Accounts Payable', 'account_type': 'Liability'},
+            {'code': '3000', 'name': 'Retained Earnings', 'account_type': 'Equity'},
+        ]
+        
+        for acc in default_accounts:
+            Account.objects.get_or_create(
+                code=acc['code'],
+                defaults=acc
+            )
