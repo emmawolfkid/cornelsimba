@@ -11,7 +11,6 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
-import dj_database_url
 import os
 
 
@@ -28,10 +27,34 @@ SECRET_KEY = os.environ.get("SECRET_KEY", "unsafe-secret-key-for-local-dev-only"
 
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get("DEBUG", "False") == "True"
+DEBUG = False
 
 
-ALLOWED_HOSTS = ['.onrender.com', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = [
+    "cornelsimba.co.tz",
+    "www.cornelsimba.co.tz",
+]
+
+# ======================
+# SECURITY & SESSION
+# ======================
+
+SECURE_SSL_REDIRECT = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_COOKIE_AGE = 1800  # 30 minutes
+SESSION_SAVE_EVERY_REQUEST = True
+
+SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SECURE = True
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://cornelsimba.co.tz",
+    "https://www.cornelsimba.co.tz",
+]
+
 
 
 # Application definition
@@ -60,7 +83,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
 
     # ✅ MUST be here for static files on Render
-    'whitenoise.middleware.WhiteNoiseMiddleware',
+   # 'whitenoise.middleware.WhiteNoiseMiddleware',
 
     # ✅ MUST come before AuthenticationMiddleware
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -76,11 +99,7 @@ MIDDLEWARE = [
 ]
 
 
-ON_RENDER = os.environ.get("RENDER", "") == "true"
 
-SECURE_SSL_REDIRECT = ON_RENDER
-CSRF_COOKIE_SECURE = ON_RENDER
-SESSION_COOKIE_SECURE = ON_RENDER
 
 
 ROOT_URLCONF = 'cornelsimba.urls'
@@ -129,10 +148,20 @@ WSGI_APPLICATION = 'cornelsimba.wsgi.application'
         #}
     #}
 #}
+
+
 DATABASES = {
-    'default': dj_database_url.config(
-        default='sqlite:///db.sqlite3'
-    )
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': os.environ.get('DB_NAME', 'cornels1_cornelsimba_db'),
+        'USER': os.environ.get('DB_USER', 'cornels1_cornelsimba_user'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+        'HOST': os.environ.get('DB_HOST', 'localhost'),
+        'PORT': '3306',
+        'OPTIONS': {
+            'charset': 'utf8mb4',
+        },
+    }
 }
 
 
@@ -160,6 +189,7 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
 
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
@@ -193,20 +223,22 @@ LOGIN_URL = '/accounts/login/'       # <-- URL for your login page
 LOGOUT_REDIRECT_URL = '/accounts/login/'  # Optional: redirect after logout
 
 
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+#STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 
 # ======================
 # EMAIL CONFIGURATION
 # ======================
-
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
+EMAIL_HOST = 'localhost'
+EMAIL_PORT = 25
+EMAIL_USE_TLS = False
+EMAIL_USE_SSL = False
 
-EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
-EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
+EMAIL_HOST_USER = ''
+EMAIL_HOST_PASSWORD = ''
 
-DEFAULT_FROM_EMAIL = 'Cornel Simba System <emmawolfgang90@gmail.com>'
+DEFAULT_FROM_EMAIL = 'Cornel Simba System <system@cornelsimba.co.tz>'
+
+

@@ -1,0 +1,11 @@
+<h2>New Leave Request Submitted</h2>
+
+<p>A leave request has been submitted.</p>
+
+<ul>
+  <li><strong>Employee:</strong> {{ leave.employee.full_name }}</li>
+  <li><strong>Type:</strong> {{ leave.leave_type.name }}</li>
+  <li><strong>Dates:</strong> {{ leave.start_date }} to {{ leave.end_date }}</li>
+</ul>
+
+<p>Please log in to review.</p>

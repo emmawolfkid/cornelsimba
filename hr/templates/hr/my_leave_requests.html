@@ -1,5 +1,5 @@
 {% load static %}
-
+{% load leave_filters %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -86,7 +86,7 @@
                         <h3>Approved</h3>
                         <p class="stat-number">
                             {% with approved=leaves|dictsort:"status"|join:""|safe %}
-                                {{ leaves|filter_by_status:"approved"|length|default:"0" }}
+                                {{ approved_count|default:"0" }}
                             {% endwith %}
                         </p>
                         <small class="stat-description">Successfully approved</small>
@@ -103,7 +103,7 @@
                         <h3>Pending</h3>
                         <p class="stat-number">
                             {% with pending=leaves|dictsort:"status"|join:""|safe %}
-                                {{ leaves|filter_by_status:"pending"|length|default:"0" }}
+                               {{ pending_count|default:"0" }}
                             {% endwith %}
                         </p>
                         <small class="stat-description">Awaiting approval</small>
@@ -120,7 +120,7 @@
                         <h3>Rejected</h3>
                         <p class="stat-number">
                             {% with rejected=leaves|dictsort:"status"|join:""|safe %}
-                                {{ leaves|filter_by_status:"rejected"|length|default:"0" }}
+                                {{ rejected_count|default:"0" }}
                             {% endwith %}
                         </p>
                         <small class="stat-description">Not approved</small>

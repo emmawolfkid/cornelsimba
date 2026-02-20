@@ -21,6 +21,9 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from reportlab.lib.units import inch
 from reportlab.lib.enums import TA_CENTER
 from django.http import HttpResponse
+from .email_utils import send_leave_email
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.db.models import Q
 
 # Helper function to restrict access by group - SINGLE VERSION
 def group_required(group_name):
@@ -107,9 +110,6 @@ def hr_dashboard(request):
         'pending_approvals_count': pending_approvals_count,
     }
     return render(request, 'hr/dashboard.html', context)
-
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.db.models import Q
 
 @login_required
 @group_required('HR')
@@ -346,6 +346,10 @@ def create_employee_from_user(request, user_id):
 
 @login_required
 def leave_dashboard(request):
+    # Restrict employee access
+    if not request.user.groups.filter(name__in=['HR', 'Manager']).exists():
+        return redirect('hr:my_leave_requests')
+    
     """Dashboard showing leave statistics and requests"""
     # Check if user has employee record
     try:
@@ -399,7 +403,7 @@ def leave_request_create(request):
         employee = request.user.employee
     except:
         messages.error(request, 'You need an employee record to request leave.')
-        return redirect('hr:leave_dashboard')
+        return redirect('hr:my_leave_requests')
     
     if request.method == 'POST':
         form = LeaveRequestForm(request.POST, request.FILES, employee=employee)
@@ -414,6 +418,16 @@ def leave_request_create(request):
             
             leave_request.save()
             
+            # Send email to managers
+            managers = User.objects.filter(groups__name='Manager').exclude(email='')
+            for manager in managers:
+                send_leave_email(
+                    subject='New Leave Request Submitted',
+                    to_email=manager.email,
+                    template_name='hr/emails/leave_submitted.html',
+                    context={'leave': leave_request}
+                )
+            
             # Audit log
             audit_log(
                 user=request.user,
@@ -426,7 +440,7 @@ def leave_request_create(request):
             )
             
             messages.success(request, 'Leave request submitted successfully!')
-            return redirect('hr:leave_dashboard')
+            return redirect('hr:my_leave_requests')
     else:
         form = LeaveRequestForm(employee=employee)
     
@@ -439,20 +453,40 @@ def leave_request_create(request):
 
 @login_required
 def my_leave_requests(request):
-    """View all leave requests for current employee"""
     try:
         employee = request.user.employee
     except:
-        messages.error(request, 'You need an employee record to view leave requests.')
-        return redirect('hr:leave_dashboard')
-    
-    leaves = LeaveRequest.objects.filter(employee=employee).order_by('-submitted_date')
-    
+        employee = None
+
+    if not employee:
+        return render(request, 'hr/my_leave_requests.html', {
+            'leaves': [],
+            'employee': None,
+            'approved_count': 0,
+            'pending_count': 0,
+            'rejected_count': 0,
+        })
+
+    # Get all leaves
+    leaves = LeaveRequest.objects.filter(
+        employee=employee
+    ).order_by('-submitted_date')
+
+    # Count by status (PROPER WAY)
+    approved_count = leaves.filter(status='approved').count()
+    pending_count = leaves.filter(status='pending').count()
+    rejected_count = leaves.filter(status='rejected').count()
+
     context = {
         'leaves': leaves,
         'employee': employee,
+        'approved_count': approved_count,
+        'pending_count': pending_count,
+        'rejected_count': rejected_count,
     }
+
     return render(request, 'hr/my_leave_requests.html', context)
+
 
 @login_required
 def leave_request_detail(request, leave_id):
@@ -573,10 +607,26 @@ def leave_approve_reject(request, leave_id):
                 leave.approved_by = request.user
                 leave.approved_date = timezone.now()
                 success_message = f'Leave request for {leave.employee.full_name} has been approved.'
+                
+                # Send approval email
+                send_leave_email(
+                    subject='Your Leave Has Been Approved',
+                    to_email=leave.employee.user.email,
+                    template_name='hr/emails/leave_approved.html',
+                    context={'leave': leave}
+                )
             else:
                 leave.status = 'rejected'
                 leave.rejected_date = timezone.now()
                 success_message = f'Leave request for {leave.employee.full_name} has been rejected.'
+                
+                # Send rejection email
+                send_leave_email(
+                    subject='Your Leave Was Rejected',
+                    to_email=leave.employee.user.email,
+                    template_name='hr/emails/leave_rejected.html',
+                    context={'leave': leave}
+                )
             
             # Add comment if provided
             if comment:

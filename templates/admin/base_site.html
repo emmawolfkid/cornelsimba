@@ -1,0 +1,35 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}Cornel Simba Administration{% endblock %}
+
+{% block extrahead %}
+<style>
+    #header {
+        background: #1e3a8a !important;
+    }
+
+    #site-name a {
+        color: white !important;
+        font-weight: 700;
+    }
+
+    .module caption {
+        background: #1e3a8a !important;
+    }
+
+    div.breadcrumbs {
+        background: #f8fafc !important;
+    }
+</style>
+{% endblock %}
+
+{% block branding %}
+<h1 id="site-name">
+    <a href="{% url 'admin:index' %}">
+        Cornel Simba Administration
+    </a>
+</h1>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
