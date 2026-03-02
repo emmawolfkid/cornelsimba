@@ -1,382 +1,61 @@
 /* ============================================
-   RESPONSIVE.CSS - Mobile Responsive Styles
+   RESPONSIVE.CSS - Final fixes
    ============================================ */
 
-/* Mobile Devices (up to 768px) */
+/* Force mobile header to be hidden on desktop ALWAYS */
+.mobile-nav-header {
+    display: none !important;
+}
+
+/* Only show on mobile when appropriate */
 @media (max-width: 768px) {
-    /* Layout Adjustments */
-    .layout-wrapper {
-        flex-direction: column;
+    .mobile-nav-header {
+        display: flex !important;
     }
     
-    .main-content {
-        margin-left: 0;
-        padding-top: 60px; /* Space for mobile header */
-    }
-    
-    /* Sidebar Mobile Styles */
-    .sidebar {
-        width: 280px;
-        transform: translateX(-100%);
-        z-index: 1000;
-    }
-    
-    .sidebar.active {
-        transform: translateX(0);
-    }
-    
-    .sidebar-toggle-mobile {
-        display: flex;
-        position: fixed;
-        top: 1rem;
-        left: 1rem;
-        z-index: 1001;
-        background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
-    }
-    
-    .sidebar-overlay.active {
-        display: block;
-    }
-    
-    .sidebar-header {
-        padding: 1rem;
-    }
-    
-    /* Content Header */
-    .content-header {
-        padding: 1rem;
-        margin-bottom: 1rem;
-    }
-    
-    .content-header h1 {
-        font-size: 1.5rem;
-    }
-    
-    .main-content-area {
-        padding: 0 1rem 1rem;
-    }
-    
-    /* Stats Grid */
-    .stats-grid {
-        grid-template-columns: 1fr;
-        gap: 1rem;
-    }
-    
-    .stat-card {
-        padding: 1.25rem;
-    }
-    
-    .stat-card .amount {
-        font-size: 1.5rem;
-    }
-    
-    /* Quick Actions */
-    .dashboard-quick-actions {
-        padding: 1rem;
-        gap: 0.75rem;
-    }
-    
-    .dashboard-quick-actions .btn {
-        min-width: 100%;
-        padding: 0.75rem 1rem;
-        font-size: 0.8125rem;
-    }
-    
-    /* Recent Transactions */
-    .recent-transactions-grid {
-        grid-template-columns: 1fr;
-        gap: 1rem;
-    }
-    
-    .recent-transactions-grid .card {
-        margin-bottom: 1rem;
-    }
-    
-    /* Tables */
-    .table-responsive {
-        margin: 0 -1rem;
-        padding: 0 1rem;
-    }
-    
-    .table th,
-    .table td {
-        padding: 0.75rem 0.5rem;
-        font-size: 0.8125rem;
-    }
-    
-    /* Section Headers */
-    .dashboard-section-header {
-        margin: 1.5rem 0 1rem;
-    }
-    
-    .dashboard-section-header h2 {
-        font-size: 1.25rem;
-    }
-    
-    /* Alerts */
-    .alert {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 1rem;
-        padding: 1rem;
-    }
-    
-    .alert > div {
-        flex-direction: column;
-        align-items: stretch;
-        text-align: center;
-    }
-    
-    /* Notification Container */
-    .notification-container {
-        top: auto;
-        bottom: 1rem;
-        left: 1rem;
-        right: 1rem;
-        max-width: none;
-    }
-    
-    .notification {
-        font-size: 0.875rem;
-        padding: 0.875rem;
-    }
-    
-    /* Card Layout */
-    .card-header {
-        padding: 1rem;
-    }
-    
-    .card-body {
-        padding: 1rem;
-    }
-    
-    .card-footer {
-        padding: 1rem;
-    }
-    
-    /* Buttons in Mobile */
-    .btn {
-        width: 100%;
-        justify-content: center;
-        padding: 0.75rem 1rem;
-    }
-    
-    /* Breadcrumb */
-    .breadcrumb {
-        font-size: 0.75rem;
-        flex-wrap: wrap;
-    }
-    
-    /* Financial Health Summary */
-    .health-summary-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    /* Hide desktop sidebar toggle */
-    .sidebar-toggle {
-        display: none;
+    /* If sidebar is missing, still show mobile header */
+    body:not(.sidebar-present) .mobile-nav-header {
+        display: flex !important;
     }
 }
 
-/* Tablet Devices (769px to 1024px) */
-@media (min-width: 769px) and (max-width: 1024px) {
-    /* Sidebar */
-    .sidebar {
-        width: 240px;
-    }
-    
-    /* Content Header */
-    .content-header {
-        padding: 1.25rem 1.5rem;
-    }
-    
-    .main-content-area {
-        padding: 0 1.5rem 1.5rem;
-    }
-    
-    /* Stats Grid */
-    .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 1.25rem;
-    }
-    
-    /* Quick Actions */
-    .dashboard-quick-actions {
-        padding: 1.25rem;
-    }
-    
-    .dashboard-quick-actions .btn {
-        min-width: 140px;
-    }
-    
-    /* Recent Transactions */
-    .recent-transactions-grid {
-        grid-template-columns: 1fr;
-        gap: 1.25rem;
-    }
-    
-    /* Hide mobile toggle on tablet */
-    .sidebar-toggle-mobile {
-        display: none;
-    }
+/* Ensure layout wrapper always exists */
+.layout-wrapper {
+    display: flex !important;
+    min-height: 100vh !important;
+    width: 100% !important;
 }
 
-/* Desktop Large Screens (1025px and above) */
-@media (min-width: 1025px) {
-    /* Adjust main content margin when sidebar is visible */
-    .sidebar.active ~ .main-content {
-        margin-left: 280px;
-    }
-    
-    /* Hide mobile toggle on desktop */
-    .sidebar-toggle-mobile {
-        display: none;
-    }
+/* Fix main content margin */
+.main-content {
+    flex: 1 !important;
+    margin-left: var(--sidebar-width, 280px) !important;
+    transition: margin-left 0.3s ease !important;
 }
 
-/* Print Styles */
-@media print {
-    .sidebar,
-    .sidebar-toggle,
-    .sidebar-toggle-mobile,
-    .notification-container,
-    .dashboard-quick-actions,
-    .alert,
-    .card-footer {
-        display: none !important;
-    }
-    
+@media (max-width: 768px) {
     .main-content {
         margin-left: 0 !important;
-        padding-top: 0 !important;
-    }
-    
-    .content-header {
-        border: none;
-        box-shadow: none;
-        padding: 0 0 1rem 0;
-    }
-    
-    .stat-card {
-        break-inside: avoid;
-        page-break-inside: avoid;
-        border: 1px solid #ddd;
-        box-shadow: none;
-    }
-    
-    .table {
-        break-inside: avoid;
-        page-break-inside: avoid;
-    }
-    
-    .card {
-        border: 1px solid #ddd;
-        box-shadow: none;
-    }
-    
-    .btn {
-        display: none;
+        padding-top: var(--header-height, 70px) !important;
     }
 }
 
-/* High Contrast Mode Support */
-@media (prefers-contrast: high) {
-    .stat-card {
-        border: 2px solid #000;
-    }
-    
-    .sidebar {
-        border-right: 3px solid #000;
-    }
-    
-    .btn {
-        border: 2px solid #000;
-    }
+/* Emergency fix for pages without sidebar */
+.main-content:first-child {
+    margin-left: 0 !important;
 }
 
-/* Reduced Motion Support */
-@media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-    }
-    
-    .stat-card,
-    .btn,
-    .menu-item a {
-        transition: none !important;
-        transform: none !important;
-    }
+/* Fix for any page that might be missing the layout structure */
+body > .container,
+body > div:not(.layout-wrapper) {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 1rem;
 }
 
-/* Touch Device Optimizations */
-@media (hover: none) and (pointer: coarse) {
-    .btn,
-    .menu-item a {
-        min-height: 44px;
-        min-width: 44px;
-    }
-    
-    .table th,
-    .table td {
-        padding: 1rem 0.75rem;
-    }
-    
-    .sidebar-menu a {
-        padding: 1rem;
-    }
-    
-    /* Increase tap targets */
-    input[type="checkbox"],
-    input[type="radio"] {
-        min-width: 24px;
-        min-height: 24px;
-    }
-}
-
-/* Landscape Mode for Mobile */
-@media (max-width: 768px) and (orientation: landscape) {
-    .sidebar {
-        width: 250px;
-    }
-    
-    .main-content {
-        padding-top: 50px;
-    }
-    
-    .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .notification-container {
-        max-height: 50vh;
-        overflow-y: auto;
-    }
-}
-
-/* Very Small Phones */
-@media (max-width: 360px) {
-    .content-header h1 {
-        font-size: 1.25rem;
-    }
-    
-    .stat-card .amount {
-        font-size: 1.25rem;
-    }
-    
-    .ratio-display {
-        font-size: 1.5rem;
-    }
-    
-    .dashboard-section-header h2 {
-        font-size: 1.125rem;
-    }
-    
-    .dashboard-quick-actions .btn {
-        font-size: 0.75rem;
-        padding: 0.625rem 0.75rem;
+@media (max-width: 768px) {
+    body > .container,
+    body > div:not(.layout-wrapper) {
+        padding-top: calc(var(--header-height, 70px) + 1rem) !important;
     }
 }

@@ -11,15 +11,20 @@
     <link rel="stylesheet" href="{% static 'finance/css/base.css' %}">
     <link rel="stylesheet" href="{% static 'finance/css/sidebar.css' %}">
     <link rel="stylesheet" href="{% static 'finance/css/dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'finance/css/responsive.css' %}">
+
+    <!-- Professional Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     {% block extra_css %}{% endblock %}
 </head>
+
 <body class="finance-body">
 
-    <!-- Mobile Overlay -->
+    <!-- Sidebar Overlay (Mobile Only) -->
     <div id="sidebarOverlay" class="sidebar-overlay"></div>
 
     <!-- Mobile Header -->
@@ -27,18 +32,33 @@
         <button id="sidebarToggleMobile" class="sidebar-toggle-mobile" type="button">
             <i class="fas fa-bars"></i>
         </button>
-        <span class="mobile-title">Finance</span>
+        <span class="mobile-title">Finance Management</span>
     </div>
 
-    <!-- Layout -->
     <div class="layout-wrapper">
 
-        <!-- Sidebar (ONCE ONLY) -->
+        <!-- Sidebar -->
         {% include "finance/includes/sidebar.html" %}
 
-        <!-- Main Content -->
+        <!-- Main Content Area -->
         <div class="main-content">
-            {% block content %}{% endblock %}
+
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1 class="page-title">
+                    {% block page_title %}{% endblock %}
+                </h1>
+
+                <div class="breadcrumb">
+                    {% block breadcrumb %}{% endblock %}
+                </div>
+            </div>
+
+            <!-- Page Body -->
+            <div class="content-wrapper">
+                {% block content %}{% endblock %}
+            </div>
+
         </div>
 
     </div>

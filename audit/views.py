@@ -5,7 +5,8 @@ from .models import AuditLog
 from django.db.models import Q
 import json
 from django.http import HttpResponse
-from datetime import datetime, timedelta
+from django.utils import timezone
+from datetime import timedelta
 from io import BytesIO
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4, landscape
@@ -46,7 +47,7 @@ def audit_logs(request):
     
     # Apply time period filter if specified
     if time_period:
-        today = datetime.now().date()
+        today = timezone.localdate()
         if time_period == 'today':
             logs = logs.filter(timestamp__date=today)
         elif time_period == 'yesterday':
@@ -94,7 +95,7 @@ def audit_logs(request):
         return export_audit_logs_pdf_simple(request, logs)
     
     # Get summary statistics
-    today_logs = logs.filter(timestamp__date=datetime.now().date()).count()
+    today_logs = logs.filter(timestamp__date=timezone.localdate()).count()
     unique_users = logs.values('user').distinct().count()
     modules_count = logs.values('module').distinct().count()
     
@@ -158,7 +159,7 @@ def audit_log_detail(request, log_id):
     user_total_actions = AuditLog.objects.filter(user=log.user).count()
     user_today_actions = AuditLog.objects.filter(
         user=log.user,
-        timestamp__date=datetime.now().date()
+        timestamp__date=timezone.localdate()
     ).count() if log.user else 0
     
     # Check if PDF download is requested - SIMPLIFIED
@@ -193,7 +194,7 @@ def export_audit_logs_pdf_simple(request, queryset):
         logger.info(f"PDF export requested, {queryset.count()} records")
         
         response = HttpResponse(content_type='application/pdf')
-        filename = f"audit_logs_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+        filename = f"audit_logs_{timezone.localtime(timezone.now()).strftime('%Y%m%d_%H%M%S')}.pdf"
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
         
         # Create the PDF using reportlab directly (no xhtml2pdf)
@@ -211,7 +212,7 @@ def export_audit_logs_pdf_simple(request, queryset):
         elements.append(title)
         
         # Generation date
-        date_str = Paragraph(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}", styles['Normal'])
+        date_str = Paragraph(f"Generated: {timezone.localtime(timezone.now()).strftime('%Y-%m-%d %H:%M')}", styles['Normal'])
         elements.append(date_str)
         elements.append(Spacer(1, 20))
         
@@ -226,7 +227,7 @@ def export_audit_logs_pdf_simple(request, queryset):
                 desc = desc + "..."
                 
             data.append([
-                log.timestamp.strftime('%Y-%m-%d %H:%M'),
+                timezone.localtime(log.timestamp).strftime('%Y-%m-%d %H:%M'),
                 log.user.username[:15] if log.user else 'System',
                 log.get_action_display(),
                 log.get_module_display(),
@@ -289,14 +290,14 @@ def download_audit_log_pdf_simple(request, log, old_values, new_values):
         c.drawString(50, height - 50, "Audit Log Details - Cornel Simba")
         
         c.setFont("Helvetica", 10)
-        c.drawString(50, height - 70, f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        c.drawString(50, height - 70, f"Generated: {timezone.localtime(timezone.now()).strftime('%Y-%m-%d %H:%M:%S')}")
         
         # Log details
         y_position = height - 100
         
         details = [
             f"Log ID: {log.id}",
-            f"Timestamp: {log.timestamp.strftime('%Y-%m-%d %H:%M:%S')}",
+            f"Timestamp: {timezone.localtime(log.timestamp).strftime('%Y-%m-%d %H:%M:%S')}",
             f"User: {log.user.username if log.user else 'System'}",
             f"Module: {log.get_module_display()}",
             f"Action: {log.get_action_display()}",

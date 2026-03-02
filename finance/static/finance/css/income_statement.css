@@ -1,304 +1,334 @@
-/* ===== GENERAL LEDGER STYLES ===== */
+/* ============================================
+   INCOME_STATEMENT.CSS - Clean P&L Statement
+   Professional, readable, simple
+   ============================================ */
 
-/* Container */
-.general-ledger-container {
-    max-width: 1400px;
+.income-statement-container {
+    max-width: 900px;
     margin: 0 auto;
-    padding: 15px;
+    padding: 1rem 0;
 }
 
-/* Page Header */
-.general-ledger-header {
+/* Header */
+.income-statement-header {
     text-align: center;
-    margin-bottom: 30px;
-    padding-bottom: 15px;
-    border-bottom: 3px solid var(--primary-color);
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--primary);
 }
 
-.general-ledger-header h1 {
-    color: var(--secondary-color);
-    font-size: 2rem;
-    margin-bottom: 5px;
+.income-statement-header h1 {
+    color: var(--primary);
+    font-size: 1.8rem;
+    margin-bottom: 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
 }
 
-.general-ledger-header h2 {
-    color: var(--primary-color);
-    font-size: 1.3rem;
-    margin-bottom: 10px;
+.income-statement-header h2 {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    font-weight: normal;
+}
+
+/* Action Bar */
+.action-bar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 1rem;
+}
+
+.btn-download {
+    background: var(--danger);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius-sm);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-download:hover {
+    background: #8B1A1A;
 }
 
 /* Period Display */
-.ledger-period-display {
-    text-align: center;
-    margin-bottom: 30px;
-    padding: 15px;
-    background: #e8f4fc;
-    border-radius: 8px;
-    border-left: 4px solid var(--primary-color);
-    font-size: 1.1rem;
-}
-
-.ledger-period-display strong {
-    color: var(--secondary-color);
-}
-
-/* Section Headers */
-.ledger-section-header {
-    font-size: 1.4rem;
-    color: var(--secondary-color);
-    margin: 30px 0 20px 0;
-    padding-bottom: 10px;
-    border-bottom: 2px solid var(--primary-color);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-/* Tables */
-.ledger-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 30px;
-    background: white;
-    box-shadow: var(--shadow-md);
-    border-radius: 8px;
-    overflow: hidden;
-}
-
-.ledger-table th {
-    background: var(--primary-color);
-    color: white;
-    padding: 15px 20px;
-    text-align: left;
-    font-weight: 600;
+.period-display {
+    background: var(--bg-primary);
+    padding: 0.75rem 1rem;
+    border-radius: var(--border-radius);
+    margin-bottom: 1rem;
+    color: var(--text-secondary);
     font-size: 0.9rem;
 }
 
-.ledger-table td {
-    padding: 15px 20px;
-    border-bottom: 1px solid var(--border-color);
+.period-display i {
+    margin-right: 0.5rem;
+    color: var(--primary);
 }
 
-.ledger-table tr:hover td {
-    background: #f8f9fa;
+/* Main Grid */
+.income-statement-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin: 2rem 0;
 }
 
-/* Transaction Table */
-.transaction-table th:nth-child(1) { width: 15%; } /* Date */
-.transaction-table th:nth-child(2) { width: 25%; } /* Debit Account */
-.transaction-table th:nth-child(3) { width: 15%; } /* Debit Amount */
-.transaction-table th:nth-child(4) { width: 25%; } /* Credit Account */
-.transaction-table th:nth-child(5) { width: 15%; } /* Credit Amount */
-
-/* Summary Table */
-.summary-table th:nth-child(1) { width: 40%; } /* Account */
-.summary-table th:nth-child(2) { width: 15%; } /* Debits */
-.summary-table th:nth-child(3) { width: 15%; } /* Credits */
-.summary-table th:nth-child(4) { width: 15%; } /* Balance */
-
-/* Table Cells */
-.account-name-cell {
-    text-align: left !important;
-    font-weight: 500;
-    color: var(--secondary-color);
-}
-
-.amount-cell {
-    text-align: right;
-    font-family: 'Consolas', 'Monaco', monospace;
-    font-weight: 600;
-}
-
-.date-cell {
-    font-weight: 500;
-    color: #666;
-}
-
-/* Totals Row */
-.totals-row {
-    background: #f8f9fa !important;
-    border-top: 2px solid var(--border-color);
-}
-
-.totals-row td {
-    font-weight: 700;
-    font-size: 1.1rem;
-    padding-top: 18px;
-    padding-bottom: 18px;
-}
-
-.debit-total {
-    color: var(--danger-color);
-}
-
-.credit-total {
-    color: var(--success-color);
-}
-
-/* Balance Status */
-.balance-status {
-    background: white;
-    border-radius: 12px;
-    padding: 30px;
-    margin-top: 30px;
-    text-align: center;
-    box-shadow: var(--shadow-md);
-}
-
-.balance-status-header {
-    font-size: 1.5rem;
-    color: var(--secondary-color);
-    margin-bottom: 20px;
-}
-
-.balance-status-value {
-    font-size: 2rem;
-    font-weight: bold;
-    margin: 20px 0;
-    padding: 20px;
-    border-radius: 8px;
-    display: inline-block;
-}
-
-.balance-status-value.balanced {
-    background: #d4edda;
-    color: var(--success-color);
-    border-left: 5px solid var(--success-color);
-}
-
-.balance-status-value.not-balanced {
-    background: #f8d7da;
-    color: var(--danger-color);
-    border-left: 5px solid var(--danger-color);
-}
-
-.balance-difference {
-    font-size: 1.2rem;
-    font-weight: 600;
-    margin-top: 10px;
-}
-
-/* Filters Section */
-.ledger-filters {
-    background: white;
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 30px;
+.income-statement-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--border-radius);
+    overflow: hidden;
     box-shadow: var(--shadow-sm);
 }
 
-.filter-form {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-    align-items: end;
+.income-statement-card.revenues .income-statement-section-header {
+    background: linear-gradient(135deg, var(--success), #2ecc71);
 }
 
-.filter-group {
+.income-statement-card.expenses .income-statement-section-header {
+    background: linear-gradient(135deg, var(--danger), #e74c3c);
+}
+
+.income-statement-section-header {
+    color: white;
+    padding: 1rem;
+    font-size: 1.1rem;
+    font-weight: 600;
     display: flex;
-    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
 }
 
-.filter-label {
-    margin-bottom: 8px;
-    font-weight: 500;
-    color: var(--secondary-color);
+/* Tables */
+.income-statement-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.income-statement-table th {
+    background: var(--bg-primary);
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border);
+}
+
+.income-statement-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border);
     font-size: 0.9rem;
 }
 
-/* Empty State */
+.account-name {
+    color: var(--text-primary);
+}
+
+.account-amount {
+    font-family: 'Courier New', monospace;
+    font-weight: 600;
+}
+
+.total-row {
+    background: var(--bg-primary);
+    font-weight: 700;
+}
+
+.total-row td {
+    border-top: 2px solid var(--border);
+}
+
 .empty-state {
     text-align: center;
-    padding: 50px 20px;
-    color: #666;
+    color: var(--text-muted);
+    padding: 2rem !important;
 }
 
-.empty-state-icon {
-    font-size: 3rem;
-    color: #ccc;
-    margin-bottom: 15px;
+.table-footer {
+    padding: 0.75rem 1rem;
+    background: var(--bg-primary);
+    border-top: 1px solid var(--border);
 }
 
-/* Mobile Responsive */
+/* Summary Grid */
+.income-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin: 1.5rem 0;
+}
+
+.income-summary-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--border-radius);
+    padding: 1.25rem;
+    text-align: center;
+}
+
+.income-summary-card.revenue-card {
+    border-left: 4px solid var(--success);
+}
+
+.income-summary-card.expense-card {
+    border-left: 4px solid var(--danger);
+}
+
+.income-summary-card h4 {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin: 0 0 0.5rem 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.income-summary-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    font-family: 'Courier New', monospace;
+}
+
+/* Net Profit/Loss Section */
+.net-profit-loss-section {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: white;
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+    text-align: center;
+}
+
+.net-profit-loss-header {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.net-profit-loss-value {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.profit-loss-label {
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.profit-loss-amount {
+    font-size: 2rem;
+    font-weight: 700;
+    font-family: 'Courier New', monospace;
+}
+
+.net-profit-loss-value.profit {
+    color: var(--success);
+}
+
+.net-profit-loss-value.loss {
+    color: var(--danger);
+}
+
+.profit-loss-message {
+    margin-top: 1rem;
+    font-size: 0.9rem;
+}
+
+.profit-badge {
+    background: rgba(46, 204, 113, 0.2);
+    color: #2ecc71;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    display: inline-block;
+}
+
+.loss-badge {
+    background: rgba(231, 76, 60, 0.2);
+    color: #e74c3c;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    display: inline-block;
+}
+
+/* Notes Section */
+.notes-section {
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+}
+
+.notes-section h4 {
+    color: var(--primary);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.notes-section ul {
+    margin: 0;
+    padding-left: 1.5rem;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.notes-section li {
+    margin: 0.5rem 0;
+}
+
+/* Text utilities */
+.text-right {
+    text-align: right;
+}
+
+/* Responsive */
 @media (max-width: 768px) {
-    .general-ledger-container {
-        padding: 12px;
-    }
-    
-    .ledger-table {
-        display: block;
-        overflow-x: auto;
-    }
-    
-    .ledger-table th,
-    .ledger-table td {
-        padding: 12px 15px;
-        font-size: 0.9rem;
-    }
-    
-    .filter-form {
+    .income-statement-grid {
         grid-template-columns: 1fr;
-        gap: 12px;
     }
     
-    .balance-status-value {
-        font-size: 1.5rem;
-        padding: 15px;
+    .income-summary-grid {
+        grid-template-columns: 1fr;
     }
     
-    .ledger-period-display {
+    .net-profit-loss-value {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .profit-loss-label {
         font-size: 1rem;
-        padding: 12px;
     }
     
-    /* Hide some columns on mobile for transaction table */
-    .transaction-table th:nth-child(4),
-    .transaction-table td:nth-child(4),
-    .transaction-table th:nth-child(5),
-    .transaction-table td:nth-child(5) {
-        display: none;
+    .profit-loss-amount {
+        font-size: 1.5rem;
     }
 }
 
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-    .ledger-table,
-    .balance-status {
-        background: #2c3e50;
-        color: #ecf0f1;
+@media (max-width: 480px) {
+    .income-statement-header h1 {
+        font-size: 1.4rem;
     }
     
-    .ledger-table th {
-        background: #1a252f;
-    }
-    
-    .ledger-table td {
-        border-color: #34495e;
-    }
-    
-    .ledger-table tr:hover td {
-        background: #34495e;
-    }
-    
-    .totals-row {
-        background: #34495e !important;
-    }
-    
-    .ledger-filters {
-        background: #2c3e50;
-    }
-    
-    .account-name-cell {
-        color: #ecf0f1;
-    }
-    
-    .balance-status-value.balanced {
-        background: #155724;
-        color: #d4edda;
-    }
-    
-    .balance-status-value.not-balanced {
-        background: #721c24;
-        color: #f8d7da;
+    .income-statement-table td,
+    .income-statement-table th {
+        padding: 0.5rem;
+        font-size: 0.8rem;
     }
 }

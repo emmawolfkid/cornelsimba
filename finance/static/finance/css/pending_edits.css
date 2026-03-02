@@ -1,0 +1,115 @@
+/* ============================================
+   PENDING_EDITS.CSS - Clean Approval Interface
+   Simple admin panel styling
+   ============================================ */
+
+.page-wrapper {
+    padding: 1rem 0;
+}
+
+.page-header {
+    margin-bottom: 2rem;
+}
+
+.page-header h2 {
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+}
+
+/* Custom Card */
+.custom-card {
+    border: 1px solid var(--border);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+}
+
+/* Custom Table */
+.custom-table {
+    width: 100%;
+}
+
+.custom-table thead {
+    background: var(--primary);
+    color: white;
+}
+
+.custom-table th {
+    padding: 1rem;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.custom-table td {
+    padding: 1rem;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--border);
+}
+
+.custom-table tr:hover {
+    background: var(--bg-primary);
+}
+
+/* Type Badge */
+.type-badge {
+    background: var(--bg-primary);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--primary);
+    border: 1px solid var(--primary);
+}
+
+/* Change List */
+.change-list {
+    margin: 0;
+    padding-left: 1.25rem;
+    font-size: 0.85rem;
+}
+
+.change-list li {
+    margin-bottom: 0.25rem;
+}
+
+.change-list li strong {
+    color: var(--primary);
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
+.reject-form {
+    display: inline;
+}
+
+/* Empty State */
+.text-muted.py-4 {
+    padding: 2rem;
+    color: var(--text-muted);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .custom-table th,
+    .custom-table td {
+        padding: 0.75rem 0.5rem;
+        font-size: 0.8rem;
+    }
+    
+    .change-list {
+        padding-left: 1rem;
+        font-size: 0.75rem;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+    }
+    
+    .btn-sm {
+        width: 100%;
+    }
+}

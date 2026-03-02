@@ -1,281 +1,156 @@
-/* ===== PAYROLL LIST SPECIFIC STYLES ===== */
+/* ============================================
+   PAYROLL.CSS - Clean Payroll List
+   Simple, readable, effective
+   ============================================ */
 
-/* Period Header */
+/* Header */
+.payroll-header-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 1.5rem;
+}
+
+/* Period Badge */
 .payroll-period-header {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 15px;
-    background: var(--light-color);
-    padding: 15px 20px;
+    background: var(--bg-secondary);
+    padding: 1rem;
     border-radius: var(--border-radius);
-    margin-bottom: 25px;
-    flex-wrap: wrap;
+    border: 1px solid var(--border);
+    margin-bottom: 1.5rem;
 }
 
 .payroll-period-badge {
-    background: var(--primary-color);
+    background: var(--primary);
     color: white;
-    padding: 8px 20px;
+    padding: 0.5rem 1rem;
     border-radius: 20px;
     font-weight: 600;
-    font-size: 0.95rem;
 }
 
 .payroll-period-info {
-    color: var(--secondary-color);
-    font-size: 0.95rem;
+    color: var(--text-secondary);
+}
+
+/* Filters */
+.payroll-filter-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.payroll-filter-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
 }
 
 /* Summary Cards */
 .payroll-summary-cards {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-    margin-bottom: 25px;
+    gap: 1.5rem;
+    margin: 1.5rem 0;
 }
 
 .payroll-summary-card {
-    background: white;
-    padding: 25px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
     border-radius: var(--border-radius);
-    box-shadow: var(--shadow-md);
-    text-align: center;
+    padding: 1.5rem;
     transition: transform 0.2s;
 }
 
 .payroll-summary-card:hover {
-    transform: translateY(-3px);
-    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
 }
 
 .payroll-summary-card.total {
-    border-top: 5px solid var(--secondary-color);
+    border-left: 4px solid var(--primary);
 }
 
 .payroll-summary-card.gross {
-    border-top: 5px solid var(--primary-color);
-}
-
-.payroll-summary-card.net {
-    border-top: 5px solid var(--success-color);
+    border-left: 4px solid var(--warning);
 }
 
 .payroll-summary-card.deductions {
-    border-top: 5px solid var(--danger-color);
+    border-left: 4px solid var(--danger);
+}
+
+.payroll-summary-card h3 {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin: 0 0 0.5rem 0;
 }
 
 .payroll-summary-value {
-    font-size: 2rem;
-    font-weight: bold;
-    margin: 10px 0;
-    font-family: 'Consolas', monospace;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    font-family: 'Courier New', monospace;
+    margin-bottom: 0.25rem;
 }
 
-.payroll-summary-card.total .payroll-summary-value {
-    color: var(--secondary-color);
-}
-
-.payroll-summary-card.gross .payroll-summary-value {
-    color: var(--primary-color);
-}
-
-.payroll-summary-card.net .payroll-summary-value {
-    color: var(--success-color);
-}
-
-.payroll-summary-card.deductions .payroll-summary-value {
-    color: var(--danger-color);
-}
-
-/* Status Badges */
-.payroll-status-badge {
-    padding: 6px 15px;
-    border-radius: 20px;
+/* Table */
+.table th {
+    background: var(--bg-primary);
     font-size: 0.8rem;
-    font-weight: 500;
-    display: inline-block;
+    white-space: nowrap;
 }
 
-.payroll-status-paid {
-    background: var(--success-color);
-    color: white;
+.table td {
+    vertical-align: middle;
 }
 
-.payroll-status-pending {
-    background: var(--warning-color);
-    color: white;
+/* Action buttons */
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
 }
 
-/* Salary Breakdown */
-.payroll-salary-breakdown {
-    font-size: 0.85rem;
-    color: #666;
+.btn-sm i {
+    font-size: 0.9rem;
 }
 
-.payroll-salary-item {
-    display: flex;
-    justify-content: space-between;
-    margin: 4px 0;
-}
-
-.payroll-salary-label {
-    color: #666;
-}
-
-.payroll-salary-value {
-    font-weight: 500;
-    font-family: 'Consolas', monospace;
-}
-
-.payroll-salary-gross {
-    color: var(--primary-color);
-    font-weight: bold;
-}
-
-.payroll-salary-deductions {
-    color: var(--danger-color);
-    font-weight: bold;
-}
-
-.payroll-salary-net {
-    color: var(--success-color);
-    font-size: 1.1rem;
-    font-weight: bold;
-}
-
-/* Actions */
-.payroll-actions {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
-.payroll-action-btn {
-    padding: 8px 16px;
-    border-radius: 5px;
-    font-size: 0.85rem;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    transition: all 0.2s;
-}
-
-.payroll-action-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-sm);
-}
-
+/* Pay button */
 .payroll-pay-btn {
-    background: var(--success-color);
-    color: white;
+    background: var(--success);
+    border: none;
 }
 
-.payroll-view-btn {
-    background: var(--primary-color);
-    color: white;
+.payroll-pay-btn:hover {
+    background: #2ecc71;
 }
 
-/* Total Footer */
-.payroll-total-footer {
-    background: var(--secondary-color);
-    color: white;
-    padding: 18px;
-    border-radius: var(--border-radius);
-    margin-top: 20px;
-}
-
-.payroll-total-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 15px;
-}
-
-/* Empty State */
-.payroll-empty-state {
-    text-align: center;
-    padding: 50px 20px;
-    color: #7f8c8d;
-    background: white;
-    border-radius: var(--border-radius);
-}
-
-/* Current Period Row Highlight */
-.payroll-current-period {
-    background-color: #f0f9ff !important;
-    border-left: 4px solid var(--primary-color);
-}
-
-/* Filter Form */
-.payroll-filter-row {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-    margin-bottom: 20px;
-}
-
-.payroll-filter-actions {
-    display: flex;
-    gap: 10px;
-    justify-content: flex-end;
-    padding-top: 15px;
-    border-top: 1px solid var(--border-color);
-}
-
-/* Card Actions */
-.payroll-card-actions {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-/* Header Actions */
-.payroll-header-actions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 25px;
-    flex-wrap: wrap;
-    gap: 15px;
-}
-
-.payroll-header-buttons {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
-/* Mobile Responsive for Payroll */
+/* Responsive */
 @media (max-width: 768px) {
-    .payroll-summary-cards {
-        grid-template-columns: 1fr;
-    }
-    
     .payroll-filter-row {
         grid-template-columns: 1fr;
     }
     
-    .payroll-filter-actions {
-        flex-direction: column;
+    .payroll-summary-cards {
+        grid-template-columns: 1fr;
     }
     
-    .payroll-header-actions {
+    .payroll-period-header {
         flex-direction: column;
-        align-items: stretch;
-    }
-    
-    .payroll-header-buttons {
-        flex-direction: column;
-    }
-    
-    .payroll-total-content {
-        flex-direction: column;
+        gap: 0.5rem;
         text-align: center;
     }
     
-    .payroll-salary-breakdown {
+    .table th, .table td {
+        padding: 0.5rem;
         font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .payroll-summary-value {
+        font-size: 1.2rem;
     }
 }

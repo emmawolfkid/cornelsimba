@@ -1,346 +1,316 @@
-/* ===== TRIAL BALANCE STYLES ===== */
+/* ============================================
+   TRIAL_BALANCE.CSS - Clean Trial Balance
+   Simple, balanced, professional
+   ============================================ */
 
-/* Container */
 .trial-balance-container {
-    max-width: 1400px;
+    max-width: 1200px;
     margin: 0 auto;
-    padding: 15px;
+    padding: 1rem;
 }
 
-/* Page Header */
+/* Header */
 .trial-balance-header {
-    text-align: center;
-    margin-bottom: 30px;
-    padding-bottom: 15px;
-    border-bottom: 3px solid var(--primary-color);
+    margin-bottom: 2rem;
 }
 
-.trial-balance-header h1 {
-    color: var(--secondary-color);
-    font-size: 2rem;
-    margin-bottom: 10px;
+.trial-balance-header h2 {
+    color: var(--primary);
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
 }
 
 .trial-balance-date {
-    color: #666;
-    font-size: 1.1rem;
-    font-style: italic;
+    color: var(--text-secondary);
+    font-size: 1rem;
+    background: var(--bg-primary);
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius);
+    display: inline-block;
 }
 
-/* Status Alerts */
-.trial-balance-status {
-    margin-bottom: 30px;
-    text-align: center;
+/* Alert Messages */
+.alert-success {
+    background-color: var(--success-bg);
+    color: var(--success);
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    margin: 1rem 0;
+    border-left: 4px solid var(--success);
+    font-weight: 500;
 }
 
-.status-alert {
-    padding: 20px;
-    border-radius: 8px;
-    font-size: 1.1rem;
-    font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-    gap: 15px;
-    max-width: 600px;
-    margin: 0 auto;
+.alert-danger {
+    background-color: var(--danger-light);
+    color: var(--danger);
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    margin: 1rem 0;
+    border-left: 4px solid var(--danger);
+    font-weight: 500;
 }
 
-.status-alert.success {
-    background: #d4edda;
-    color: #155724;
-    border-left: 5px solid var(--success-color);
-}
-
-.status-alert.danger {
-    background: #f8d7da;
-    color: #721c24;
-    border-left: 5px solid var(--danger-color);
-}
-
-/* Main Table */
+/* Table */
 .trial-balance-table {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 30px;
-    background: white;
-    box-shadow: var(--shadow-md);
-    border-radius: 8px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--border-radius);
     overflow: hidden;
+    margin: 1.5rem 0;
+    box-shadow: var(--shadow-sm);
 }
 
 .trial-balance-table th {
-    background: var(--primary-color);
+    background: var(--primary);
     color: white;
-    padding: 15px 20px;
+    padding: 0.75rem 1rem;
     text-align: left;
     font-weight: 600;
     font-size: 0.9rem;
 }
 
 .trial-balance-table td {
-    padding: 15px 20px;
-    border-bottom: 1px solid var(--border-color);
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.9rem;
 }
 
-.trial-balance-table tr:hover td {
-    background: #f8f9fa;
+.trial-balance-table tbody tr:hover {
+    background: var(--bg-primary);
 }
 
-/* Column widths */
-.trial-balance-table th:nth-child(1) { width: 15%; } /* Account Code */
-.trial-balance-table th:nth-child(2) { width: 40%; } /* Account Name */
-.trial-balance-table th:nth-child(3) { width: 22.5%; } /* Debit */
-.trial-balance-table th:nth-child(4) { width: 22.5%; } /* Credit */
-
-/* Table Cells */
-.account-code {
-    font-family: 'Consolas', 'Monaco', monospace;
+.trial-balance-table tfoot {
+    background: var(--bg-primary);
     font-weight: 600;
-    color: var(--secondary-color);
 }
 
-.account-name-cell {
+.trial-balance-table tfoot td {
+    padding: 1rem;
+    border-top: 2px solid var(--border);
+}
+
+/* Account type badges (optional) */
+.account-type {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
     font-weight: 500;
-    color: var(--secondary-color);
 }
 
+.account-type.asset { background: var(--info-light); color: var(--info); }
+.account-type.liability { background: var(--warning-light); color: var(--warning); }
+.account-type.equity { background: var(--success-bg); color: var(--success); }
+.account-type.revenue { background: #e3f2fd; color: #1976d2; }
+.account-type.expense { background: var(--danger-light); color: var(--danger); }
+
+/* Amount cells */
 .amount-cell {
+    font-family: 'Courier New', monospace;
     text-align: right;
-    font-family: 'Consolas', 'Monaco', monospace;
-    font-weight: 600;
+    font-weight: 500;
 }
 
 .debit-cell {
-    color: var(--danger-color);
+    color: var(--danger);
 }
 
 .credit-cell {
-    color: var(--success-color);
+    color: var(--success);
 }
 
-/* Totals Row */
-.trial-balance-total-row {
-    background: #f8f9fa !important;
-    border-top: 2px solid var(--border-color);
-}
-
-.trial-balance-total-row td {
-    font-weight: 700;
-    font-size: 1.1rem;
-    padding-top: 18px;
-    padding-bottom: 18px;
-}
-
-.trial-balance-total-row .debit-cell {
-    color: var(--danger-color);
-}
-
-.trial-balance-total-row .credit-cell {
-    color: var(--success-color);
-}
-
-/* Summary Section */
-.trial-balance-summary {
-    background: white;
-    border-radius: 12px;
-    padding: 25px;
-    margin-top: 30px;
-    box-shadow: var(--shadow-md);
-}
-
-.summary-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 20px;
-    margin-top: 20px;
-}
-
-.summary-card {
-    padding: 20px;
-    border-radius: 8px;
+/* Difference section */
+.difference-box {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--border-radius);
+    padding: 1.25rem;
+    margin: 1.5rem 0;
     text-align: center;
-    background: #f8f9fa;
 }
 
-.summary-card h4 {
-    margin: 0 0 10px 0;
-    color: var(--secondary-color);
-    font-size: 0.9rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.summary-value {
-    font-size: 1.8rem;
-    font-weight: bold;
-    font-family: 'Consolas', 'Monaco', monospace;
-}
-
-.summary-debits {
-    color: var(--danger-color);
-}
-
-.summary-credits {
-    color: var(--success-color);
-}
-
-.summary-difference {
-    color: var(--warning-color);
-}
-
-/* Difference Display */
-.difference-display {
-    text-align: center;
-    margin-top: 30px;
-    padding: 20px;
-    background: white;
-    border-radius: 8px;
-    box-shadow: var(--shadow-sm);
+.difference-box strong {
+    color: var(--text-primary);
+    font-size: 1rem;
 }
 
 .difference-value {
-    font-size: 2rem;
-    font-weight: bold;
-    margin: 10px 0;
-    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 1.2rem;
+    font-weight: 700;
+    font-family: 'Courier New', monospace;
+    margin-left: 0.5rem;
 }
 
-.difference-value.zero {
-    color: var(--success-color);
+.difference-value.balanced {
+    color: var(--success);
 }
 
-.difference-value.non-zero {
-    color: var(--danger-color);
+.difference-value.not-balanced {
+    color: var(--danger);
 }
 
-/* Filters */
-.trial-balance-filters {
-    background: white;
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 30px;
-    box-shadow: var(--shadow-sm);
+/* Download section */
+.download-section {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: var(--bg-primary);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border);
+    text-align: center;
 }
 
-.filter-form {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-    align-items: end;
-}
-
-/* Actions */
-.trial-balance-actions {
+.download-section h4 {
+    color: var(--primary);
+    margin-bottom: 1rem;
     display: flex;
-    gap: 15px;
+    align-items: center;
     justify-content: center;
-    margin-top: 30px;
+    gap: 0.5rem;
+}
+
+.download-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
     flex-wrap: wrap;
 }
 
-/* Empty State */
-.trial-balance-empty {
+/* Button styles (if not already in base) */
+.btn-pdf {
+    background: var(--danger);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--border-radius-sm);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.btn-pdf:hover {
+    background: #8B1A1A;
+}
+
+.btn-print {
+    background: var(--text-secondary);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--border-radius-sm);
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.btn-print:hover {
+    background: var(--text-primary);
+}
+
+.btn-reports {
+    background: var(--primary);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--border-radius-sm);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.btn-reports:hover {
+    background: var(--primary-light);
+}
+
+/* Empty state */
+.empty-state {
     text-align: center;
-    padding: 50px 20px;
-    background: white;
-    border-radius: 8px;
-    box-shadow: var(--shadow-sm);
-    color: #666;
+    padding: 3rem !important;
+    color: var(--text-muted);
 }
 
-.trial-balance-empty i {
+.empty-state i {
     font-size: 3rem;
-    color: #ccc;
-    margin-bottom: 15px;
+    margin-bottom: 1rem;
 }
 
-/* Mobile Responsive */
+/* Responsive */
 @media (max-width: 768px) {
-    .trial-balance-container {
-        padding: 12px;
+    .trial-balance-header h2 {
+        font-size: 1.5rem;
     }
     
     .trial-balance-table {
-        display: block;
-        overflow-x: auto;
+        font-size: 0.8rem;
     }
     
     .trial-balance-table th,
     .trial-balance-table td {
-        padding: 12px 15px;
-        font-size: 0.9rem;
+        padding: 0.5rem;
     }
     
-    .status-alert {
+    .download-buttons {
         flex-direction: column;
-        text-align: center;
-        gap: 10px;
-        padding: 15px;
     }
     
-    .summary-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .filter-form {
-        grid-template-columns: 1fr;
-        gap: 12px;
-    }
-    
-    .trial-balance-actions {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    
-    .trial-balance-actions .btn {
+    .btn-pdf,
+    .btn-print,
+    .btn-reports {
         width: 100%;
         justify-content: center;
     }
 }
 
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-    .trial-balance-table,
-    .trial-balance-summary,
-    .difference-display,
-    .trial-balance-filters,
-    .trial-balance-empty {
-        background: #2c3e50;
-        color: #ecf0f1;
+@media (max-width: 480px) {
+    .trial-balance-table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+    
+    .trial-balance-header h2 {
+        font-size: 1.2rem;
+    }
+    
+    .difference-value {
+        font-size: 1rem;
+        display: block;
+        margin-top: 0.25rem;
+    }
+}
+
+/* Print styles */
+@media print {
+    .download-section,
+    .btn-pdf,
+    .btn-print,
+    .btn-reports {
+        display: none !important;
+    }
+    
+    .trial-balance-table {
+        border: 1px solid #000;
     }
     
     .trial-balance-table th {
-        background: #1a252f;
+        background: #f0f0f0;
+        color: #000;
     }
     
-    .trial-balance-table td {
-        border-color: #34495e;
-    }
-    
-    .trial-balance-table tr:hover td {
-        background: #34495e;
-    }
-    
-    .trial-balance-total-row {
-        background: #34495e !important;
-    }
-    
-    .summary-card {
-        background: #34495e;
-    }
-    
-    .account-code,
-    .account-name-cell {
-        color: #ecf0f1;
-    }
-    
-    .status-alert.success {
-        background: #155724;
-        color: #d4edda;
-    }
-    
-    .status-alert.danger {
-        background: #721c24;
-        color: #f8d7da;
+    .alert-success,
+    .alert-danger {
+        border: 1px solid #000;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
     }
 }

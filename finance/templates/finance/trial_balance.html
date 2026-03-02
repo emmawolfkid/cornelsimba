@@ -12,15 +12,7 @@
 {% endblock %}
 
 {% block extra_css %}
-<style>
-    .alert-success { background-color: #d4edda; color: #155724; padding: 10px; border-radius: 4px; }
-    .alert-danger { background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th { background-color: #f2f2f2; text-align: left; padding: 10px; border: 1px solid #ddd; }
-    td { padding: 10px; border: 1px solid #ddd; }
-    tfoot { font-weight: bold; background-color: #f9f9f9; }
-    .difference { margin-top: 20px; padding: 10px; background-color: #f8f9fa; border-radius: 4px; }
-</style>
+<link rel="stylesheet" href="{% static 'finance/css/trial_balance.css' %}">
 {% endblock %}
 
 {% block content %}
