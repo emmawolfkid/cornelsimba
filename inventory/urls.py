@@ -48,4 +48,6 @@ urlpatterns = [
     path('api/item/<int:pk>/', views.get_item_details, name='item_details_api'),
 
     path('accounts/login/', auth_views.LogoutView.as_view(next_page='login'), name='login'),
+
+    path('reports/download/', views.stock_report_pdf, name='stock_report_pdf'),
 ]

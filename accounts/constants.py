@@ -1,6 +1,6 @@
 # Group name constants (DO NOT CHANGE NAMES ONCE CREATED)
 
-GROUP_ADMIN = "Administrator"
+GROUP_ADMIN = "Admin"
 GROUP_MANAGER = "Manager"
 GROUP_HR = "HR"
 GROUP_FINANCE = "Finance"

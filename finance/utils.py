@@ -1,8 +1,10 @@
-from .models import AccountingPeriod
+# finance/utils.py
 
-def is_period_closed(date):
+def is_period_closed(target_date):
+    from .models import AccountingPeriod
+
     return AccountingPeriod.objects.filter(
-        start_date__lte=date,
-        end_date__gte=date,
+        year=target_date.year,
+        month=target_date.month,
         is_closed=True
     ).exists()

@@ -18,11 +18,17 @@ Details
 
 {% block content %}
 <div class="expense-detail-container">
-    <!-- Header -->
+    <!-- Header with PDF button properly placed -->
     <div class="expense-detail-header">
         <h1><i class="fas fa-file-invoice-dollar"></i> Expense Details</h1>
+        <div class="expense-header-actions">
+            <a href="{% url 'finance:download_expense_pdf' expense.id %}" 
+               class="btn btn-primary">
+                <i class="fas fa-download"></i> Download PDF
+            </a>
+        </div>
     </div>
-    
+
     <!-- Navigation -->
     <div class="expense-detail-nav">
         <a href="{% url 'finance:expense_list' %}" class="btn btn-secondary">
@@ -142,6 +148,11 @@ Details
                         <i class="fas fa-print"></i> Print Details
                     </button>
                     
+                    <a href="{% url 'finance:download_expense_pdf' expense.id %}" 
+                       class="btn btn-primary">
+                        <i class="fas fa-download"></i> Download PDF
+                    </a>
+                    
                     <a href="{% url 'finance:expense_edit' expense.pk %}" class="btn btn-warning">
                         <i class="fas fa-edit"></i> Edit Expense
                     </a>
@@ -172,6 +183,12 @@ Details
                     This expense record is part of your financial accounting system. 
                     All changes are logged in the audit trail.
                 </p>
+                <div style="margin-top: 15px; text-align: center;">
+                    <a href="{% url 'finance:download_expense_pdf' expense.id %}" 
+                       class="btn btn-sm btn-primary">
+                        <i class="fas fa-download"></i> Download Expense PDF
+                    </a>
+                </div>
             </div>
         </div>
     </div>
@@ -219,5 +236,16 @@ if (editBtn) {
         }
     });
 }
+
+// Additional confirmation for PDF download if needed
+const pdfBtns = document.querySelectorAll('a[href*="download_expense_pdf"]');
+pdfBtns.forEach(btn => {
+    btn.addEventListener('click', function(e) {
+        // Optional: Add confirmation if needed
+        // if (!confirm('Download PDF for this expense?')) {
+        //     e.preventDefault();
+        // }
+    });
+});
 </script>
 {% endblock %}

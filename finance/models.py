@@ -112,6 +112,12 @@ class Income(models.Model):
         
         return self
     
+    def save(self, *args, **kwargs):
+        from .utils import is_period_closed
+        if self.date and is_period_closed(self.date):
+            raise ValueError("This accounting period is closed.")
+        super().save(*args, **kwargs) 
+
     class Meta:
         ordering = ['-date']
         indexes = [
@@ -252,6 +258,14 @@ class Expense(models.Model):
             return f"€{self.amount:,.2f}"
         return f"{self.amount:,.2f}"
     
+    def save(self, *args, **kwargs):
+        from .utils import is_period_closed
+
+        if self.date and is_period_closed(self.date):
+             raise ValueError("This accounting period is closed.")
+
+        super().save(*args, **kwargs) 
+
     class Meta:
         ordering = ['-date']
         indexes = [
@@ -259,6 +273,7 @@ class Expense(models.Model):
             models.Index(fields=['expense_type']),
             models.Index(fields=['is_paid']),
             models.Index(fields=['purchase_order']),
+            models.Index(fields=['payment_date']),
         ]
 
 
@@ -304,18 +319,19 @@ class Payroll(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    @property
     def gross_salary(self):
-        return self.basic_salary + self.allowances
+      return (self.basic_salary or 0) + (self.allowances or 0)
 
     def net_salary(self):
         total_deductions = (
-            self.deductions +
-            self.tax_amount +
-            self.pension_amount +
-            self.other_deductions +
-            self.leave_deductions
-        )
-        return self.gross_salary() - total_deductions
+        (self.deductions or 0) +
+        (self.tax_amount or 0) +
+        (self.pension_amount or 0) +
+        (self.other_deductions or 0) +
+        (self.leave_deductions or 0)
+    )
+        return (self.gross_salary or 0) - total_deductions
         
     @property
     def net_salary_display(self):
@@ -324,6 +340,19 @@ class Payroll(models.Model):
 
     def __str__(self):
         return f"{self.employee.full_name} - {self.month}/{self.year}"
+    
+    def save(self, *args, **kwargs):
+       from .models import AccountingPeriod
+       month_number = list(dict(self.MONTH_CHOICES).keys()).index(self.month) + 1
+
+       if AccountingPeriod.objects.filter(
+        year=self.year,
+        month=month_number,
+        is_closed=True
+    ).exists():
+        raise ValueError("This payroll period is closed.")
+
+       super().save(*args, **kwargs)
 
     class Meta:
         unique_together = ['employee', 'month', 'year']
@@ -332,6 +361,7 @@ class Payroll(models.Model):
             models.Index(fields=['employee']),
             models.Index(fields=['month', 'year']),
             models.Index(fields=['is_paid']),
+            models.Index(fields=['payment_date']),
         ]
 
 
@@ -434,3 +464,76 @@ class AccountingPeriod(models.Model):
 
     def __str__(self):
         return f"{self.month}/{self.year}"
+    
+
+class SystemNotification(models.Model):
+
+    MODULE_CHOICES = [
+        ('Inventory', 'Inventory'),
+        ('Sales', 'Sales'),
+        ('HR', 'HR'),
+        ('Procurement', 'Procurement'),
+        ('Finance', 'Finance'),
+    ]
+
+    module = models.CharField(max_length=50, choices=MODULE_CHOICES)
+    message = models.CharField(max_length=255)
+    related_object_id = models.IntegerField(null=True, blank=True)
+
+    is_read = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    target_role = models.CharField(max_length=50, default='Admin')
+
+    def __str__(self):
+        return f"{self.module} - {self.message}"
+    
+class FinanceEditRequest(models.Model):
+
+    REQUEST_TYPES = [
+        ('Income', 'Income'),
+        ('Expense', 'Expense'),
+        ('Payroll', 'Payroll'),
+    ]
+
+    STATUS_CHOICES = [
+        ('Pending', 'Pending'),
+        ('Approved', 'Approved'),
+        ('Rejected', 'Rejected'),
+    ]
+
+    request_type = models.CharField(max_length=20, choices=REQUEST_TYPES)
+
+    object_id = models.IntegerField()
+
+    requested_changes = models.JSONField()
+
+    requested_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='finance_edit_requests'
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='Pending'
+    )
+
+    rejected_reason = models.TextField(blank=True, null=True)
+
+    approved_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='approved_finance_edits'
+    )
+
+    processed_at = models.DateTimeField(null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.request_type} Edit Request #{self.id}"

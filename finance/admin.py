@@ -74,6 +74,10 @@ class PayrollAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
+    def net_salary_display(self, obj):
+      return f"Tsh {obj.net_salary():,.2f}"
+
+    net_salary_display.short_description = "Net Salary"
     
     def net_salary_display(self, obj):
         return f"${obj.net_salary():.2f}"

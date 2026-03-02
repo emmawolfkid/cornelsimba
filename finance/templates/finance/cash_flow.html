@@ -19,6 +19,32 @@
     <!-- Page Header -->
     <div class="cash-flow-header">
         <h1><i class="fas fa-money-check-alt"></i> Cash Flow Statement</h1>
+        
+        <!-- Filter Form - Properly placed -->
+        <div class="cash-flow-filter-section">
+            <form method="get" class="cash-flow-filter-form">
+                <div class="filter-group">
+                    <label for="start_date">Start Date:</label>
+                    <input type="date" name="start_date" id="start_date" value="{{ request.GET.start_date }}" class="filter-input">
+                </div>
+                
+                <div class="filter-group">
+                    <label for="end_date">End Date:</label>
+                    <input type="date" name="end_date" id="end_date" value="{{ request.GET.end_date }}" class="filter-input">
+                </div>
+                
+                <button type="submit" class="filter-btn">
+                    <i class="fas fa-filter"></i> Apply Filter
+                </button>
+                
+                {% if request.GET.start_date or request.GET.end_date %}
+                <a href="{% url 'finance:cash_flow' %}" class="filter-reset-btn">
+                    <i class="fas fa-times"></i> Clear
+                </a>
+                {% endif %}
+            </form>
+        </div>
+        
         <div class="cash-flow-period">
             <i class="fas fa-calendar-alt"></i> 
             Period: {{ start_date|date:"F d, Y" }} to {{ end_date|date:"F d, Y" }}
@@ -163,72 +189,72 @@
     </div>
     {% endif %}
     
-  <!-- Cash Flow Analysis -->
-<div class="cash-flow-analysis">
-    <h3><i class="fas fa-chart-pie"></i> Cash Flow Analysis</h3>
-    
-    <div class="analysis-item">
-        <div class="analysis-label">Cash Conversion Rate</div>
-        <div class="analysis-value">
-            {% if total_income > 0 %}
-                Tsh {{ cash_inflows|floatformat:0|intcomma }} / Tsh {{ total_income|floatformat:0|intcomma }}
-                ({{ cash_conversion_rate }}% of income collected in cash)
-            {% else %}
-                No income recorded
-            {% endif %}
-        </div>
-    </div>
-    
-    <div class="analysis-item">
-        <div class="analysis-label">Cash Reserve Coverage</div>
-        <div class="analysis-value">
-            {% if total_outflows > 0 %}
-                Can cover 
-                {% if available_cash >= total_outflows %}
-                    <span class="analysis-value good">
-                        at least 1 month of expenses
-                    </span>
-                {% elif available_cash > 0 %}
-                    {{ cash_reserve_coverage }} months of expenses
+    <!-- Cash Flow Analysis -->
+    <div class="cash-flow-analysis">
+        <h3><i class="fas fa-chart-pie"></i> Cash Flow Analysis</h3>
+        
+        <div class="analysis-item">
+            <div class="analysis-label">Cash Conversion Rate</div>
+            <div class="analysis-value">
+                {% if total_income > 0 %}
+                    Tsh {{ cash_inflows|floatformat:0|intcomma }} / Tsh {{ total_income|floatformat:0|intcomma }}
+                    ({{ cash_conversion_rate }}% of income collected in cash)
                 {% else %}
+                    No income recorded
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="analysis-item">
+            <div class="analysis-label">Cash Reserve Coverage</div>
+            <div class="analysis-value">
+                {% if total_outflows > 0 %}
+                    Can cover 
+                    {% if net_cash_flow >= total_outflows %}
+                        <span class="analysis-value good">
+                            at least 1 month of expenses
+                        </span>
+                    {% elif net_cash_flow > 0 %}
+                        {{ cash_reserve_coverage }} months of expenses
+                    {% else %}
+                        <span class="analysis-value danger">
+                            no expenses (insufficient cash)
+                        </span>
+                    {% endif %}
+                {% else %}
+                    No expenses in period
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="analysis-item">
+            <div class="analysis-label">Financial Health</div>
+            <div class="analysis-value">
+                {% if net_cash_flow < 0 %}
                     <span class="analysis-value danger">
-                        no expenses (insufficient cash)
+                        <i class="fas fa-exclamation-triangle"></i> 
+                        Negative cash flow - Consider reducing expenses or improving collections
+                    </span>
+                {% elif net_cash_flow < total_outflows %}
+                    <span class="analysis-value warning">
+                        <i class="fas fa-info-circle"></i> 
+                        Marginal cash position - Maintain current operations
+                    </span>
+                {% else %}
+                    <span class="analysis-value good">
+                        <i class="fas fa-check-circle"></i> 
+                        Healthy cash position - Consider investment opportunities
                     </span>
                 {% endif %}
-            {% else %}
-                No expenses in period
-            {% endif %}
+            </div>
         </div>
     </div>
     
-    <div class="analysis-item">
-        <div class="analysis-label">Financial Health</div>
-        <div class="analysis-value">
-            {% if net_cash_flow < 0 %}
-                <span class="analysis-value danger">
-                    <i class="fas fa-exclamation-triangle"></i> 
-                    Negative cash flow - Consider reducing expenses or improving collections
-                </span>
-            {% elif net_cash_flow < total_outflows %}
-                <span class="analysis-value warning">
-                    <i class="fas fa-info-circle"></i> 
-                    Marginal cash position - Maintain current operations
-                </span>
-            {% else %}
-                <span class="analysis-value good">
-                    <i class="fas fa-check-circle"></i> 
-                    Healthy cash position - Consider investment opportunities
-                </span>
-            {% endif %}
-        </div>
-    </div>
-</div>
-       <!-- Actions -->
+    <!-- Actions -->
     <div class="cash-flow-actions">
         <a href="{% url 'finance:dashboard' %}" class="btn btn-secondary">
             <i class="fas fa-arrow-left"></i> Back to Dashboard
         </a>
-        <!-- Add PDF Download Button here -->
         <a href="{% url 'finance:download_cash_flow_pdf' %}?start_date={{ start_date|date:'Y-m-d' }}&end_date={{ end_date|date:'Y-m-d' }}" 
            class="btn btn-danger">
             <i class="fas fa-file-pdf"></i> Download PDF
@@ -269,20 +295,5 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
-
-// Add date range picker functionality
-function updateCashFlowDates() {
-    const startDate = document.getElementById('start_date').value;
-    const endDate = document.getElementById('end_date').value;
-    
-    if (startDate && endDate) {
-        window.location.href = `{% url 'finance:cash_flow' %}?start_date=${startDate}&end_date=${endDate}`;
-    }
-}
-
-// Auto-refresh every 5 minutes for real-time updates
-setTimeout(function() {
-    location.reload();
-}, 300000); // 5 minutes
 </script>
 {% endblock %}

@@ -76,7 +76,9 @@
 <div class="header-actions">
     <h1 class="report-title">📊 Stock Report</h1>
     <div class="no-print">
-        <button onclick="window.print()" class="btn btn-print">🖨️ Print Report</button>
+        <a href="{% url 'inventory:stock_report_pdf' %}" class="btn btn-print">
+    ⬇ Download PDF
+</a>
         <a href="{% url 'inventory:dashboard' %}" class="btn btn-secondary">← Dashboard</a>
     </div>
 </div>
@@ -311,14 +313,7 @@
 
 {% block extra_js %}
 <script>
-    // Print report function
-    document.querySelector('.btn-print').addEventListener('click', function() {
-        const originalTitle = document.title;
-        document.title = 'Stock Report - ' + new Date().toLocaleDateString();
-        window.print();
-        document.title = originalTitle;
-    });
-    
+   
     // Highlight critical and low stock rows
     document.addEventListener('DOMContentLoaded', function() {
         const criticalRows = document.querySelectorAll('.critical-row');

@@ -15,6 +15,12 @@ from audit.utils import audit_log
 from django.http import JsonResponse
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from decimal import Decimal
+from django.http import HttpResponse
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib import colors
+from reportlab.lib.units import inch
+from reportlab.lib.pagesizes import A4
 
 USD_TO_TSH = getattr(settings, 'USD_TO_TSH', 2500)
 
@@ -570,7 +576,7 @@ def stock_adjustment_approve(request, pk):
                     module='INVENTORY',
                     object_type='StockAdjustment',
                     object_id=adjustment.id,
-                    description=f'Approved stock adjustment: {adjustment.adjustment_quantity} {adjustment.item.unit_of_measure} of "{adjustment.item.name}" (Qty: {old_quantity} → {adjustment.item.quantity})',
+                    description=f'Approved stock adjustment: {adjustment.adjustment_quantity} {adjustment.item.unit_of_measure} of "{adjustment.item.name}" (Qty: {old_quantity} -> {adjustment.item.quantity})',
                     request=request
                 )
                 
@@ -998,3 +1004,50 @@ def get_item_details(request, pk):
         return JsonResponse(data)
     except Item.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'Item not found'})
+    
+@login_required
+@group_required('Inventory')
+def stock_report_pdf(request):
+    from io import BytesIO
+    buffer = BytesIO()
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="stock_report.pdf"'
+
+    doc = SimpleDocTemplate(response, pagesize=A4)
+    elements = []
+
+    styles = getSampleStyleSheet()
+    elements.append(Paragraph("Stock Report", styles["Title"]))
+    elements.append(Spacer(1, 12))
+
+    items = Item.objects.filter(is_active=True).order_by('name')
+
+    data = [["Item", "Category", "Quantity", "Unit", "Status"]]
+
+    for item in items:
+        if item.quantity <= item.minimum_stock:
+            status = "Critical"
+        elif item.quantity <= item.reorder_level:
+            status = "Low"
+        else:
+            status = "Good"
+
+        data.append([
+            item.name,
+            item.get_category_display(),
+            str(item.quantity),
+            item.unit_of_measure,
+            status
+        ])
+
+    table = Table(data)
+    table.setStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.grey),
+        ('GRID', (0,0), (-1,-1), 0.5, colors.black)
+    ])
+
+    elements.append(table)
+    doc.build(elements)
+
+    return response

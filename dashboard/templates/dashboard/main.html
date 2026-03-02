@@ -82,13 +82,11 @@
 
     .logo-container img {
         width: 100%;
-    height: auto;
-    max-height: 90px; /* Limit height if needed */
-    object-fit: contain; /* Keep the full logo visible */
-    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1)); /* Add subtle shadow */
-}
-    
-   
+        height: auto;
+        max-height: 90px;
+        object-fit: contain;
+        filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
+    }
 
     .logo-text {
         font-size: 2.8em;
@@ -340,6 +338,34 @@
 
     .items-control select:hover {
         border-color: var(--primary);
+    }
+
+    /* ============================
+       ADMIN APPROVAL BADGES
+    ============================ */
+    .module-box {
+        position: relative;
+    }
+
+    .module-badge {
+        position: absolute;
+        top: 18px;
+        right: 18px;
+        background: #ef4444;
+        color: white;
+        font-weight: 700;
+        font-size: 0.8em;
+        padding: 6px 12px;
+        border-radius: 50px;
+        box-shadow: 0 5px 15px rgba(239, 68, 68, 0.4);
+        animation: pulseBadge 1.5s infinite;
+        z-index: 10;
+    }
+
+    @keyframes pulseBadge {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.08); }
+        100% { transform: scale(1); }
     }
 
     /* Module Grid */
@@ -595,6 +621,34 @@
         color: var(--success);
     }
 
+    /* Admin Panel Button */
+    .admin-panel-section {
+        margin-left: 10px;
+    }
+
+    .admin-btn {
+        background: linear-gradient(135deg, #6c5ce7 0%, #8e44ad 100%);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.9em;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        box-shadow: 0 4px 10px rgba(108, 92, 231, 0.2);
+    }
+
+    .admin-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(108, 92, 231, 0.3);
+        color: white;
+    }
+
     /* Responsive */
     @media (max-width: 768px) {
         .top-header {
@@ -649,33 +703,6 @@
     .module-box {
         animation: fadeInUp 0.6s ease forwards;
     }
-    /* Admin Panel Button */
-.admin-panel-section {
-    margin-left: 10px;
-}
-
-.admin-btn {
-    background: linear-gradient(135deg, #6c5ce7 0%, #8e44ad 100%);
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 10px;
-    cursor: pointer;
-    font-weight: 600;
-    font-size: 0.9em;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: all 0.3s ease;
-    text-decoration: none;
-    box-shadow: 0 4px 10px rgba(108, 92, 231, 0.2);
-}
-
-.admin-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 15px rgba(108, 92, 231, 0.3);
-    color: white;
-}
 
     .module-box:nth-child(1) { animation-delay: 0.1s; }
     .module-box:nth-child(2) { animation-delay: 0.2s; }
@@ -683,19 +710,18 @@
     .module-box:nth-child(4) { animation-delay: 0.4s; }
     .module-box:nth-child(5) { animation-delay: 0.5s; }
     .module-box:nth-child(6) { animation-delay: 0.6s; }
-</style>
+    </style>
 </head>
 <body>
     <div class="container">
         <!-- Notification Area -->
         <div class="notification-area" id="notificationCenter"></div>
 
-               <!-- Top Header -->
+        <!-- Top Header -->
         <div class="top-header">
             <div class="brand-section">
                 <div class="logo-container">
-                    <!-- Replace 'logo.png' with your actual image filename -->
-                    <img src="{% static 'images/cornelsimba 2.png' %}" alt="Cornel Simba Logo" style="width: 100%; height: 100%; object-fit: contain; border-radius: 20px;">
+                    <img src="{% static 'images/cornelsimba 2.png' %}" alt="Cornel Simba Logo">
                 </div>
                 <div class="brand-info">
                     <h1>Cornel Simba</h1>
@@ -717,23 +743,22 @@
                     <i class="fas fa-user"></i>
                 </div>
 
-                <!-- Add Admin Panel Button Here -->
-    {% if request.user.is_staff %}
-    <div class="admin-panel-section">
-        <a href="/admin/" target="_blank" class="admin-btn">
-            <i class="fas fa-cog"></i> Admin Panel
-        </a>
-    </div>
-    {% endif %}
-                <!-- Add Logout Button Here -->
+                <!-- Admin Panel Button -->
+                {% if request.user.is_staff %}
+                <div class="admin-panel-section">
+                    <a href="/admin/" target="_blank" class="admin-btn">
+                        <i class="fas fa-cog"></i> Admin Panel
+                    </a>
+                </div>
+                {% endif %}
+                
+                <!-- Logout Button -->
                 <div class="logout-section">
-                    <!-- Hidden logout form for POST request -->
                     <form id="logoutForm" action="{% url 'logout' %}" method="post" style="display: none;">
                         {% csrf_token %}
                         <input type="hidden" name="next" value="/">
                     </form>
                     
-                    <!-- Logout Button -->
                     <button class="logout-btn" onclick="logoutUser()">
                         <i class="fas fa-sign-out-alt"></i> Logout
                     </button>
@@ -806,11 +831,18 @@
             {% endif %}
         </div>
 
-        <!-- Modules Grid -->
+        <!-- Modules Grid with Pending Badges -->
         <div class="modules-grid" id="moduleGrid">
             <!-- HR Module -->
             {% if 'HR' in modules %}
             <div class="module-box" data-module="HR">
+                <!-- HR Pending Badge -->
+                {% if hr_pending_leaves > 0 %}
+                <div class="module-badge">
+                    {{ hr_pending_leaves }}
+                </div>
+                {% endif %}
+                
                 <div class="module-icon-large hr">
                     <i class="fas fa-users"></i>
                 </div>
@@ -823,6 +855,11 @@
             <!-- Finance Module -->
             {% if 'Finance' in modules %}
             <div class="module-box" data-module="Finance">
+                {% if finance_pending_requests > 0 %}
+    <div class="module-badge">
+        {{ finance_pending_requests }}
+    </div>
+     {% endif %}
                 <div class="module-icon-large finance">
                     <i class="fas fa-money-bill-wave"></i>
                 </div>
@@ -835,6 +872,15 @@
             <!-- Inventory Module -->
             {% if 'Inventory' in modules %}
             <div class="module-box" data-module="Inventory">
+                <!-- Inventory Pending Badge (Adjustments + Stockouts) -->
+                {% with inventory_pending_adjustments|add:inventory_pending_stockouts as inventory_total %}
+                    {% if inventory_total > 0 %}
+                        <div class="module-badge">
+                            {{ inventory_total }}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+                
                 <div class="module-icon-large inventory">
                     <i class="fas fa-boxes"></i>
                 </div>
@@ -847,6 +893,13 @@
             <!-- Procurement Module -->
             {% if 'Procurement' in modules %}
             <div class="module-box" data-module="Procurement">
+                <!-- Procurement Pending Badge -->
+                {% if procurement_pending_po > 0 %}
+                <div class="module-badge">
+                    {{ procurement_pending_po }}
+                </div>
+                {% endif %}
+                
                 <div class="module-icon-large procurement">
                     <i class="fas fa-shopping-cart"></i>
                 </div>
@@ -859,6 +912,15 @@
             <!-- Sales Module -->
             {% if 'Sales' in modules %}
             <div class="module-box" data-module="Sales">
+                <!-- Sales Pending Badge (Approvals + Stockout) -->
+                {% with sales_pending_approvals|add:sales_pending_stockout as sales_total %}
+                    {% if sales_total > 0 %}
+                        <div class="module-badge">
+                            {{ sales_total }}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+                
                 <div class="module-icon-large sales">
                     <i class="fas fa-chart-line"></i>
                 </div>
@@ -941,7 +1003,7 @@
 
         <!-- Footer -->
         <div class="footer">
-            <p><i class="fas fa-lock"></i> Cornel Simba Business Management System v1.0 | All rights reserved 漏 2025</p>
+            <p><i class="fas fa-lock"></i> Cornel Simba Business Management System v1.0 | All rights reserved © 2025</p>
             <div class="security-badge">
                 <i class="fas fa-shield-alt"></i>
                 <span>Audit System: {% if audit_data %}Active{% else %}Inactive{% endif %}</span>
@@ -965,7 +1027,7 @@
             });
             const el = document.getElementById('liveTime');
             if (el) {
-                el.textContent = `${day} 路 ${time}`;
+                el.textContent = day + " - " + time;
             }
         }
 
@@ -981,118 +1043,107 @@
             console.log('Showing', value, 'modules');
         }
 
-        // Logout function with confirmation
-function logoutUser() {
-    // Show custom confirmation dialog
-    const confirmDialog = document.createElement('div');
-    confirmDialog.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0,0,0,0.5);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 9999;
-    `;
-    
-    confirmDialog.innerHTML = `
-        <div style="
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            max-width: 400px;
-            width: 90%;
-            text-align: center;
-        ">
-            <div style="
-                width: 60px;
-                height: 60px;
-                background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-                border-radius: 50%;
+        function logoutUser() {
+            // Show custom confirmation dialog
+            const confirmDialog = document.createElement('div');
+            confirmDialog.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.5);
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                margin: 0 auto 20px;
-                color: white;
-                font-size: 1.5em;
-            ">
-                <i class="fas fa-sign-out-alt"></i>
-            </div>
+                z-index: 9999;
+            `;
             
-            <h3 style="color: #2c3e50; margin-bottom: 10px;">Confirm Logout</h3>
-            <p style="color: #7f8c8d; margin-bottom: 25px;">
-                Are you sure you want to logout from your account?
-            </p>
+            confirmDialog.innerHTML = `
+                <div style="
+                    background: white;
+                    padding: 30px;
+                    border-radius: 15px;
+                    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+                    max-width: 400px;
+                    width: 90%;
+                    text-align: center;
+                ">
+                    <div style="
+                        width: 60px;
+                        height: 60px;
+                        background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+                        border-radius: 50%;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        margin: 0 auto 20px;
+                        color: white;
+                        font-size: 1.5em;
+                    ">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </div>
+                    
+                    <h3 style="color: #2c3e50; margin-bottom: 10px;">Confirm Logout</h3>
+                    <p style="color: #7f8c8d; margin-bottom: 25px;">
+                        Are you sure you want to logout from your account?
+                    </p>
+                    
+                    <div style="display: flex; gap: 15px; justify-content: center;">
+                        <button onclick="confirmLogout()" style="
+                            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+                            color: white;
+                            border: none;
+                            padding: 10px 25px;
+                            border-radius: 8px;
+                            font-weight: 500;
+                            cursor: pointer;
+                            transition: all 0.3s;
+                            flex: 1;
+                            max-width: 120px;
+                        ">
+                            Yes, Logout
+                        </button>
+                        <button onclick="cancelLogout(this)" style="
+                            background: #f8f9fa;
+                            color: #2c3e50;
+                            border: 1px solid #ddd;
+                            padding: 10px 25px;
+                            border-radius: 8px;
+                            font-weight: 500;
+                            cursor: pointer;
+                            transition: all 0.3s;
+                            flex: 1;
+                            max-width: 120px;
+                        ">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            `;
             
-            <div style="display: flex; gap: 15px; justify-content: center;">
-                <button onclick="confirmLogout()" style="
-                    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-                    color: white;
-                    border: none;
-                    padding: 10px 25px;
-                    border-radius: 8px;
-                    font-weight: 500;
-                    cursor: pointer;
-                    transition: all 0.3s;
-                    flex: 1;
-                    max-width: 120px;
-                ">
-                    Yes, Logout
-                </button>
-                <button onclick="cancelLogout(this)" style="
-                    background: #f8f9fa;
-                    color: #2c3e50;
-                    border: 1px solid #ddd;
-                    padding: 10px 25px;
-                    border-radius: 8px;
-                    font-weight: 500;
-                    cursor: pointer;
-                    transition: all 0.3s;
-                    flex: 1;
-                    max-width: 120px;
-                ">
-                    Cancel
-                </button>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(confirmDialog);
-}
-
-function confirmLogout() {
-    // Submit the hidden logout form
-    document.getElementById('logoutForm').submit();
-}
-
-function cancelLogout(button) {
-    // Remove the confirmation dialog
-    const dialog = button.closest('div[style*="position: fixed"]');
-    if (dialog) {
-        document.body.removeChild(dialog);
-    }
-}
-
-// Add keyboard support
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        const dialog = document.querySelector('div[style*="position: fixed"]');
-        if (dialog) {
-            document.body.removeChild(dialog);
+            document.body.appendChild(confirmDialog);
         }
-    }
-});
 
-// Simple logout with browser confirmation
-function logoutUser() {
-    if (confirm('Are you sure you want to logout?')) {
-        document.getElementById('logoutForm').submit();
-    }
-}
+        function confirmLogout() {
+            document.getElementById('logoutForm').submit();
+        }
+
+        function cancelLogout(button) {
+            const dialog = button.closest('div[style*="position: fixed"]');
+            if (dialog) {
+                document.body.removeChild(dialog);
+            }
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const dialog = document.querySelector('div[style*="position: fixed"]');
+                if (dialog) {
+                    document.body.removeChild(dialog);
+                }
+            }
+        });
     </script>
 </body>
 </html>

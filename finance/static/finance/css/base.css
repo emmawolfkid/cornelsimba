@@ -620,7 +620,48 @@
 ::-webkit-scrollbar-thumb:hover {
     background: #a8a8a8;
 }
+/* ============================================
+   PENDING APPROVALS PAGE STYLES
+   ============================================ */
 
+.page-wrapper {
+    padding: 25px;
+}
+
+.page-header h2 {
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.custom-card {
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.custom-table thead {
+    background-color: var(--dark-color);
+    color: white;
+}
+
+.type-badge {
+    background-color: #edf2f7;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.change-list {
+    padding-left: 16px;
+    font-size: 0.8rem;
+}
+
+.action-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+}
 /* ============================================
    RESPONSIVE STYLES
    ============================================ */

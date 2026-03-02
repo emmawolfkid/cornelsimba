@@ -34,6 +34,6 @@ def leave_counts(request):
         pass
     
     return {
-        'pending_count': pending_count,
-        'user_is_manager': user_is_manager,
+    'hr_pending_leaves': pending_count,
+    'user_is_manager': user_is_manager,
     }

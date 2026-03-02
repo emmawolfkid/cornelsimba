@@ -4,7 +4,7 @@
 
 {% block title %}Financial Reports - Finance{% endblock %}
 
-{% block page_title %}📊 Financial Reports - {{ current_year }}{% endblock %}
+{% block page_title %}📊 Financial Reports - {{ period_label }}{% endblock %}
 
 {% block breadcrumb %}
 <a href="{% url 'finance:dashboard' %}">Dashboard</a> / Reports
@@ -16,25 +16,57 @@
 
 {% block content %}
 <div class="reports-container">
- <!-- Header -->
+    <!-- Header -->
     <div class="reports-header">
         <h1><i class="fas fa-chart-bar"></i> Financial Reports</h1>
+        
+        <!-- Filter Form - Properly structured -->
+        <div class="report-filter-section">
+            <form method="get" class="report-filter-form">
+                <div class="filter-group">
+                    <label for="start_date">Start Date:</label>
+                    <input type="date" name="start_date" id="start_date" value="{{ request.GET.start_date }}">
+                </div>
+                
+                <div class="filter-group">
+                    <label for="end_date">End Date:</label>
+                    <input type="date" name="end_date" id="end_date" value="{{ request.GET.end_date }}">
+                </div>
+                
+                <div class="filter-group">
+                    <label for="year">Year:</label>
+                    <select name="year" id="year">
+                        <option value="">-- Select Year --</option>
+                        {% for y in available_years %}
+                            <option value="{{ y }}" {% if request.GET.year == y|stringformat:"s" %}selected{% endif %}>{{ y }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <button type="submit" class="filter-btn">
+                    <i class="fas fa-filter"></i> Generate Report
+                </button>
+            </form>
+        </div>
+        
         <div class="report-meta">
             <div>
                 <strong><i class="fas fa-calendar"></i> Generated:</strong> {% now "F d, Y H:i" %}
             </div>
             <div>
-                <strong><i class="fas fa-clock"></i> Period:</strong> January {{ current_year }} - December {{ current_year }}
+                <strong><i class="fas fa-clock"></i> Period:</strong> {{ period_label }}
             </div>
-            <!-- Add PDF Download Button here -->
-            <a href="{% url 'finance:download_financial_report_pdf' %}" 
-               class="reports-download-btn" 
-               style="background: #dc3545; color: white; padding: 10px 15px; border-radius: 5px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; margin-left: 10px;">
-                <i class="fas fa-file-pdf"></i> Download PDF
-            </a>
-            <button onclick="window.print()" class="reports-print-btn">
-                <i class="fas fa-print"></i> Print Report
-            </button>
+            
+            <!-- Action Buttons -->
+            <div class="report-actions">
+                <a href="{% url 'finance:download_financial_report_pdf' %}?start_date={{ start_date }}&end_date={{ end_date }}" 
+                   class="reports-download-btn">
+                    <i class="fas fa-file-pdf"></i> Download PDF
+                </a>
+                <button onclick="window.print()" class="reports-print-btn">
+                    <i class="fas fa-print"></i> Print Report
+                </button>
+            </div>
         </div>
     </div>
     
@@ -45,7 +77,7 @@
             <div class="reports-summary-value">
                 Tsh {{ total_income|floatformat:0|default:"0"|intcomma }}
             </div>
-            <div class="reports-summary-detail">Year {{ current_year }}</div>
+            <div class="reports-summary-detail">{{ period_label }}</div>
         </div>
         
         <div class="reports-summary-card expense">
@@ -53,7 +85,7 @@
             <div class="reports-summary-value">
                 Tsh {{ total_expense|floatformat:0|default:"0"|intcomma }}
             </div>
-            <div class="reports-summary-detail">Year {{ current_year }}</div>
+            <div class="reports-summary-detail">{{ period_label }}</div>
         </div>
         
         <div class="reports-summary-card profit {% if profit_loss >= 0 %}positive{% else %}negative{% endif %}">
@@ -81,7 +113,7 @@
     <div class="reports-charts-grid">
         <!-- Monthly Income Chart -->
         <div class="reports-chart-card">
-            <h2><i class="fas fa-chart-line"></i> Monthly Income - {{ current_year }}</h2>
+            <h2><i class="fas fa-chart-line"></i> Monthly Income - {{ period_label }}</h2>
             <div class="reports-bar-chart">
                 {% for item in monthly_income %}
                 <div class="reports-bar reports-bar-income">
@@ -105,7 +137,7 @@
         
         <!-- Monthly Expense Chart -->
         <div class="reports-chart-card">
-            <h2><i class="fas fa-chart-line"></i> Monthly Expenses - {{ current_year }}</h2>
+            <h2><i class="fas fa-chart-line"></i> Monthly Expenses - {{ period_label }}</h2>
             <div class="reports-bar-chart">
                 {% for item in monthly_expense %}
                 <div class="reports-bar reports-bar-expense">
@@ -200,7 +232,7 @@
             
             <div class="reports-summary-detail-item">
                 <div class="reports-summary-label">Report Period</div>
-                <div class="reports-summary-data">Jan {{ current_year }} - Dec {{ current_year }}</div>
+                <div class="reports-summary-data">{{ period_label }}</div>
             </div>
             
             <div class="reports-summary-detail-item">

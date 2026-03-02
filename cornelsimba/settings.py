@@ -122,6 +122,7 @@ TEMPLATES = [
                 'hr.context_processors.leave_counts',
                 'finance.context_processors.finance_context',
                 'sales.context_processors.sales_sidebar_context',
+                'finance.context_processors.finance_notifications',
             ],
         },
     },

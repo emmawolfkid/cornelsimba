@@ -1,17 +1,17 @@
 {% extends 'finance/base.html' %}
 {% load static %}
 {% load humanize %}
-
+{% load finance_filters %}
 {% block title %}Income Statement - Finance{% endblock %}
 
 {% block page_title %}📈 Income Statement (Profit & Loss){% endblock %}
 
 {% block breadcrumb %}
-<a href="{% url 'finance:dashboard' %}">Dashboard</a> / Income Statement
+    <a href="{% url 'finance:dashboard' %}">Dashboard</a> / Income Statement
 {% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'finance/css/income_statement.css' %}">
+    <link rel="stylesheet" href="{% static 'finance/css/income_statement.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -21,18 +21,40 @@
         <h1><i class="fas fa-chart-line"></i> Income Statement</h1>
         <h2>CornelSimba Mining Enterprise</h2>
     </div>
+
+    <!-- Action Buttons -->
+    <div class="action-bar">
+        <a href="{% url 'finance:download_income_statement_pdf' %}?start_date={{ start_date }}&end_date={{ end_date }}" 
+           class="btn-download">
+            <i class="fas fa-download"></i> Download PDF
+        </a>
+    </div>
     
     <!-- Period Display -->
     {% if start_date and end_date %}
     <div class="period-display">
-        <strong><i class="fas fa-calendar-alt"></i> Reporting Period:</strong> 
-        {{ start_date|date:"F j, Y" }} to {{ end_date|date:"F j, Y" }}
+        <i class="fas fa-calendar-alt"></i>
+        <strong>Reporting Period:</strong> 
+        {{ start_date|date:"F j, Y" }} - {{ end_date|date:"F j, Y" }}
     </div>
     {% endif %}
     
+    <!-- Filter Form - Moved outside the grid -->
+    <form method="get" style="margin-bottom: 20px; display: flex; gap: 15px; align-items: center;">
+        <div>
+            <label>Start Date:</label>
+            <input type="date" name="start_date" value="{{ request.GET.start_date }}">
+        </div>
+        <div>
+            <label>End Date:</label>
+            <input type="date" name="end_date" value="{{ request.GET.end_date }}">
+        </div>
+        <button type="submit" class="btn btn-primary">Filter</button>
+    </form>
+    
     <!-- Main Content Grid -->
     <div class="income-statement-grid">
-        <!-- Revenues -->
+        <!-- Revenues Section -->
         <div class="income-statement-card revenues">
             <div class="income-statement-section-header">
                 <i class="fas fa-arrow-up"></i> Revenues
@@ -42,41 +64,44 @@
                 <thead>
                     <tr>
                         <th>Account</th>
-                        <th>Amount (Tsh)</th>
+                        <th class="text-right">Amount (Tsh)</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for acc in revenues %}
+                    {% for item in revenue_data %}
                     <tr>
-                        <td class="account-name">{{ acc.name }}</td>
-                        <td class="account-amount">
-                            {{ acc.credit_transactions.aggregate(total=Sum('amount'))['total']|default:0|floatformat:0|intcomma }}
-                        </td>
+                        <td class="account-name">{{ item.account.name }}</td>
+                        <td class="account-amount text-right">{{ item.amount|floatformat:0|intcomma }}</td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="2" style="text-align: center; padding: 20px; color: #666;">
+                        <td colspan="2" class="empty-state">
                             <i class="fas fa-info-circle"></i> No revenue accounts found
                         </td>
                     </tr>
                     {% endfor %}
-                    <tr class="income-total-row">
+                    
+                    {% if revenue_data %}
+                    <tr class="total-row">
                         <td><strong>Total Revenue</strong></td>
-                        <td class="account-amount">
+                        <td class="account-amount text-right">
                             <strong>{{ total_revenue|floatformat:0|intcomma }}</strong>
                         </td>
                     </tr>
+                    {% endif %}
                 </tbody>
             </table>
             
-            {% if revenues %}
-            <div style="text-align: center; margin-top: 15px;">
-                <small class="text-muted">{{ revenues|length }} revenue account{{ revenues|pluralize }}</small>
+            {% if revenue_data %}
+            <div class="table-footer">
+                <small class="text-muted">
+                    {{ revenue_data|length }} revenue account{{ revenue_data|length|pluralize }}
+                </small>
             </div>
             {% endif %}
         </div>
         
-        <!-- Expenses -->
+        <!-- Expenses Section -->
         <div class="income-statement-card expenses">
             <div class="income-statement-section-header">
                 <i class="fas fa-arrow-down"></i> Expenses
@@ -86,36 +111,39 @@
                 <thead>
                     <tr>
                         <th>Account</th>
-                        <th>Amount (Tsh)</th>
+                        <th class="text-right">Amount (Tsh)</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for acc in expenses %}
+                    {% for item in expense_data %}
                     <tr>
-                        <td class="account-name">{{ acc.name }}</td>
-                        <td class="account-amount">
-                            {{ acc.debit_transactions.aggregate(total=Sum('amount'))['total']|default:0|floatformat:0|intcomma }}
-                        </td>
+                        <td class="account-name">{{ item.account.name }}</td>
+                        <td class="account-amount text-right">{{ item.amount|floatformat:0|intcomma }}</td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="2" style="text-align: center; padding: 20px; color: #666;">
+                        <td colspan="2" class="empty-state">
                             <i class="fas fa-info-circle"></i> No expense accounts found
                         </td>
                     </tr>
                     {% endfor %}
-                    <tr class="income-total-row">
+                    
+                    {% if expense_data %}
+                    <tr class="total-row">
                         <td><strong>Total Expenses</strong></td>
-                        <td class="account-amount">
+                        <td class="account-amount text-right">
                             <strong>{{ total_expense|floatformat:0|intcomma }}</strong>
                         </td>
                     </tr>
+                    {% endif %}
                 </tbody>
             </table>
             
-            {% if expenses %}
-            <div style="text-align: center; margin-top: 15px;">
-                <small class="text-muted">{{ expenses|length }} expense account{{ expenses|pluralize }}</small>
+            {% if expense_data %}
+            <div class="table-footer">
+                <small class="text-muted">
+                    {{ expense_data|length }} expense account{{ expense_data|length|pluralize }}
+                </small>
             </div>
             {% endif %}
         </div>
@@ -123,30 +151,21 @@
     
     <!-- Summary Cards -->
     <div class="income-summary-grid">
-        <div class="income-summary-card">
+        <div class="income-summary-card revenue-card">
             <h4><i class="fas fa-arrow-up"></i> Total Revenue</h4>
-            <div class="income-summary-value income-summary-revenue">
+            <div class="income-summary-value">
                 Tsh {{ total_revenue|floatformat:0|intcomma }}
             </div>
         </div>
         
-        <div class="income-summary-card">
+        <div class="income-summary-card expense-card">
             <h4><i class="fas fa-arrow-down"></i> Total Expenses</h4>
-            <div class="income-summary-value income-summary-expense">
+            <div class="income-summary-value">
                 Tsh {{ total_expense|floatformat:0|intcomma }}
             </div>
         </div>
         
-        {% if total_revenue > 0 %}
-        <div class="income-summary-card">
-            <h4><i class="fas fa-percentage"></i> Profit Margin</h4>
-            <div class="income-summary-value">
-                {% with margin=net_profit|div:total_revenue|floatformat:2 %}
-                {{ margin|multiply:100 }}%
-                {% endwith %}
-            </div>
-        </div>
-        {% endif %}
+         
     </div>
     
     <!-- Net Profit/Loss Section -->
@@ -156,48 +175,32 @@
         </div>
         
         <div class="net-profit-loss-value {% if net_profit >= 0 %}profit{% else %}loss{% endif %}">
-            {% if net_profit >= 0 %}
-                <i class="fas fa-arrow-up"></i> Profit
-            {% else %}
-                <i class="fas fa-arrow-down"></i> Loss
-            {% endif %}
-            <div style="font-size: 3rem; margin-top: 10px;">
+            <div class="profit-loss-label">
+                {% if net_profit >= 0 %}
+                    <i class="fas fa-arrow-up"></i> Net Profit
+                {% else %}
+                    <i class="fas fa-arrow-down"></i> Net Loss
+                {% endif %}
+            </div>
+            <div class="profit-loss-amount">
                 Tsh {{ net_profit|floatformat:0|intcomma }}
             </div>
         </div>
         
-        <p style="color: #666; margin-top: 15px;">
+        <div class="profit-loss-message">
             {% if net_profit >= 0 %}
-                ✅ The business is profitable for this period.
+                <span class="profit-badge">✅ The business is profitable for this period.</span>
             {% else %}
-                ⚠️ The business incurred a loss for this period.
+                <span class="loss-badge">⚠️ The business incurred a loss for this period.</span>
             {% endif %}
-        </p>
-        
-        <!-- Profit Margin -->
-        {% if total_revenue > 0 %}
-        <div class="profit-margin-section">
-            <div style="font-size: 1.1rem; opacity: 0.9;">
-                Profit Margin
-            </div>
-            <div class="profit-margin-value">
-                {% with margin=net_profit|div:total_revenue|floatformat:4 %}
-                {{ margin|multiply:100|floatformat:1 }}%
-                {% endwith %}
-            </div>
-            <div style="font-size: 0.9rem; opacity: 0.8;">
-                (Net Profit / Total Revenue)
-            </div>
         </div>
-        {% endif %}
+         
     </div>
     
-    <!-- Notes -->
-    <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid var(--info-color);">
-        <h4 style="margin: 0 0 10px 0; color: var(--secondary-color);">
-            <i class="fas fa-info-circle"></i> Notes
-        </h4>
-        <ul style="margin: 0; padding-left: 20px; color: #666;">
+    <!-- Notes Section -->
+    <div class="notes-section">
+        <h4><i class="fas fa-info-circle"></i> Notes</h4>
+        <ul>
             <li>This statement shows revenues and expenses for the selected period</li>
             <li>Positive values indicate profit, negative values indicate loss</li>
             <li>All amounts are in Tanzanian Shillings (Tsh)</li>
@@ -209,46 +212,40 @@
 
 {% block extra_js %}
 <script>
-// Format all currency amounts
 document.addEventListener('DOMContentLoaded', function() {
-    // Format account amounts
-    document.querySelectorAll('.account-amount').forEach(element => {
+    // Format all currency amounts
+    function formatCurrency(element) {
         const text = element.textContent;
-        const amount = text.replace(/[^\d.]/g, '');
+        // Extract number (remove 'Tsh' and commas)
+        const number = text.replace(/[^\d.-]/g, '');
         
-        if (amount && !isNaN(parseFloat(amount))) {
-            const num = parseFloat(amount);
-            element.textContent = 'Tsh ' + Math.abs(num).toLocaleString('en-US');
-        }
-    });
-    
-    // Format summary values
-    document.querySelectorAll('.income-summary-value').forEach(element => {
-        const text = element.textContent;
-        const amount = text.replace(/[^\d.]/g, '');
-        
-        if (amount && !isNaN(parseFloat(amount))) {
-            const num = parseFloat(amount);
-            element.textContent = 'Tsh ' + Math.abs(num).toLocaleString('en-US');
-        }
-    });
-    
-    // Format net profit/loss
-    const netProfitElement = document.querySelector('.net-profit-loss-value div');
-    if (netProfitElement) {
-        const text = netProfitElement.textContent;
-        const amount = text.replace(/[^\d.]/g, '');
-        
-        if (amount && !isNaN(parseFloat(amount))) {
-            const num = parseFloat(amount);
-            netProfitElement.textContent = 'Tsh ' + Math.abs(num).toLocaleString('en-US');
+        if (number && !isNaN(parseFloat(number))) {
+            const num = parseFloat(number);
+            const formattedNum = Math.abs(num).toLocaleString('en-US', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            });
+            
+            // Preserve sign if negative
+            if (num < 0) {
+                element.textContent = 'Tsh (' + formattedNum + ')';
+            } else {
+                element.textContent = 'Tsh ' + formattedNum;
+            }
         }
     }
-});
 
-// Add print functionality
-function printIncomeStatement() {
-    window.print();
-}
+    // Format account amounts
+    document.querySelectorAll('.account-amount').forEach(formatCurrency);
+    
+    // Format summary values
+    document.querySelectorAll('.income-summary-value').forEach(formatCurrency);
+    
+    // Format net profit/loss
+    const profitLossAmount = document.querySelector('.profit-loss-amount');
+    if (profitLossAmount) {
+        formatCurrency(profitLossAmount);
+    }
+});
 </script>
 {% endblock %}

@@ -191,28 +191,19 @@
         {% endif %}
     </div>
     <!-- Download Section -->
-<div class="download-section" style="text-align: center; margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 10px;">
+<div class="download-section" 
+     style="text-align: center; margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 10px;">
+
     <h4 style="margin-bottom: 15px;">
-        <i class="fas fa-download"></i> Download Options
+        <i class="fas fa-download"></i> Download Report
     </h4>
-    <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
-        <a href="{% url 'finance:download_balance_sheet_pdf' %}" 
-           class="btn btn-danger" 
-           style="background: #dc3545; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none;">
-            <i class="fas fa-file-pdf"></i> Download PDF
-        </a>
-        <button onclick="window.print()" 
-                class="btn btn-secondary" 
-                style="background: #6c757d; color: white; padding: 10px 20px; border-radius: 5px; border: none; cursor: pointer;">
-            <i class="fas fa-print"></i> Print
-        </button>
-        <a href="{% url 'finance:reports' %}" 
-           class="btn btn-primary" 
-           style="background: #007bff; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none;">
-            <i class="fas fa-chart-bar"></i> View Reports
-        </a>
-    </div>
-</div>
+
+    <a href="{% url 'finance:download_balance_sheet_pdf' %}" 
+       style="background: #dc3545; color: white; padding: 12px 25px; 
+              border-radius: 6px; text-decoration: none; font-weight: bold;">
+        <i class="fas fa-file-pdf"></i> Download Balance Sheet PDF
+    </a>
+
 </div>
 {% endblock %}
 
@@ -243,9 +234,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Auto-refresh every 5 minutes for real-time updates
-setTimeout(function() {
-    location.reload();
-}, 300000); // 5 minutes
+
 </script>
 {% endblock %}

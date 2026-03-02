@@ -46,4 +46,9 @@ urlpatterns = [
     path('balance-sheet/pdf/', views.download_balance_sheet_pdf, name='download_balance_sheet_pdf'),
     path('income-statement/pdf/', views.download_income_statement_pdf, name='download_income_statement_pdf'),
     path('general-ledger/pdf/', views.download_general_ledger_pdf, name='download_general_ledger_pdf'),
+    path('payroll/<int:pk>/download/', views.download_payroll_pdf, name='download_payroll_pdf'),
+    path('expenses/<int:pk>/download/', views.download_expense_pdf, name='download_expense_pdf'),
+    path('pending-edits/', views.pending_finance_edits, name='pending_finance_edits'),
+    path('approve-edit/<int:pk>/', views.approve_finance_edit, name='approve_finance_edit'),
+path('reject-edit/<int:pk>/', views.reject_finance_edit, name='reject_finance_edit'),
 ]

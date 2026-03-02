@@ -15,10 +15,15 @@ from audit.utils import audit_log
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 from io import BytesIO
-from xhtml2pdf import pisa
 from django.template.loader import get_template
 from django.contrib.humanize.templatetags.humanize import intcomma
-import logging
+from .models import FinanceEditRequest
+import logging 
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib import colors
+from reportlab.lib.units import inch
+from django.utils import timezone
 logger = logging.getLogger(__name__)
 
 
@@ -296,7 +301,6 @@ def income_create(request):
     
     return render(request, 'finance/income_form.html', {'form': form})
 
-
 @login_required
 @group_required('Finance')
 def income_edit(request, pk):
@@ -305,23 +309,49 @@ def income_edit(request, pk):
     if request.method == 'POST':
         form = IncomeForm(request.POST, instance=income)
         if form.is_valid():
-            form.save()
-            
-            # 🔴 AUDIT ADD - After this line
-            audit_log(
-                user=request.user,
-                action='UPDATE',
-                module='FINANCE',
-                object_type='Income',
-                object_id=income.id,
-                description=f'Updated income record: {income.source} - {income.amount_display}',
-                request=request
-            )
-            
-            messages.success(request, 
-                f'Income record updated: {income.source} - {income.amount_display}'
-            )
-            return redirect('finance:income_list')
+            # Check if user is admin or has approval permission
+            if request.user.is_superuser or request.user.groups.filter(name='Admin').exists():
+                # Direct save for admins
+                income = form.save()
+                
+                audit_log(
+                    user=request.user,
+                    action='UPDATE',
+                    module='FINANCE',
+                    object_type='Income',
+                    object_id=income.id,
+                    description=f'Updated income record: {income.source} - {income.amount_display}',
+                    request=request
+                )
+                
+                messages.success(request, 
+                    f'Income record updated: {income.source} - {income.amount_display}'
+                )
+                return redirect('finance:income_list')
+            else:
+                # Create edit request for non-admins
+                changes = {}
+
+                for field, value in form.cleaned_data.items():
+                    if isinstance(value, date):
+                        changes[field] = value.strftime('%Y-%m-%d')
+                    elif hasattr(value, 'pk'):
+                        changes[field] = value.pk
+                    else:
+                        changes[field] = str(value) if value is not None else None
+                
+                # Create edit request (assuming you have this model)
+                from .models import FinanceEditRequest
+                FinanceEditRequest.objects.create(
+                    request_type='Income',
+                    object_id=income.id,
+                    requested_changes=changes,
+                    requested_by=request.user,
+                    
+                )
+                
+                messages.info(request, "Edit request submitted for admin approval.")
+                return redirect('finance:income_list')
     else:
         form = IncomeForm(instance=income)
     
@@ -488,57 +518,101 @@ def expense_create(request):
         'expense_types': Expense.EXPENSE_TYPES,  # Add this line
     }
     return render(request, 'finance/expense_form.html', context)
-
-
 @login_required
 @group_required('Finance')
 def expense_edit(request, pk):
-    """Edit an existing expense"""
     expense = get_object_or_404(Expense, pk=pk)
-    
+
     if request.method == 'POST':
         form = ExpenseForm(request.POST, instance=expense)
         if form.is_valid():
-            form.save()
-            
-            # 🔴 AUDIT ADD - After this line
-            audit_log(
-                user=request.user,
-                action='UPDATE',
-                module='FINANCE',
-                object_type='Expense',
-                object_id=expense.id,
-                description=f'Updated expense: {expense.category} - {expense.amount_display}',
-                request=request
-            )
-            
-            messages.success(request, 
-                f'Expense record updated: {expense.category} - {expense.amount_display}'
-            )
-            return redirect('finance:expense_list')
+
+            if request.user.is_superuser:
+                expense = form.save()
+
+                audit_log(
+                    user=request.user,
+                    action='UPDATE',
+                    module='FINANCE',
+                    object_type='Expense',
+                    object_id=expense.id,
+                    description=f'Updated expense: {expense.category} - {expense.amount_display}',
+                    request=request
+                )
+
+                messages.success(request,
+                    f'Expense updated: {expense.category} - {expense.amount_display}'
+                )
+                return redirect('finance:expense_list')
+
+            else:
+                changes = {}
+
+                for field, value in form.cleaned_data.items():
+                    if isinstance(value, date):
+                        changes[field] = value.strftime('%Y-%m-%d')
+                    elif hasattr(value, 'pk'):
+                        changes[field] = value.pk
+                    else:
+                        changes[field] = str(value) if value is not None else None
+
+                FinanceEditRequest.objects.create(
+                    request_type='Expense',
+                    object_id=expense.id,
+                    requested_changes=changes,
+                    requested_by=request.user,
+                )
+
+                messages.info(request,
+                    "Edit request submitted for admin approval."
+                )
+                return redirect('finance:expense_list')
+
     else:
         form = ExpenseForm(instance=expense)
-    
-    # IMPORTANT: Add expense_types to context
-    context = {
+
+    return render(request, 'finance/expense_form.html', {
         'form': form,
-        'editing': True,
-        'expense_types': Expense.EXPENSE_TYPES,  # Add this line
-    }
-    return render(request, 'finance/expense_form.html', context)
-
-
+        'editing': True
+    })
 @login_required
 @group_required('Finance')
 def expense_mark_paid(request, pk):
+
     expense = get_object_or_404(Expense, pk=pk)
-    
+
+    # 🔐 If NOT superuser → submit approval
+    if not request.user.is_superuser:
+
+        existing_request = FinanceEditRequest.objects.filter(
+            request_type='Expense',
+            object_id=expense.id,
+            status='Pending'
+        ).exists()
+
+        if existing_request:
+            messages.warning(request, "Approval request already pending.")
+            return redirect('finance:expense_list')
+
+        FinanceEditRequest.objects.create(
+            request_type='Expense',
+            object_id=expense.id,
+            requested_changes={
+                'is_paid': True,
+                'payment_date': str(date.today())
+            },
+            requested_by=request.user
+        )
+
+        messages.info(request, "Expense payment request submitted for admin approval.")
+        return redirect('finance:expense_list')
+
+    # ✅ Superuser processes payment immediately
     if not expense.is_paid:
         expense.is_paid = True
         expense.payment_date = date.today()
         expense.save()
-        
-        # 🔴 AUDIT ADD - After this line
+
         audit_log(
             user=request.user,
             action='UPDATE',
@@ -548,13 +622,12 @@ def expense_mark_paid(request, pk):
             description=f'Marked expense as paid: {expense.category} - {expense.amount_display}',
             request=request
         )
-        
-        messages.success(request, 
+
+        messages.success(request,
             f'Expense marked as paid: {expense.category} - {expense.amount_display}'
         )
-    
-    return redirect('finance:expense_list')
 
+    return redirect('finance:expense_list')
 
 @login_required
 @group_required('Finance')
@@ -623,12 +696,40 @@ def payroll_create(request):
     
     return render(request, 'finance/payroll_form.html', {'form': form})
 
-
 @login_required
 @group_required('Finance')
 def payroll_mark_paid(request, pk):
+
     payroll = get_object_or_404(Payroll, pk=pk)
-    
+
+    # 🔐 If NOT superuser → submit approval request
+    if not request.user.is_superuser:
+
+        # Prevent duplicate requests
+        existing_request = FinanceEditRequest.objects.filter(
+            request_type='Payroll',
+            object_id=payroll.id,
+            status='Pending'
+        ).exists()
+
+        if existing_request:
+            messages.warning(request, "Approval request already pending.")
+            return redirect('finance:payroll_list')
+
+        FinanceEditRequest.objects.create(
+            request_type='Payroll',
+            object_id=payroll.id,
+            requested_changes={
+                'is_paid': True,
+                'payment_date': str(date.today())
+            },
+            requested_by=request.user
+        )
+
+        messages.info(request, "Payroll payment request submitted for admin approval.")
+        return redirect('finance:payroll_list')
+
+    # ✅ Superuser processes payment immediately
     if not payroll.is_paid:
         payroll.is_paid = True
         payroll.payment_date = date.today()
@@ -654,8 +755,7 @@ def payroll_mark_paid(request, pk):
             credit_account=cash_account,
             created_by=request.user.get_full_name() or request.user.username
         )
-        
-        # 🔴 AUDIT ADD - After this line
+
         audit_log(
             user=request.user,
             action='UPDATE',
@@ -665,13 +765,53 @@ def payroll_mark_paid(request, pk):
             description=f'Marked payroll as paid for {payroll.employee.full_name} - {payroll.net_salary_display}',
             request=request
         )
-        
-        messages.success(request, 
+
+        messages.success(
+            request,
             f'Payroll marked as paid for {payroll.employee.full_name} - {payroll.net_salary_display}'
         )
-    
+
     return redirect('finance:payroll_list')
 
+@login_required
+@group_required('Finance')
+def download_payroll_pdf(request, pk):
+
+    payroll = get_object_or_404(Payroll, pk=pk)
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="payroll_{pk}.pdf"'
+
+    doc = SimpleDocTemplate(response)
+    elements = []
+    styles = getSampleStyleSheet()
+
+    elements.append(Paragraph("Cornel Simba Mining Enterprise", styles['Heading1']))
+    elements.append(Spacer(1, 0.3 * inch))
+    elements.append(Paragraph("Payroll Slip", styles['Heading2']))
+    elements.append(Spacer(1, 0.3 * inch))
+
+    net_salary = payroll.net_salary()
+
+    data = [
+        ["Employee", payroll.employee.full_name],
+        ["Month", f"{payroll.month} {payroll.year}"],
+        ["Basic Salary", f"{payroll.basic_salary:,.2f}"],
+        ["Allowances", f"{payroll.allowances:,.2f}"],
+        ["Deductions", f"{payroll.deductions:,.2f}"],
+        ["Net Salary", f"{net_salary:,.2f}"],
+        ["Status", "PAID" if payroll.is_paid else "UNPAID"],
+    ]
+
+    table = Table(data, colWidths=[2.5 * inch, 3 * inch])
+    table.setStyle(TableStyle([
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+    ]))
+
+    elements.append(table)
+    doc.build(elements)
+
+    return response
 
 @login_required
 @group_required('Finance')
@@ -747,116 +887,185 @@ def create_expense_from_po(request, po_id):
 @login_required
 @group_required('Finance')
 def financial_reports(request):
-    """Financial reports dashboard - FIXED VERSION"""
-    # Monthly summaries
-    current_year = date.today().year
-    
-    # Monthly income
-    monthly_income = []
-    max_income = 0
-    for month in range(1, 13):
-        total = Income.objects.filter(
-            date__year=current_year,
-            date__month=month
-        ).aggregate(total=Sum('amount'))['total'] or 0
-        monthly_income.append({
-            'month': date(2000, month, 1).strftime('%B'),
-            'amount': total
-        })
-        max_income = max(max_income, total)
-    
-    # Monthly expense
-    monthly_expense = []
-    max_expense = 0
-    for month in range(1, 13):
-        total = Expense.objects.filter(
-            date__year=current_year,
-            date__month=month
-        ).aggregate(total=Sum('amount'))['total'] or 0
-        monthly_expense.append({
-            'month': date(2000, month, 1).strftime('%B'),
-            'amount': total
-        })
-        max_expense = max(max_expense, total)
-    
-    # Expense by category WITH PERCENTAGES
-    total_expenses_all = Expense.objects.filter(
-        date__year=current_year
+
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+    year = request.GET.get('year')
+
+    # Determine reporting period
+    if start_date and end_date:
+        start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+        end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+        period_label = f"{start_date.strftime('%B %d, %Y')} - {end_date.strftime('%B %d, %Y')}"
+
+    elif year:
+        year = int(year)
+        start_date = date(year, 1, 1)
+        end_date = date(year, 12, 31)
+        period_label = f"January {year} - December {year}"
+
+    else:
+        current_year = date.today().year
+        start_date = date(current_year, 1, 1)
+        end_date = date.today()
+        period_label = f"January {current_year} - {end_date.strftime('%B %d, %Y')}"
+
+    # ======= MAIN CALCULATIONS =======
+    total_income = Income.objects.filter(
+        date__range=[start_date, end_date],
+        is_active=True
     ).aggregate(total=Sum('amount'))['total'] or 0
-    
-    expense_by_category = []
-    for category in Expense.objects.filter(date__year=current_year).values('expense_type').annotate(
-        total=Sum('amount')
-    ).order_by('-total'):
-        percentage = (category['total'] / total_expenses_all * 100) if total_expenses_all > 0 else 0
-        expense_by_category.append({
-            'expense_type': category['expense_type'],
-            'total': category['total'],
-            'percentage': round(percentage, 1)
-        })
-    
-    # Income by type WITH PERCENTAGES
-    total_income_all = Income.objects.filter(
-        date__year=current_year
+
+    total_expense = Expense.objects.filter(
+        date__range=[start_date, end_date]
     ).aggregate(total=Sum('amount'))['total'] or 0
-    
-    income_by_type = []
-    for income_type in Income.objects.filter(date__year=current_year).values('income_type').annotate(
-        total=Sum('amount')
-    ).order_by('-total'):
-        percentage = (income_type['total'] / total_income_all * 100) if total_income_all > 0 else 0
-        income_by_type.append({
-            'income_type': income_type['income_type'],
-            'total': income_type['total'],
-            'percentage': round(percentage, 1)
-        })
-    
-    # Sales vs other income
-    sales_income = Income.objects.filter(
-        income_type='Sales',
-        date__year=current_year
-    ).aggregate(total=Sum('amount'))['total'] or 0
-    
-    other_income = Income.objects.filter(
-        date__year=current_year
-    ).exclude(income_type='Sales').aggregate(total=Sum('amount'))['total'] or 0
-    
-    total_income = sum(item['amount'] for item in monthly_income)
-    total_expense = sum(item['amount'] for item in monthly_expense)
+
     profit_loss = total_income - total_expense
-    
-    # Calculate profit margin
     profit_margin = (profit_loss / total_income * 100) if total_income > 0 else 0
-    
+
     context = {
-        'current_year': current_year,
-        'monthly_income': monthly_income,
-        'monthly_expense': monthly_expense,
-        'expense_by_category': expense_by_category,
-        'income_by_type': income_by_type,
-        'sales_income': sales_income,
-        'other_income': other_income,
+        'start_date': start_date,
+        'end_date': end_date,
+        'period_label': period_label,
         'total_income': total_income,
         'total_expense': total_expense,
         'profit_loss': profit_loss,
         'profit_margin': round(profit_margin, 1),
-        'max_income': max_income,
-        'max_expense': max_expense,
     }
+
     return render(request, 'finance/reports.html', context)
 
 @login_required
 @group_required('Finance')
+def download_financial_report_pdf(request):
+
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+    year = request.GET.get('year')
+
+    if start_date and end_date:
+
+        # Parse start_date safely
+        if isinstance(start_date, str):
+            try:
+                start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+            except ValueError:
+                try:
+                    start_date = datetime.strptime(start_date, '%b. %d, %Y').date()
+                except ValueError:
+                    start_date = datetime.strptime(start_date, '%B %d, %Y').date()
+
+        # Parse end_date safely
+        if isinstance(end_date, str):
+            try:
+                end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+            except ValueError:
+                try:
+                    end_date = datetime.strptime(end_date, '%b. %d, %Y').date()
+                except ValueError:
+                    end_date = datetime.strptime(end_date, '%B %d, %Y').date()
+
+        period_label = f"{start_date} to {end_date}"
+
+    elif year:
+        year = int(year)
+        start_date = date(year, 1, 1)
+        end_date = date(year, 12, 31)
+        period_label = f"Year {year}"
+
+    else:
+        current_year = date.today().year
+        start_date = date(current_year, 1, 1)
+        end_date = date.today()
+        period_label = f"{start_date} to {end_date}"
+
+    total_income = Income.objects.filter(
+        date__range=[start_date, end_date],
+        is_active=True
+    ).aggregate(total=Sum('amount'))['total'] or 0
+
+    total_expense = Expense.objects.filter(
+        date__range=[start_date, end_date]
+    ).aggregate(total=Sum('amount'))['total'] or 0
+
+    profit_loss = total_income - total_expense
+    profit_margin = (profit_loss / total_income * 100) if total_income > 0 else 0
+
+    # ======== PDF =========
+    response = HttpResponse(content_type='application/pdf')
+    filename = f"financial_report_{start_date}_to_{end_date}.pdf"
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+    doc = SimpleDocTemplate(response)
+    elements = []
+    styles = getSampleStyleSheet()
+
+    elements.append(Paragraph("Cornel Simba Mining Enterprise", styles['Heading1']))
+    elements.append(Spacer(1, 0.2 * inch))
+    elements.append(Paragraph("Financial Report", styles['Heading2']))
+    elements.append(Spacer(1, 0.2 * inch))
+    elements.append(Paragraph(f"Period: {period_label}", styles['Normal']))
+    elements.append(Spacer(1, 0.4 * inch))
+
+    data = [
+        ["Category", "Amount (Tsh)"],
+        ["Total Income", f"{total_income:,.2f}"],
+        ["Total Expense", f"{total_expense:,.2f}"],
+        ["Profit / Loss", f"{profit_loss:,.2f}"],
+        ["Profit Margin (%)", f"{profit_margin:.1f}%"],
+    ]
+
+    table = Table(data, colWidths=[3 * inch, 2 * inch])
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('ALIGN', (1, 1), (-1, -1), 'RIGHT'),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+    ]))
+
+    elements.append(table)
+    doc.build(elements)
+
+    return response
+
+@login_required
+@group_required('Finance')
 def income_mark_paid(request, pk):
-    """Mark income as paid"""
+
     income = get_object_or_404(Income, pk=pk)
-    
+
+    # 🔐 If NOT superuser → submit approval
+    if not request.user.is_superuser:
+
+        existing_request = FinanceEditRequest.objects.filter(
+            request_type='Income',
+            object_id=income.id,
+            status='Pending'
+        ).exists()
+
+        if existing_request:
+            messages.warning(request, "Approval request already pending.")
+            return redirect('finance:income_list')
+
+        FinanceEditRequest.objects.create(
+            request_type='Income',
+            object_id=income.id,
+            requested_changes={
+                'is_paid': True,
+                'payment_date': str(date.today())
+            },
+            requested_by=request.user
+        )
+
+        messages.info(request, "Income payment request submitted for admin approval.")
+        return redirect('finance:income_list')
+
+    # ✅ Superuser processes payment
     if not income.is_paid:
         income.is_paid = True
         income.payment_date = date.today()
         income.save()
-        
-        # 🔴 AUDIT ADD - After this line
+
         audit_log(
             user=request.user,
             action='UPDATE',
@@ -866,88 +1075,99 @@ def income_mark_paid(request, pk):
             description=f'Marked income as paid: {income.source} - {income.amount_display}',
             request=request
         )
-        
-        messages.success(request, 
+
+        messages.success(request,
             f'Income marked as paid: {income.source} - {income.amount_display}'
         )
-    
+
     return redirect('finance:income_list')
 
 @login_required
 @group_required('Finance')
 def cash_flow_statement(request):
-    """Generate cash flow statement"""
-    # Get date range (default to current month)
+    """Generate Cash Flow Statement (Operating Activities)"""
+
+    # ========= DATE RANGE =========
     end_date = date.today()
     start_date = end_date.replace(day=1)
-    
-    # Get parameters if provided
+
     if request.GET.get('start_date'):
-        start_date = datetime.strptime(request.GET.get('start_date'), '%Y-%m-%d').date()
+        start_date = datetime.strptime(
+            request.GET.get('start_date'), '%Y-%m-%d'
+        ).date()
+
     if request.GET.get('end_date'):
-        end_date = datetime.strptime(request.GET.get('end_date'), '%Y-%m-%d').date()
-    
-    # Calculate cash inflows (income paid in period)
+        end_date = datetime.strptime(
+            request.GET.get('end_date'), '%Y-%m-%d'
+        ).date()
+
+    # ========= CASH INFLOWS =========
     cash_inflows = Income.objects.filter(
         is_paid=True,
         is_active=True,
+        payment_date__isnull=False,
         payment_date__range=[start_date, end_date]
     ).aggregate(total=Sum('amount'))['total'] or 0
-    
-    # Calculate cash outflows
+
+    # ========= CASH OUTFLOWS =========
     cash_outflows = Expense.objects.filter(
         is_paid=True,
+        payment_date__isnull=False,
         payment_date__range=[start_date, end_date]
     ).aggregate(total=Sum('amount'))['total'] or 0
-    
+
     payroll_outflows = Payroll.objects.filter(
         is_paid=True,
+        payment_date__isnull=False,
         payment_date__range=[start_date, end_date]
-    ).aggregate(total=Sum(F('basic_salary') + F('allowances')))['total'] or 0
-    
+    ).aggregate(
+        total=Sum(F('basic_salary') + F('allowances'))
+    )['total'] or 0
+
     total_outflows = cash_outflows + payroll_outflows
     net_cash_flow = cash_inflows - total_outflows
-    
-    # Get total income for context
+
+    # ========= ACCRUAL INCOME (FOR CONVERSION RATE) =========
     total_income = Income.objects.filter(
-        date__range=[start_date, end_date],
-        is_active=True
+        is_active=True,
+        date__range=[start_date, end_date]
     ).aggregate(total=Sum('amount'))['total'] or 0
-    
-    # Calculate available cash
-    available_cash = cash_inflows - total_outflows
-    
-    # ========== ADD THESE CALCULATIONS ==========
-    # Calculate cash conversion rate
+
+    # ========= ANALYTICS =========
     if total_income > 0:
-        cash_conversion_rate = round((cash_inflows / total_income * 100), 1)
+        cash_conversion_rate = round(
+            (cash_inflows / total_income) * 100, 1
+        )
     else:
         cash_conversion_rate = 0
-    
-    # Calculate cash reserve coverage (months)
+
     if total_outflows > 0:
-        cash_reserve_coverage = round((available_cash / total_outflows), 1)
+        cash_reserve_coverage = round(
+            (net_cash_flow / total_outflows), 1
+        )
     else:
         cash_reserve_coverage = 0
-    # ========== END ADDITIONS ==========
-    
-    # Get transaction details
+
+    # ========= TRANSACTION DETAILS =========
     income_transactions = Income.objects.filter(
         is_paid=True,
         is_active=True,
+        payment_date__isnull=False,
         payment_date__range=[start_date, end_date]
     ).order_by('-payment_date')[:20]
-    
+
     expense_transactions = Expense.objects.filter(
         is_paid=True,
+        payment_date__isnull=False,
         payment_date__range=[start_date, end_date]
     ).order_by('-payment_date')[:20]
-    
+
     payroll_transactions = Payroll.objects.filter(
         is_paid=True,
+        payment_date__isnull=False,
         payment_date__range=[start_date, end_date]
     ).order_by('-payment_date')[:20]
-    
+
     context = {
         'start_date': start_date,
         'end_date': end_date,
@@ -957,13 +1177,13 @@ def cash_flow_statement(request):
         'total_outflows': total_outflows,
         'net_cash_flow': net_cash_flow,
         'total_income': total_income,
-        'available_cash': available_cash,
-        'cash_conversion_rate': cash_conversion_rate,  # ADD THIS
-        'cash_reserve_coverage': cash_reserve_coverage,  # ADD THIS
+        'cash_conversion_rate': cash_conversion_rate,
+        'cash_reserve_coverage': cash_reserve_coverage,
         'income_transactions': income_transactions,
         'expense_transactions': expense_transactions,
         'payroll_transactions': payroll_transactions,
     }
+
     return render(request, 'finance/cash_flow.html', context)
 
 @login_required
@@ -1042,6 +1262,41 @@ def expense_detail(request, pk):
         'related_transactions': related_transactions,
     }
     return render(request, 'finance/expense_detail.html', context)
+@login_required
+@group_required('Finance')
+def download_expense_pdf(request, pk):
+
+    expense = get_object_or_404(Expense, pk=pk)
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="expense_{expense.id}.pdf"'
+
+    doc = SimpleDocTemplate(response)
+    elements = []
+    styles = getSampleStyleSheet()
+
+    elements.append(Paragraph("Cornel Simba Mining Enterprise", styles['Heading1']))
+    elements.append(Spacer(1, 0.3 * inch))
+    elements.append(Paragraph("Expense Report", styles['Heading2']))
+    elements.append(Spacer(1, 0.3 * inch))
+
+    data = [
+        ["Category", expense.category],
+        ["Type", expense.expense_type],
+        ["Amount", f"{expense.amount:,.2f} {expense.currency}"],
+        ["Date", expense.date.strftime('%B %d, %Y')],
+        ["Status", "PAID" if expense.is_paid else "UNPAID"],
+    ]
+
+    table = Table(data, colWidths=[2.5 * inch, 3 * inch])
+    table.setStyle(TableStyle([
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+    ]))
+
+    elements.append(table)
+
+    doc.build(elements)
+    return response
 
 @login_required
 @group_required('Finance')
@@ -1184,50 +1439,83 @@ def trial_balance(request):
     
     return render(request, 'finance/trial_balance.html', context)
 
-
 @login_required
 @group_required('Finance')
 def income_statement(request):
-    """Profit & Loss Statement"""
-    
+
+    # ========= GET DATE FILTERS =========
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
 
-    filters = {}
     if start_date and end_date:
-        filters['date__range'] = [
-            datetime.strptime(start_date, '%Y-%m-%d').date(),
-            datetime.strptime(end_date, '%Y-%m-%d').date()
-        ]
+        start_date = datetime.strptime(start_date, '%Y-%m-%d')
+        end_date = datetime.strptime(end_date, '%Y-%m-%d')
+    else:
+        start_date = None
+        end_date = None
 
-    # Get accounts
+    # ========= GET ACCOUNTS =========
     revenues = Account.objects.filter(account_type='Revenue')
     expenses = Account.objects.filter(account_type='Expense')
+
+    revenue_data = []
+    expense_data = []
 
     total_revenue = 0
     total_expense = 0
 
+    # ========= REVENUES =========
     for acc in revenues:
-        total_revenue += acc.credit_transactions.aggregate(
+        transactions = acc.credit_transactions.all()
+
+        if start_date and end_date:
+            transactions = transactions.filter(
+                date__range=[start_date, end_date]
+            )
+
+        amount = transactions.aggregate(
             total=Sum('amount')
         )['total'] or 0
 
+        if amount > 0:
+            revenue_data.append({
+                'account': acc,
+                'amount': amount
+            })
+            total_revenue += amount
+
+    # ========= EXPENSES =========
     for acc in expenses:
-        total_expense += acc.debit_transactions.aggregate(
+        transactions = acc.debit_transactions.all()
+
+        if start_date and end_date:
+            transactions = transactions.filter(
+                date__range=[start_date, end_date]
+            )
+
+        amount = transactions.aggregate(
             total=Sum('amount')
         )['total'] or 0
+
+        if amount > 0:
+            expense_data.append({
+                'account': acc,
+                'amount': amount
+            })
+            total_expense += amount
 
     net_profit = total_revenue - total_expense
 
     return render(request, 'finance/income_statement.html', {
-        'revenues': revenues,
-        'expenses': expenses,
+        'revenue_data': revenue_data,
+        'expense_data': expense_data,
         'total_revenue': total_revenue,
         'total_expense': total_expense,
         'net_profit': net_profit,
         'start_date': start_date,
         'end_date': end_date,
     })
+
 @login_required
 @group_required('Finance')
 def balance_sheet(request):
@@ -1266,539 +1554,686 @@ def balance_sheet(request):
 @login_required
 @group_required('Finance')
 def download_general_ledger_pdf(request):
-    """Download General Ledger as PDF - DIRECT VERSION"""
-    from django.http import HttpResponse
-    from django.template.loader import get_template
-    from io import BytesIO
-    from xhtml2pdf import pisa
-    
-    # Get date range (default to current month)
+
     end_date = date.today()
     start_date = end_date.replace(day=1)
-    
+
     if request.GET.get('start_date'):
         start_date = datetime.strptime(request.GET.get('start_date'), '%Y-%m-%d').date()
     if request.GET.get('end_date'):
         end_date = datetime.strptime(request.GET.get('end_date'), '%Y-%m-%d').date()
-    
-    # Get all transactions in date range
+
     transactions = Transaction.objects.filter(
         date__date__range=[start_date, end_date]
     ).select_related('debit_account', 'credit_account').order_by('-date')
-    
-    # Calculate totals
+
     debit_total = 0
     credit_total = 0
-    
-    for transaction in transactions:
-        debit_total += transaction.amount
-        credit_total += transaction.amount
-    
-    # Calculate account summaries
-    accounts_summary = {}
-    for transaction in transactions:
-        # Debit account
-        debit_acc_code = transaction.debit_account.code
-        if debit_acc_code not in accounts_summary:
-            accounts_summary[debit_acc_code] = {
-                'account': transaction.debit_account,
-                'debits': 0,
-                'credits': 0,
-            }
-        accounts_summary[debit_acc_code]['debits'] += transaction.amount
-        
-        # Credit account
-        credit_acc_code = transaction.credit_account.code
-        if credit_acc_code not in accounts_summary:
-            accounts_summary[credit_acc_code] = {
-                'account': transaction.credit_account,
-                'debits': 0,
-                'credits': 0,
-            }
-        accounts_summary[credit_acc_code]['credits'] += transaction.amount
-    
-    balance_difference = abs(debit_total - credit_total)
-    
-    # Format currency
-    def format_currency(value):
-        return "{:,.2f}".format(value)
-    
-    context = {
-        'start_date': start_date,
-        'end_date': end_date,
-        'transactions': transactions,
-        'accounts_summary': accounts_summary,
-        'debit_total': debit_total,
-        'credit_total': credit_total,
-        'debit_total_formatted': format_currency(debit_total),
-        'credit_total_formatted': format_currency(credit_total),
-        'balance_difference': balance_difference,
-        'balance_difference_formatted': format_currency(balance_difference),
-    }
-    
-    # Generate PDF directly
-    try:
-        template = get_template('finance/general_ledger_pdf.html')
-        html = template.render(context)
-        result = BytesIO()
-        
-        pdf = pisa.CreatePDF(BytesIO(html.encode("UTF-8")), result)
-        
-        if not pdf.err:
-            response = HttpResponse(result.getvalue(), content_type='application/pdf')
-            filename = f"general_ledger_{start_date}_to_{end_date}.pdf"
-            response['Content-Disposition'] = f'attachment; filename="{filename}"'
-            return response
-    except Exception as e:
-        logger.warning(f"PDF Error: {e}")
 
-    
-    return HttpResponse("Error generating PDF", status=500)
+    rows = []
+
+    for t in transactions:
+        debit_total += t.amount
+        credit_total += t.amount
+
+        rows.append([
+            t.date.strftime("%Y-%m-%d"),
+            t.debit_account.name,
+            f"{t.amount:,.2f}",
+            t.credit_account.name,
+            f"{t.amount:,.2f}",
+        ])
+
+    balance_difference = abs(debit_total - credit_total)
+
+    # ================= PDF =================
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="general_ledger_{start_date}_to_{end_date}.pdf"'
+
+    doc = SimpleDocTemplate(response)
+    elements = []
+    styles = getSampleStyleSheet()
+
+    elements.append(Paragraph("Cornel Simba Mining Enterprise", styles['Heading1']))
+    elements.append(Spacer(1, 0.2 * inch))
+    elements.append(Paragraph("General Ledger", styles['Heading2']))
+    elements.append(Spacer(1, 0.2 * inch))
+    elements.append(Paragraph(
+        f"Period: {start_date.strftime('%B %d, %Y')} to {end_date.strftime('%B %d, %Y')}",
+        styles['Normal']
+    ))
+    elements.append(Spacer(1, 0.3 * inch))
+
+    data = [
+        ["Date", "Debit Account", "Debit (Tsh)", "Credit Account", "Credit (Tsh)"]
+    ]
+
+    data += rows
+
+    data.append([
+        "",
+        "TOTAL",
+        f"{debit_total:,.2f}",
+        "",
+        f"{credit_total:,.2f}"
+    ])
+
+    table = Table(data, repeatRows=1)
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('ALIGN', (2, 1), (-1, -1), 'RIGHT'),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+    ]))
+
+    elements.append(table)
+    elements.append(Spacer(1, 0.3 * inch))
+
+    status_text = "BALANCED ✅" if balance_difference == 0 else f"NOT BALANCED ❌ (Difference: {balance_difference:,.2f})"
+
+    elements.append(Paragraph(status_text, styles['Normal']))
+
+    doc.build(elements)
+    return response
+
+
 @login_required
 @group_required('Finance')
 def download_trial_balance_pdf(request):
-    """Download Trial Balance as PDF - FINAL FIXED VERSION"""
-    from django.http import HttpResponse
-    from django.template.loader import get_template
-    from io import BytesIO
-    from xhtml2pdf import pisa
-    
-    # Get accounts
+
     accounts = Account.objects.filter(is_active=True).order_by('code')
-    
+
     total_debits = 0
     total_credits = 0
-    
-    # Prepare account data
-    account_data = []
+
+    account_rows = []
+
     for account in accounts:
-        # Get transaction totals
-        debit_total = account.debit_transactions.aggregate(total=Sum('amount'))['total'] or 0
-        credit_total = account.credit_transactions.aggregate(total=Sum('amount'))['total'] or 0
-        
-        # Calculate balances
+
+        debit_total = account.debit_transactions.aggregate(
+            total=Sum('amount')
+        )['total'] or 0
+
+        credit_total = account.credit_transactions.aggregate(
+            total=Sum('amount')
+        )['total'] or 0
+
         if account.account_type in ['Asset', 'Expense']:
-            debit_balance = debit_total - credit_total if debit_total > credit_total else 0
-            credit_balance = credit_total - debit_total if credit_total > debit_total else 0
+            debit_balance = max(debit_total - credit_total, 0)
+            credit_balance = max(credit_total - debit_total, 0)
         else:
-            credit_balance = credit_total - debit_total if credit_total > debit_total else 0
-            debit_balance = debit_total - credit_total if debit_total > credit_total else 0
-        
-        account_dict = {
-            'code': account.code,
-            'name': account.name,
-            'account_type': account.account_type,
-            'debit_balance': debit_balance,
-            'credit_balance': credit_balance,
-            'is_debit': debit_balance > 0,
-        }
-        
-        account_data.append(account_dict)
-        total_debits += debit_balance
-        total_credits += credit_balance
-    
-    # Check balance
-    is_balanced = abs(total_debits - total_credits) < 0.01
-    
-    # Create context
-    context = {
-        'accounts': account_data,
-        'total_debits': total_debits,
-        'total_credits': total_credits,
-        'is_balanced': is_balanced,
-        'abs_difference': abs(total_debits - total_credits),
-        'date': date.today(),
-    }
-    
-    # Generate PDF
-    template = get_template('finance/trial_balance_pdf.html')
-    html = template.render(context)
-    
-    result = BytesIO()
-    pdf = pisa.CreatePDF(BytesIO(html.encode('UTF-8')), dest=result)
-    
-    if pdf.err:
-        # Return HTML as fallback
-        response = HttpResponse(html, content_type='text/html')
-        response['Content-Disposition'] = 'attachment; filename="trial_balance.html"'
-        return response
-    
-    # Return PDF
-    response = HttpResponse(result.getvalue(), content_type='application/pdf')
-    filename = f"trial_balance_{date.today().strftime('%Y%m%d')}.pdf"
-    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+            credit_balance = max(credit_total - debit_total, 0)
+            debit_balance = max(debit_total - credit_total, 0)
+
+        if debit_balance > 0:
+            total_debits += debit_balance
+        if credit_balance > 0:
+            total_credits += credit_balance
+
+        account_rows.append([
+            account.code,
+            account.name,
+            account.account_type,
+            f"{debit_balance:,.2f}" if debit_balance > 0 else "-",
+            f"{credit_balance:,.2f}" if credit_balance > 0 else "-"
+        ])
+
+    is_balanced = abs(total_debits - total_credits) < 1
+
+    # ================= PDF =================
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="trial_balance.pdf"'
+
+    doc = SimpleDocTemplate(response)
+    elements = []
+    styles = getSampleStyleSheet()
+
+    elements.append(Paragraph("Cornel Simba Mining Enterprise", styles['Heading1']))
+    elements.append(Spacer(1, 0.2 * inch))
+    elements.append(Paragraph("Trial Balance", styles['Heading2']))
+    elements.append(Spacer(1, 0.3 * inch))
+
+    data = [
+        ["Code", "Account", "Type", "Debit (Tsh)", "Credit (Tsh)"]
+    ]
+
+    data += account_rows
+
+    data.append([
+        "",
+        "TOTAL",
+        "",
+        f"{total_debits:,.2f}",
+        f"{total_credits:,.2f}"
+    ])
+
+    table = Table(data, repeatRows=1)
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('ALIGN', (3, 1), (-1, -1), 'RIGHT'),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+    ]))
+
+    elements.append(table)
+    elements.append(Spacer(1, 0.3 * inch))
+
+    status_text = "BALANCED ✅" if is_balanced else "NOT BALANCED ❌"
+
+    elements.append(Paragraph(
+        f"Status: {status_text}",
+        styles['Normal']
+    ))
+
+    doc.build(elements)
     return response
         
-
 @login_required
 @group_required('Finance')
 def download_income_statement_pdf(request):
-    """Download Income Statement as PDF - DIRECT VERSION"""
-    from django.http import HttpResponse
-    from django.template.loader import get_template
-    from io import BytesIO
-    from xhtml2pdf import pisa
-    
-    start_date = request.GET.get('start_date')
-    end_date = request.GET.get('end_date')
+    start_date_param = request.GET.get('start_date')
+    end_date_param = request.GET.get('end_date')
 
-    filters = {}
-    if start_date and end_date:
-        filters['date__range'] = [
-            datetime.strptime(start_date, '%Y-%m-%d').date(),
-            datetime.strptime(end_date, '%Y-%m-%d').date()
-        ]
+    start_date = None
+    end_date = None
 
-    # Get accounts
+    if start_date_param and end_date_param:
+        try:
+            start_date = datetime.strptime(start_date_param, '%Y-%m-%d').date()
+            end_date = datetime.strptime(end_date_param, '%Y-%m-%d').date()
+        except ValueError:
+            start_date = None
+            end_date = None
+
     revenues = Account.objects.filter(account_type='Revenue')
     expenses = Account.objects.filter(account_type='Expense')
 
     total_revenue = 0
     total_expense = 0
-    
+
     revenue_details = []
     expense_details = []
 
+    # ========= REVENUES =========
     for acc in revenues:
-        revenue_amount = acc.credit_transactions.aggregate(
-            total=Sum('amount')
-        )['total'] or 0
-        total_revenue += revenue_amount
-        if revenue_amount > 0:
-            revenue_details.append({
-                'account': acc,
-                'amount': revenue_amount
-            })
+        transactions = acc.credit_transactions.all()
 
-    for acc in expenses:
-        expense_amount = acc.debit_transactions.aggregate(
+        if start_date and end_date:
+            transactions = transactions.filter(
+                date__range=[start_date, end_date]
+            )
+
+        revenue_amount = transactions.aggregate(
             total=Sum('amount')
         )['total'] or 0
-        total_expense += expense_amount
+
+        if revenue_amount > 0:
+            revenue_details.append((acc.name, revenue_amount))
+            total_revenue += revenue_amount
+
+    # ========= EXPENSES =========
+    for acc in expenses:
+        transactions = acc.debit_transactions.all()
+
+        if start_date and end_date:
+            transactions = transactions.filter(
+                date__range=[start_date, end_date]
+            )
+
+        expense_amount = transactions.aggregate(
+            total=Sum('amount')
+        )['total'] or 0
+
         if expense_amount > 0:
-            expense_details.append({
-                'account': acc,
-                'amount': expense_amount
-            })
+            expense_details.append((acc.name, expense_amount))
+            total_expense += expense_amount
 
     net_profit = total_revenue - total_expense
-    
-    # Format currency
-    def format_currency(value):
-        return "{:,.2f}".format(value)
 
-    context = {
-        'revenue_details': revenue_details,
-        'expense_details': expense_details,
-        'total_revenue': total_revenue,
-        'total_expense': total_expense,
-        'net_profit': net_profit,
-        'total_revenue_formatted': format_currency(total_revenue),
-        'total_expense_formatted': format_currency(total_expense),
-        'net_profit_formatted': format_currency(net_profit),
-        'start_date': start_date,
-        'end_date': end_date,
-        'date': date.today(),
-    }
-    
-    # Generate PDF directly
-    try:
-        template = get_template('finance/income_statement_pdf.html')
-        html = template.render(context)
-        result = BytesIO()
-        
-        pdf = pisa.CreatePDF(BytesIO(html.encode("UTF-8")), result)
-        
-        if not pdf.err:
-            response = HttpResponse(result.getvalue(), content_type='application/pdf')
-            filename = f"income_statement_{start_date or ''}_to_{end_date or date.today()}.pdf"
-            response['Content-Disposition'] = f'attachment; filename="{filename}"'
-            return response
-    except Exception as e:
-        logger.warning(f"PDF Error: {e}")
+    # ========== PDF ==========
+    response = HttpResponse(content_type='application/pdf')
+    filename = f"income_statement_{start_date or 'all'}_to_{end_date or 'all'}.pdf"
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
 
-    
-    return HttpResponse("Error generating PDF", status=500)
+    doc = SimpleDocTemplate(response)
+    elements = []
+    styles = getSampleStyleSheet()
+
+    elements.append(Paragraph("Cornel Simba Mining Enterprise", styles['Heading1']))
+    elements.append(Spacer(1, 0.2 * inch))
+    elements.append(Paragraph("Income Statement", styles['Heading2']))
+    elements.append(Spacer(1, 0.2 * inch))
+
+    if start_date and end_date:
+        elements.append(Paragraph(f"Period: {start_date} to {end_date}", styles['Normal']))
+        elements.append(Spacer(1, 0.3 * inch))
+
+    # Revenue table
+    revenue_data = [["Account", "Amount (Tsh)"]]
+    for name, amount in revenue_details:
+        revenue_data.append([name, f"{amount:,.2f}"])
+    revenue_data.append(["Total Revenue", f"{total_revenue:,.2f}"])
+
+    revenue_table = Table(revenue_data, colWidths=[3 * inch, 2 * inch])
+    revenue_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('ALIGN', (1, 1), (-1, -1), 'RIGHT'),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+    ]))
+
+    elements.append(revenue_table)
+    elements.append(Spacer(1, 0.4 * inch))
+
+    # Expense table
+    expense_data = [["Account", "Amount (Tsh)"]]
+    for name, amount in expense_details:
+        expense_data.append([name, f"{amount:,.2f}"])
+    expense_data.append(["Total Expenses", f"{total_expense:,.2f}"])
+
+    expense_table = Table(expense_data, colWidths=[3 * inch, 2 * inch])
+    expense_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('ALIGN', (1, 1), (-1, -1), 'RIGHT'),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+    ]))
+
+    elements.append(expense_table)
+    elements.append(Spacer(1, 0.3 * inch))
+
+    elements.append(Paragraph(
+        f"Net Profit / Loss: {net_profit:,.2f} Tsh",
+        styles['Heading3']
+    ))
+
+    elements.append(Spacer(1, 0.3 * inch))
+    elements.append(Paragraph(
+        f"Generated on: {datetime.now().strftime('%B %d, %Y %H:%M')}",
+        styles['Normal']
+    ))
+
+    doc.build(elements)
+    return response
+
 @login_required
 @group_required('Finance')
 def download_cash_flow_pdf(request):
-    """Download Cash Flow Statement as PDF - DIRECT VERSION"""
-    from django.http import HttpResponse
-    from django.template.loader import get_template
-    from io import BytesIO
-    from xhtml2pdf import pisa
-    
-    # Get date range (default to current month)
+
     end_date = date.today()
     start_date = end_date.replace(day=1)
-    
-    # Get parameters if provided
+
     if request.GET.get('start_date'):
         start_date = datetime.strptime(request.GET.get('start_date'), '%Y-%m-%d').date()
     if request.GET.get('end_date'):
         end_date = datetime.strptime(request.GET.get('end_date'), '%Y-%m-%d').date()
-    
-    # Calculate cash inflows (income paid in period)
+
+    # Calculations (same as cash_flow_statement view)
+
     cash_inflows = Income.objects.filter(
         is_paid=True,
         is_active=True,
+        payment_date__isnull=False,
         payment_date__range=[start_date, end_date]
     ).aggregate(total=Sum('amount'))['total'] or 0
-    
-    # Calculate cash outflows
+
     cash_outflows = Expense.objects.filter(
         is_paid=True,
+        payment_date__isnull=False,
         payment_date__range=[start_date, end_date]
     ).aggregate(total=Sum('amount'))['total'] or 0
-    
+
     payroll_outflows = Payroll.objects.filter(
         is_paid=True,
+        payment_date__isnull=False,
         payment_date__range=[start_date, end_date]
     ).aggregate(total=Sum(F('basic_salary') + F('allowances')))['total'] or 0
-    
+
     total_outflows = cash_outflows + payroll_outflows
     net_cash_flow = cash_inflows - total_outflows
-    
-    # Get transaction details
-    income_transactions = Income.objects.filter(
-        is_paid=True,
-        is_active=True,
-        payment_date__range=[start_date, end_date]
-    ).order_by('-payment_date')[:20]
-    
-    expense_transactions = Expense.objects.filter(
-        is_paid=True,
-        payment_date__range=[start_date, end_date]
-    ).order_by('-payment_date')[:20]
-    
-    payroll_transactions = Payroll.objects.filter(
-        is_paid=True,
-        payment_date__range=[start_date, end_date]
-    ).order_by('-payment_date')[:20]
-    
-    # Format currency
-    def format_currency(value):
-        return "{:,.2f}".format(value)
-    
-    context = {
-        'start_date': start_date,
-        'end_date': end_date,
-        'cash_inflows': cash_inflows,
-        'cash_outflows': cash_outflows,
-        'payroll_outflows': payroll_outflows,
-        'total_outflows': total_outflows,
-        'net_cash_flow': net_cash_flow,
-        'cash_inflows_formatted': format_currency(cash_inflows),
-        'cash_outflows_formatted': format_currency(cash_outflows),
-        'payroll_outflows_formatted': format_currency(payroll_outflows),
-        'total_outflows_formatted': format_currency(total_outflows),
-        'net_cash_flow_formatted': format_currency(net_cash_flow),
-        'income_transactions': income_transactions,
-        'expense_transactions': expense_transactions,
-        'payroll_transactions': payroll_transactions,
-    }
-    
-    # Generate PDF directly
-    try:
-        template = get_template('finance/cash_flow_pdf.html')
-        html = template.render(context)
-        result = BytesIO()
-        
-        pdf = pisa.CreatePDF(BytesIO(html.encode("UTF-8")), result)
-        
-        if not pdf.err:
-            response = HttpResponse(result.getvalue(), content_type='application/pdf')
-            filename = f"cash_flow_{start_date}_to_{end_date}.pdf"
-            response['Content-Disposition'] = f'attachment; filename="{filename}"'
-            return response
-    except Exception as e:
-        logger.warning(f"PDF Error: {e}")
 
-    
-    return HttpResponse("Error generating PDF", status=500)
-@login_required
-@group_required('Finance')
-def download_financial_report_pdf(request):
-    """Download Financial Report as PDF - DIRECT VERSION"""
-    from django.http import HttpResponse
-    from django.template.loader import get_template
-    from io import BytesIO
-    from xhtml2pdf import pisa
-    
-    current_year = date.today().year
-    
-    # Get all the same data as the regular report view
-    monthly_income = []
-    for month in range(1, 13):
-        total = Income.objects.filter(
-            date__year=current_year,
-            date__month=month
-        ).aggregate(total=Sum('amount'))['total'] or 0
-        monthly_income.append({
-            'month': date(2000, month, 1).strftime('%B'),
-            'amount': total
-        })
-    
-    monthly_expense = []
-    for month in range(1, 13):
-        total = Expense.objects.filter(
-            date__year=current_year,
-            date__month=month
-        ).aggregate(total=Sum('amount'))['total'] or 0
-        monthly_expense.append({
-            'month': date(2000, month, 1).strftime('%B'),
-            'amount': total
-        })
-    
-    # Calculate totals
-    total_income = sum(item['amount'] for item in monthly_income)
-    total_expense = sum(item['amount'] for item in monthly_expense)
-    profit_loss = total_income - total_expense
-    
-    # Format currency
-    def format_currency(value):
-        return "{:,.2f}".format(value)
-    
-    context = {
-        'current_year': current_year,
-        'monthly_income': monthly_income,
-        'monthly_expense': monthly_expense,
-        'total_income': total_income,
-        'total_expense': total_expense,
-        'profit_loss': profit_loss,
-        'total_income_formatted': format_currency(total_income),
-        'total_expense_formatted': format_currency(total_expense),
-        'profit_loss_formatted': format_currency(profit_loss),
-        'date': date.today(),
-    }
-    
-    # Generate PDF directly
-    try:
-        template = get_template('finance/financial_report_pdf.html')
-        html = template.render(context)
-        result = BytesIO()
-        
-        pdf = pisa.CreatePDF(BytesIO(html.encode("UTF-8")), result)
-        
-        if not pdf.err:
-            response = HttpResponse(result.getvalue(), content_type='application/pdf')
-            filename = f"financial_report_{current_year}.pdf"
-            response['Content-Disposition'] = f'attachment; filename="{filename}"'
-            return response
-    except Exception as e:
-        logger.warning(f"PDF Error: {e}")
+    # ================= PDF =================
 
-    
-    return HttpResponse("Error generating PDF", status=500)
+    response = HttpResponse(content_type='application/pdf')
+    filename = f"cash_flow_{start_date.strftime('%Y%m%d')}_to_{end_date.strftime('%Y%m%d')}.pdf"
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+    doc = SimpleDocTemplate(response)
+    elements = []
+    styles = getSampleStyleSheet()
+
+    elements.append(Paragraph("Cornel Simba Mining Enterprise", styles['Heading1']))
+    elements.append(Spacer(1, 0.2 * inch))
+    elements.append(Paragraph("Cash Flow Statement", styles['Heading2']))
+    elements.append(Spacer(1, 0.2 * inch))
+    elements.append(Paragraph(
+        f"Period: {start_date.strftime('%B %d, %Y')} to {end_date.strftime('%B %d, %Y')}",
+        styles['Normal']
+    ))
+    elements.append(Spacer(1, 0.4 * inch))
+
+    data = [
+        ["Category", "Amount (Tsh)"],
+        ["Cash Inflows", f"{cash_inflows:,.0f}"],
+        ["Expense Outflows", f"{cash_outflows:,.0f}"],
+        ["Payroll Outflows", f"{payroll_outflows:,.0f}"],
+        ["Total Outflows", f"{total_outflows:,.0f}"],
+        ["Net Cash Flow", f"{net_cash_flow:,.0f}"],
+]
+
+    table = Table(data, colWidths=[3 * inch, 2 * inch])
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('ALIGN', (1, 1), (-1, -1), 'RIGHT'),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+    ]))
+
+    elements.append(table)
+    elements.append(Spacer(1, 0.4 * inch))
+
+    if net_cash_flow >= 0:
+        status_text = "POSITIVE CASH FLOW ✅"
+    else:
+        status_text = "NEGATIVE CASH FLOW ❌"
+
+    elements.append(Paragraph(status_text, styles['Normal']))
+
+    elements.append(Spacer(1, 0.3 * inch))
+    elements.append(Paragraph(
+        f"Generated on: {datetime.now().strftime('%B %d, %Y %H:%M')}",
+        styles['Normal']
+    ))
+
+    doc.build(elements)
+    return response
+
+
+
+
 @login_required
 @group_required('Finance')
 def download_balance_sheet_pdf(request):
-    """Download Balance Sheet as PDF with REAL data"""
-    from django.http import HttpResponse
-    from django.template.loader import get_template
-    from io import BytesIO
-    from xhtml2pdf import pisa
-    from django.db.models import Sum
-    
-    # Get ALL accounts with their balances
+
+    # ===============================
+    # SAME LOGIC AS YOUR balance_sheet VIEW
+    # ===============================
+
     assets = Account.objects.filter(account_type='Asset')
     liabilities = Account.objects.filter(account_type='Liability')
-    equity = Account.objects.filter(account_type='Equity')
-    
-    # Prepare detailed lists for each category
-    asset_details = []
-    liability_details = []
-    equity_details = []
-    
+    equity_accounts = Account.objects.filter(account_type='Equity')
+
     total_assets = 0
     total_liabilities = 0
     total_equity = 0
-    
-    # Calculate asset balances
+
+    # Calculate Assets
     for acc in assets:
         debits = acc.debit_transactions.aggregate(total=Sum('amount'))['total'] or 0
         credits = acc.credit_transactions.aggregate(total=Sum('amount'))['total'] or 0
-        balance = debits - credits
-        
-        if balance != 0:
-            asset_details.append({
-                'name': acc.name,
-                'balance': balance
-            })
-            total_assets += balance
-    
-    # Calculate liability balances
+        total_assets += (debits - credits)
+
+    # Calculate Liabilities
     for acc in liabilities:
         debits = acc.debit_transactions.aggregate(total=Sum('amount'))['total'] or 0
         credits = acc.credit_transactions.aggregate(total=Sum('amount'))['total'] or 0
-        balance = credits - debits  # Liabilities are credit normal
-        
-        if balance != 0:
-            liability_details.append({
-                'name': acc.name,
-                'balance': balance
-            })
-            total_liabilities += balance
-    
-    # Calculate equity balances
-    for acc in equity:
+        total_liabilities += (credits - debits)
+
+    # Calculate Equity
+    for acc in equity_accounts:
         debits = acc.debit_transactions.aggregate(total=Sum('amount'))['total'] or 0
         credits = acc.credit_transactions.aggregate(total=Sum('amount'))['total'] or 0
-        balance = credits - debits  # Equity is credit normal
-        
-        if balance != 0:
-            equity_details.append({
-                'name': acc.name,
-                'balance': balance
-            })
-            total_equity += balance
-    
-    # Format numbers with commas
-    def format_currency(value):
-        return "{:,.2f}".format(value)
-    
-    # Calculate if balanced
-    is_balanced = abs(total_assets - (total_liabilities + total_equity)) < 1
-    difference = total_assets - (total_liabilities + total_equity)
-    
-    context = {
-        # Detailed account lists
-        'asset_details': asset_details,
-        'liability_details': liability_details,
-        'equity_details': equity_details,
-        
-        # Totals
-        'total_assets': total_assets,
-        'total_liabilities': total_liabilities,
-        'total_equity': total_equity,
-        
-        # Formatted totals
-        'total_assets_formatted': format_currency(total_assets),
-        'total_liabilities_formatted': format_currency(total_liabilities),
-        'total_equity_formatted': format_currency(total_equity),
-        'liabilities_plus_equity_formatted': format_currency(total_liabilities + total_equity),
-        'difference_formatted': format_currency(abs(difference)),
-        
-        # Status
-        'is_balanced': is_balanced,
-        'date': date.today(),
-    }
-    
-    # Generate PDF
-    try:
-        template = get_template('finance/balance_sheet_pdf.html')
-        html = template.render(context)
-        result = BytesIO()
-        
-        pdf = pisa.CreatePDF(BytesIO(html.encode("UTF-8")), result)
-        
-        if not pdf.err:
-            response = HttpResponse(result.getvalue(), content_type='application/pdf')
-            filename = f"balance_sheet_{date.today()}.pdf"
-            response['Content-Disposition'] = f'attachment; filename="{filename}"'
-            return response
-    except Exception as e:
-        logger.warning(f"PDF Error: {e}")
+        total_equity += (credits - debits)
 
-    
-    return HttpResponse("Error generating PDF", status=500)
+    # ===============================
+    # CREATE PDF
+    # ===============================
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="balance_sheet.pdf"'
+
+    doc = SimpleDocTemplate(response)
+    elements = []
+    styles = getSampleStyleSheet()
+
+    elements.append(Paragraph("Cornel Simba Mining Enterprise", styles['Heading1']))
+    elements.append(Spacer(1, 0.2 * inch))
+    elements.append(Paragraph("Balance Sheet", styles['Heading2']))
+    elements.append(Spacer(1, 0.3 * inch))
+
+    data = [
+        ["Category", "Amount (Tsh)"],
+        ["Total Assets", f"{total_assets:,.2f}"],
+        ["Total Liabilities", f"{total_liabilities:,.2f}"],
+        ["Total Equity", f"{total_equity:,.2f}"],
+    ]
+
+    table = Table(data, colWidths=[3 * inch, 2 * inch])
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('ALIGN', (1, 1), (-1, -1), 'RIGHT'),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+    ]))
+
+    elements.append(table)
+    elements.append(Spacer(1, 0.4 * inch))
+
+    is_balanced = abs(total_assets - (total_liabilities + total_equity)) < 1
+
+    status_text = "BALANCED ✅" if is_balanced else "NOT BALANCED ❌"
+
+    elements.append(Paragraph(
+        f"Status: {status_text}",
+        styles['Normal']
+    ))
+
+    elements.append(Spacer(1, 0.3 * inch))
+
+    elements.append(Paragraph(
+        f"Generated on: {timezone.now().strftime('%B %d, %Y %H:%M')}",
+        styles['Normal']
+    ))
+
+    doc.build(elements)
+    return response
+
+@login_required
+def pending_finance_edits(request):
+
+    if not request.user.is_superuser:
+        messages.error(request, "Admin access required.")
+        return redirect('finance:dashboard')
+
+    pending_requests = FinanceEditRequest.objects.filter(
+        status='Pending'
+    ).order_by('-created_at')
+
+    return render(request, 'finance/pending_edits.html', {
+        'pending_requests': pending_requests
+    })
+
+@login_required
+@transaction.atomic
+def approve_finance_edit(request, pk):
+
+    if not request.user.is_superuser:
+        messages.error(request, "Admin access required.")
+        return redirect('finance:dashboard')
+
+    edit_request = get_object_or_404(FinanceEditRequest, pk=pk)
+
+    if edit_request.status != 'Pending':
+        messages.warning(request, "Request already processed.")
+        return redirect('finance:pending_finance_edits')
+
+    # ==========================
+    # Get Target Object
+    # ==========================
+    if edit_request.request_type == 'Income':
+        obj = get_object_or_404(Income, pk=edit_request.object_id)
+
+    elif edit_request.request_type == 'Expense':
+        obj = get_object_or_404(Expense, pk=edit_request.object_id)
+
+    elif edit_request.request_type == 'Payroll':
+        obj = get_object_or_404(Payroll, pk=edit_request.object_id)
+
+    else:
+        messages.error(request, "Invalid request type.")
+        return redirect('finance:pending_finance_edits')
+
+    # ==========================
+    # Apply Requested Changes
+    # ==========================
+    for field, value in edit_request.requested_changes.items():
+
+        if field == 'payment_date' and value:
+            value = datetime.strptime(value, "%Y-%m-%d").date()
+
+        setattr(obj, field, value)
+
+    obj.save()
+    # ADD THIS BLOCK
+    if edit_request.request_type in ['Expense', 'Payroll', 'Income']:
+        obj.approved_by = request.user
+        obj.save(update_fields=['approved_by'])
+
+    # ==========================
+    # CREATE ACCOUNTING TRANSACTION (IF PAYMENT APPROVAL)
+    # ==========================
+    if 'is_paid' in edit_request.requested_changes:
+
+        # -------- EXPENSE PAYMENT --------
+        if edit_request.request_type == 'Expense':
+
+            expense_account, _ = Account.objects.get_or_create(
+                code='5000',
+                defaults={'name': 'Operating Expenses', 'account_type': 'Expense'}
+            )
+
+            cash_account, _ = Account.objects.get_or_create(
+                code='1000',
+                defaults={'name': 'Cash', 'account_type': 'Asset'}
+            )
+
+            Transaction.objects.create(
+                transaction_type='Expense',
+                amount=obj.amount,
+                currency=obj.currency,
+                description=f"Approved expense payment: {obj.category}",
+                expense=obj,
+                debit_account=expense_account,
+                credit_account=cash_account,
+                created_by=request.user.get_full_name() or request.user.username
+            )
+
+        # -------- PAYROLL PAYMENT --------
+        elif edit_request.request_type == 'Payroll':
+
+            salary_account, _ = Account.objects.get_or_create(
+                code='5100',
+                defaults={'name': 'Salary Expense', 'account_type': 'Expense'}
+            )
+
+            cash_account, _ = Account.objects.get_or_create(
+                code='1000',
+                defaults={'name': 'Cash', 'account_type': 'Asset'}
+            )
+
+            Transaction.objects.create(
+                transaction_type='Payroll',
+                amount=obj.basic_salary + obj.allowances,
+                currency=obj.currency,
+                description=f"Approved payroll payment: {obj.employee.full_name}",
+                payroll=obj,
+                debit_account=salary_account,
+                credit_account=cash_account,
+                created_by=request.user.get_full_name() or request.user.username
+            )
+
+        # -------- INCOME PAYMENT --------
+        elif edit_request.request_type == 'Income':
+
+            cash_account, _ = Account.objects.get_or_create(
+                code='1000',
+                defaults={'name': 'Cash', 'account_type': 'Asset'}
+            )
+
+            revenue_account, _ = Account.objects.get_or_create(
+                code='4000',
+                defaults={'name': 'Sales Revenue', 'account_type': 'Revenue'}
+            )
+
+            Transaction.objects.create(
+                transaction_type='Income',
+                amount=obj.amount,
+                currency=obj.currency,
+                description=f"Approved income payment: {obj.source}",
+                income=obj,
+                debit_account=cash_account,
+                credit_account=revenue_account,
+                created_by=request.user.get_full_name() or request.user.username
+            )
+
+    # ==========================
+    # UPDATE REQUEST STATUS
+    # ==========================
+    edit_request.status = 'Approved'
+    edit_request.approved_by = request.user
+    edit_request.processed_at = timezone.now()
+    edit_request.save()
+
+    # ==========================
+    # AUDIT LOG
+    # ==========================
+    audit_log(
+        user=request.user,
+        action='APPROVE',
+        module='FINANCE',
+        object_type='FinanceEditRequest',
+        object_id=edit_request.id,
+        description=f'Approved {edit_request.request_type} edit request',
+        request=request
+    )
+
+    messages.success(request, "Request approved successfully.")
+
+    return redirect('finance:pending_finance_edits')
+
+@login_required
+@transaction.atomic
+def reject_finance_edit(request, pk):
+
+    if not request.user.is_superuser:
+        messages.error(request, "Admin access required.")
+        return redirect('finance:dashboard')
+
+    edit_request = get_object_or_404(FinanceEditRequest, pk=pk)
+
+    if edit_request.status != 'Pending':
+        messages.warning(request, "Request already processed.")
+        return redirect('finance:pending_finance_edits')
+
+    # Mark as Rejected
+    edit_request.status = 'Rejected'
+    edit_request.approved_by = request.user
+    edit_request.processed_at = timezone.now()
+    edit_request.save()
+
+    # Audit log
+    audit_log(
+        user=request.user,
+        action='REJECT',
+        module='FINANCE',
+        object_type='FinanceEditRequest',
+        object_id=edit_request.id,
+        description=f'Rejected {edit_request.request_type} edit request',
+        request=request
+    )
+
+    messages.warning(request, "Request rejected.")
+
+    return redirect('finance:pending_finance_edits')
