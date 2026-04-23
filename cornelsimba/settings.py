@@ -33,7 +33,7 @@ DEBUG = False
 ALLOWED_HOSTS = [
     "cornelsimba.co.tz",
     "www.cornelsimba.co.tz",
-    "10.42.21.196"
+    "10.42.21.196",
     ".onrender.com",
 ]
 
