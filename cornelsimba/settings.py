@@ -34,10 +34,6 @@ ALLOWED_HOSTS = [
     "cornelsimba.co.tz",
     "www.cornelsimba.co.tz",
     "10.42.21.196"
-    "https://*.onrender.com",   # ✅ ADD THIS
-
-
-    # ✅ Render domain (important)
     ".onrender.com",
 ]
 
@@ -59,6 +55,7 @@ CSRF_COOKIE_SECURE = True
 CSRF_TRUSTED_ORIGINS = [
     "https://cornelsimba.co.tz",
     "https://www.cornelsimba.co.tz",
+    "https://*.onrender.com",
 ]
 
 
