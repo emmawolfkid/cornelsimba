@@ -34,6 +34,9 @@ ALLOWED_HOSTS = [
     "cornelsimba.co.tz",
     "www.cornelsimba.co.tz",
     "10.42.21.196"
+
+    # ✅ Render domain (important)
+    ".onrender.com",
 ]
 
 # ======================
