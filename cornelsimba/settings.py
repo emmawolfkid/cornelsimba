@@ -31,6 +31,8 @@ DEBUG = True
 
 
 ALLOWED_HOSTS = [
+    "127.0.0.1",
+    "localhost",
     "cornelsimba.co.tz",
     "www.cornelsimba.co.tz",
     "10.42.21.196",
@@ -41,7 +43,7 @@ ALLOWED_HOSTS = [
 # SECURITY & SESSION
 # ======================
 
-SECURE_SSL_REDIRECT = True
+SECURE_SSL_REDIRECT = False
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
