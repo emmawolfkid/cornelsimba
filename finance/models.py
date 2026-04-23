@@ -108,15 +108,33 @@ class Income(models.Model):
                 )
         except Exception as e:
             logger.warning(f"Reversal transaction failed: {e}")
-
         
         return self
     
     def save(self, *args, **kwargs):
         from .utils import is_period_closed
-        if self.date and is_period_closed(self.date):
+        from datetime import datetime, date
+
+        # --- Step 1: Get the record date ---
+        record_date = self.date
+
+        # --- Step 2: Convert string to date if needed ---
+        if record_date:
+            if isinstance(record_date, str):
+                try:
+                    # Assuming the string format is "YYYY-MM-DD"
+                    record_date = datetime.strptime(record_date, "%Y-%m-%d").date()
+                except ValueError:
+                    # If format is invalid, fallback to today
+                    logger.warning(f"Invalid date format for Income id={self.id}: {record_date}")
+                    record_date = date.today()
+
+        # --- Step 3: Check if accounting period is closed ---
+        if record_date and is_period_closed(record_date):
             raise ValueError("This accounting period is closed.")
-        super().save(*args, **kwargs) 
+
+        # --- Step 4: Save the object ---
+        super().save(*args, **kwargs)
 
     class Meta:
         ordering = ['-date']
@@ -179,7 +197,6 @@ class Income(models.Model):
         except Exception as e:
             # If transaction fails, still keep the income record
             logger.warning(f"Transaction creation failed: {e}")
-
         
         return income
 
@@ -260,11 +277,26 @@ class Expense(models.Model):
     
     def save(self, *args, **kwargs):
         from .utils import is_period_closed
+        from datetime import datetime, date
 
-        if self.date and is_period_closed(self.date):
-             raise ValueError("This accounting period is closed.")
+        # --- Step 1: Get the record date ---
+        record_date = self.date
 
-        super().save(*args, **kwargs) 
+        # --- Step 2: Convert string to date if needed ---
+        if record_date:
+            if isinstance(record_date, str):
+                try:
+                    record_date = datetime.strptime(record_date, "%Y-%m-%d").date()
+                except ValueError:
+                    logger.warning(f"Invalid date format for Expense id={self.id}: {record_date}")
+                    record_date = date.today()
+
+        # --- Step 3: Check if accounting period is closed ---
+        if record_date and is_period_closed(record_date):
+            raise ValueError("This accounting period is closed.")
+
+        # --- Step 4: Save the object ---
+        super().save(*args, **kwargs)
 
     class Meta:
         ordering = ['-date']
@@ -275,7 +307,6 @@ class Expense(models.Model):
             models.Index(fields=['purchase_order']),
             models.Index(fields=['payment_date']),
         ]
-
 
 class Payroll(models.Model):
     MONTH_CHOICES = [
@@ -534,6 +565,9 @@ class FinanceEditRequest(models.Model):
     processed_at = models.DateTimeField(null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
+    
+    # ADD THIS NEW FIELD HERE:
+    edit_reason = models.TextField(blank=True, null=True)  # Reason why user wants to edit
 
     def __str__(self):
         return f"{self.request_type} Edit Request #{self.id}"

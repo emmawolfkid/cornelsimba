@@ -184,7 +184,7 @@
         <div class="form-group">
             <label for="id_item" class="required">Item</label>
             {{ form.item }}
-            <div class="help-text">Select the item being issued (only items with stock available)</div>
+            <div class="help-text">Select the item being issued. Out-of-stock items stay visible for reference, but cannot be issued.</div>
             {% if form.item.errors %}
             <div class="error">{{ form.item.errors }}</div>
             {% endif %}
@@ -293,7 +293,7 @@
         itemSelect.addEventListener('change', function() {
             const itemId = this.value;
             if (itemId) {
-                fetch("{% url 'inventory:item_details_api' pk=0 %}".replace('0', itemId))
+                fetch(`/inventory/api/item/${itemId}/`)
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {

@@ -22,6 +22,6 @@ def log_user_logout(sender, request, user, **kwargs):
         user=user,
         action='LOGOUT',
         module='AUTH',
-        description=f'User {user.username} logged out',
+        description=f'User {user.username if user else "Unknown"} logged out',
         request=request
     )

@@ -140,6 +140,25 @@
                 </div>
             </div>
             
+            <!-- Edit Request Reason Section (Only show when editing and user is not admin) -->
+            {% if editing and not request.user.is_superuser %}
+            <div class="expense-form-group edit-reason-section" style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
+                <label for="edit_reason" class="expense-form-label required" style="color: #856404;">
+                    <i class="fas fa-edit"></i> Reason for Edit Request <span class="text-danger">*</span>
+                </label>
+                <textarea name="edit_reason" 
+                          id="edit_reason" 
+                          class="form-control" 
+                          rows="3" 
+                          placeholder="Please explain why you need to edit this expense record. Your request will be submitted for admin approval before changes take effect."
+                          required></textarea>
+                <div class="help-text" style="color: #856404;">
+                    <i class="fas fa-info-circle"></i> 
+                    Your changes will not be applied immediately. An admin must approve this edit request first.
+                </div>
+            </div>
+            {% endif %}
+            
             <!-- Description -->
             <div class="expense-form-group">
                 <label for="id_description" class="expense-form-label">Description</label>
@@ -185,6 +204,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const managerApprovalSection = document.getElementById('manager-approval-section');
     const managerCheckbox = document.getElementById('id_require_manager_approval');
     const amountDisplay = document.querySelector('.amount-display');
+    const editReasonField = document.getElementById('edit_reason');
     
     // Set today's date as default if empty
     if (dateField && !dateField.value) {
@@ -254,6 +274,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     amountField.focus();
                     return false;
                 }
+            }
+            
+            // Validate edit reason if it exists (only when editing and not admin)
+            if (editReasonField && editReasonField.value.trim() === '') {
+                e.preventDefault();
+                showNotification('Please provide a reason for your edit request.', 'error');
+                editReasonField.classList.add('error-input');
+                editReasonField.focus();
+                editReasonField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return false;
             }
             
             // If manager approval required, ensure checkbox is checked

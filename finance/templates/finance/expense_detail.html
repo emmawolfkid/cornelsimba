@@ -100,11 +100,11 @@ Details
                     </tr>
                     <tr>
                         <th>Created:</th>
-                        <td>{{ expense.created_at|date:"F d, Y H:i" }}</td>
+                        <td>{{ expense.created_at|date:"F d, Y" }}</td>
                     </tr>
                     <tr>
                         <th>Last Updated:</th>
-                        <td>{{ expense.updated_at|date:"F d, Y H:i" }}</td>
+                        <td>{{ expense.updated_at|date:"F d, Y" }}</td>
                     </tr>
                 </table>
                 
@@ -165,10 +165,10 @@ Details
                 <!-- Audit Trail -->
                 <div class="expense-audit-trail">
                     <p><strong><i class="fas fa-history"></i> Audit Trail</strong></p>
-                    <p>Created: {{ expense.created_at|date:"M d, Y H:i" }}</p>
-                    <p>Last Updated: {{ expense.updated_at|date:"M d, Y H:i" }}</p>
+                    <p>Created: {{ expense.created_at|date:"M d, Y" }}</p>
+                    <p>Last Updated: {{ expense.updated_at|date:"M d, Y" }}</p>
                     {% if expense.is_paid %}
-                    <p>Paid: {{ expense.payment_date|date:"M d, Y H:i" }}</p>
+                    <p>Paid: {{ expense.payment_date|date:"M d, Y" }}</p>
                     {% endif %}
                     {% if expense.created_by %}
                     <p>Created By: {{ expense.created_by.get_full_name|default:expense.created_by.username }}</p>

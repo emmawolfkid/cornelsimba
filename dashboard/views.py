@@ -129,6 +129,7 @@ def main_dashboard(request):
 
     finance_pending_expenses = 0
     finance_pending_payroll = 0
+    finance_pending_requests = 0
 
     if user.is_superuser or user.groups.filter(
         name__in=[GROUP_ADMIN, GROUP_MANAGER]

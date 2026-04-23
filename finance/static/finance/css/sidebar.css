@@ -262,23 +262,17 @@
    ========================= */
 @media (max-width: 768px) {
     .sidebar {
+        top: var(--header-height);
+        height: calc(100vh - var(--header-height));
         transform: translateX(-100%);
         box-shadow: none;
     }
-    
+
     .sidebar.active {
         transform: translateX(0);
         box-shadow: 4px 0 20px rgba(0, 0, 0, 0.2);
     }
-    
-    /* Improve touch targets on mobile */
-    .menu-item a {
-        padding: 1rem;
-    }
-    
-    .btn-logout {
-        padding: 1rem;
-    }
+
 }
 
 @media (min-width: 769px) and (max-width: 1024px) {

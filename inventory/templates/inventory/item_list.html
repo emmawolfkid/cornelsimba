@@ -390,9 +390,7 @@
                                     <a href="{% url 'inventory:item_detail' item.pk %}" title="View Details">👁️</a>
                                     <a href="{% url 'inventory:item_update' item.pk %}" title="Edit Item">✏️</a>
                                     <a href="{% url 'inventory:stock_in_create' %}?item={{ item.pk }}" title="Stock In">📥</a>
-                                    {% if item.quantity > 0 %}
                                     <a href="{% url 'inventory:stock_out_create' %}?item={{ item.pk }}" title="Stock Out">📤</a>
-                                    {% endif %}
                                 </div>
                             </td>
                         </tr>

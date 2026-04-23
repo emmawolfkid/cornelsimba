@@ -670,10 +670,14 @@ body {
         display: flex;
     }
     
-    .main-content {
-        margin-left: 0;
-        padding-top: var(--header-height);
-    }
+    .layout-wrapper {
+    padding-top: var(--header-height);
+}
+
+   .main-content {
+    margin-left: 0;
+    padding-top: 0;
+ }
     
     .content-container {
         padding: 1rem;

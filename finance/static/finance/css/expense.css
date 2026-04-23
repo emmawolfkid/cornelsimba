@@ -1,10 +1,9 @@
 /* ============================================
-   EXPENSE.CSS - Expense List Management
-   Professional, Data-Rich, Action-Oriented
+   EXPENSE.CSS - Fixed visibility & mobile responsive
    ============================================ */
 
 /* =========================
-   HEADER ACTIONS
+   HEADER ACTIONS - FIXED VISIBILITY
    ========================= */
 .header-actions {
     display: flex;
@@ -15,19 +14,38 @@
     gap: 1rem;
 }
 
+/* FIXED: Make Add New Expense button POP */
+.btn-danger {
+    background: #dc3545 !important;
+    color: white !important;   /* FIXED */
+    border: none;
+    padding: 0.75rem 1.5rem !important;
+    font-weight: 600 !important;
+    font-size: 1rem !important;
+    box-shadow: 0 4px 6px rgba(220, 53, 69, 0.2) !important;
+}
+
+.btn-danger:hover {
+    background: #bb2d3b !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(220, 53, 69, 0.3) !important;
+}
+
+.btn-danger i {
+    color: white !important;
+    font-size: 1.1rem;
+}
+
 .header-buttons {
     display: flex;
     gap: 0.75rem;
     flex-wrap: wrap;
 }
 
-.btn-danger {
-    background: var(--danger);
+.btn-secondary {
+    background: #6c757d !important;
+    color: white !important;
     border: none;
-}
-
-.btn-danger:hover {
-    background: #8B1A1A;
 }
 
 /* =========================
@@ -75,11 +93,6 @@
     box-shadow: var(--shadow-md);
 }
 
-.summary-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
-}
-
 .summary-card.total {
     border-left: 4px solid var(--primary);
 }
@@ -92,375 +105,287 @@
     border-left: 4px solid var(--danger);
 }
 
-.summary-icon {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-}
-
-.summary-card.total .summary-icon {
-    background: var(--primary-light);
-    color: var(--primary);
-}
-
-.summary-card.paid .summary-icon {
-    background: var(--success-bg);
-    color: var(--success);
-}
-
-.summary-card.pending .summary-icon {
-    background: var(--danger-light);
-    color: var(--danger);
-}
-
-.summary-details {
-    flex: 1;
-}
-
-.summary-details h3 {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--text-secondary);
-    margin: 0 0 0.25rem 0;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
-
-.summary-value {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    font-family: 'Inter', 'Courier New', monospace;
-    line-height: 1.2;
-    margin-bottom: 0.25rem;
-}
-
-.summary-count {
-    font-size: 0.75rem;
-    color: var(--text-muted);
-    margin: 0;
-}
-
 /* =========================
-   TABLE STYLES
-   ========================= */
-.expense-row {
-    transition: all 0.2s;
-    cursor: pointer;
-}
-
-.expense-row:hover {
-    background: var(--bg-primary) !important;
-    transform: translateX(2px);
-}
-
-.expense-category {
-    max-width: 250px;
-}
-
-.expense-category strong {
-    color: var(--text-primary);
-    font-size: 0.9rem;
-}
-
-.department-badge {
-    display: inline-block;
-    padding: 0.2rem 0.5rem;
-    background: var(--bg-primary);
-    border-radius: 4px;
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: var(--text-secondary);
-}
-
-/* =========================
-   ACTION BUTTONS
+   TABLE ACTION BUTTONS - FIXED VISIBILITY
    ========================= */
 .expense-actions {
     display: flex;
     gap: 0.5rem;
     align-items: center;
+    justify-content: center;
 }
 
-.expense-btn-action {
-    width: 32px;
-    height: 32px;
-    border-radius: var(--border-radius-sm);
+/* FIXED: Make view button visible */
+.expense-btn-view {
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     text-decoration: none;
-    transition: all 0.2s;
+    background: var(--primary) !important;
+    color: white !important;
     border: none;
-    cursor: pointer;
-}
-
-.expense-btn-view {
-    background: var(--bg-primary);
-    color: var(--primary);
-    border: 1px solid var(--border);
+    box-shadow: 0 2px 4px rgba(10, 38, 71, 0.2);
 }
 
 .expense-btn-view:hover {
-    background: var(--primary);
-    color: white;
+    background: var(--primary-light) !important;
     transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(10, 38, 71, 0.3);
 }
 
+.expense-btn-view i {
+    color: white !important;
+}
+
+/* FIXED: Make mark as paid button visible */
 .expense-btn-success {
-    background: var(--success-bg);
-    color: var(--success);
-    border: 1px solid var(--success);
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    background: #28a745 !important;
+    color: white !important;
+    border: none;
+    box-shadow: 0 2px 4px rgba(40, 167, 69, 0.2);
 }
 
 .expense-btn-success:hover {
-    background: var(--success);
-    color: white;
+    background: #218838 !important;
     transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+}
+
+.expense-btn-success i {
+    color: white !important;
 }
 
 /* =========================
-   QUICK STATS
-   ========================= */
-.expense-quick-stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-    margin: 1.5rem 0;
-}
-
-.expense-stat-card {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border);
-    border-radius: var(--border-radius);
-    padding: 1rem;
-    transition: all 0.2s;
-}
-
-.expense-stat-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
-    border-color: var(--primary);
-}
-
-.expense-stat-card h4 {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--text-secondary);
-    margin: 0 0 0.5rem 0;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.expense-stat-card .amount {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    font-family: 'Courier New', monospace;
-}
-
-/* =========================
-   PAYMENT SUMMARY
-   ========================= */
-.payment-summary {
-    max-width: 600px;
-    margin: 0 auto;
-}
-
-.payment-progress {
-    margin-bottom: 2rem;
-}
-
-.progress-label {
-    display: flex;
-    justify-content: space-between;
-    margin: 1rem 0 0.25rem;
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-}
-
-.progress-bar {
-    height: 24px;
-    background: var(--bg-primary);
-    border-radius: 12px;
-    overflow: hidden;
-    border: 1px solid var(--border);
-}
-
-.progress-fill {
-    height: 100%;
-    transition: width 0.3s ease;
-}
-
-.progress-fill.paid {
-    background: linear-gradient(90deg, var(--success), #2ecc71);
-}
-
-.progress-fill.pending {
-    background: linear-gradient(90deg, var(--danger), #e74c3c);
-}
-
-.payment-legend {
-    display: flex;
-    justify-content: center;
-    gap: 2rem;
-    margin-top: 1rem;
-}
-
-.legend-item {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-}
-
-.legend-color {
-    width: 16px;
-    height: 16px;
-    border-radius: 4px;
-}
-
-.legend-color.paid {
-    background: var(--success);
-}
-
-.legend-color.pending {
-    background: var(--danger);
-}
-
-/* =========================
-   EMPTY STATE
-   ========================= */
-.expense-empty-state {
-    text-align: center;
-    padding: 3rem 1rem;
-}
-
-.expense-empty-state i {
-    font-size: 3rem;
-    color: var(--text-muted);
-    margin-bottom: 1rem;
-}
-
-.expense-empty-state h4 {
-    font-size: 1.25rem;
-    color: var(--text-primary);
-    margin-bottom: 0.5rem;
-}
-
-.expense-empty-state p {
-    color: var(--text-muted);
-    margin-bottom: 1.5rem;
-}
-
-/* =========================
-   BADGE CUSTOMIZATION
-   ========================= */
-.badge-purple {
-    background: #6B46C1;
-    color: white;
-}
-
-/* =========================
-   RESPONSIVE STYLES
+   MOBILE RESPONSIVE - COMPLETE FIX
    ========================= */
 @media (max-width: 768px) {
+    /* Header actions stack */
     .header-actions {
         flex-direction: column;
         align-items: stretch;
+        gap: 0.75rem;
     }
     
-    .header-buttons {
-        flex-direction: column;
+    /* Buttons full width on mobile */
+    .btn-danger,
+    .btn-secondary,
+    .header-buttons .btn {
+        width: 100% !important;
+        justify-content: center !important;
+        padding: 0.875rem !important;
+        font-size: 1rem !important;
     }
     
+    /* Filter section */
     .expense-filter-row {
         grid-template-columns: 1fr;
+        gap: 0.75rem;
     }
     
     .expense-filter-actions {
         flex-direction: column;
     }
     
+    .expense-filter-actions .btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    /* Summary cards */
     .summary-cards {
         grid-template-columns: 1fr;
+        gap: 1rem;
     }
     
-    .expense-quick-stats {
-        grid-template-columns: 1fr 1fr;
+    .summary-card {
+        padding: 1.25rem;
     }
     
-    .payment-legend {
-        flex-direction: column;
-        align-items: center;
-        gap: 0.5rem;
-    }
-    
-    .expense-actions {
-        flex-wrap: wrap;
-    }
-    
-    .table td, .table th {
-        padding: 0.75rem 0.5rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .expense-quick-stats {
-        grid-template-columns: 1fr;
+    .summary-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 1.25rem;
     }
     
     .summary-value {
         font-size: 1.25rem;
     }
     
+    /* Table - Make it scrollable horizontally */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin: 0 -1rem;
+        padding: 0 1rem;
+    }
+    
+    .table {
+        min-width: 700px; /* Forces horizontal scroll */
+    }
+    
+    .table th,
+    .table td {
+        padding: 0.75rem 0.5rem;
+        white-space: nowrap;
+    }
+    
+    /* Action buttons in table */
+    .expense-actions {
+        justify-content: flex-start;
+    }
+    
+    .expense-btn-view,
+    .expense-btn-success {
+        width: 40px;
+        height: 40px;
+    }
+    
+    /* Quick stats */
+    .expense-quick-stats {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+    }
+    
     .expense-stat-card {
-        text-align: center;
+        padding: 0.875rem;
     }
     
     .expense-stat-card h4 {
+        font-size: 0.7rem;
+    }
+    
+    .expense-stat-card .amount {
+        font-size: 1rem;
+    }
+    
+    /* Payment summary */
+    .payment-legend {
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .payment-progress {
+        margin-bottom: 1.5rem;
+    }
+    
+    /* Pagination */
+    .pagination-container {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+    
+    .pagination {
         justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .page-link {
+        min-width: 36px;
+        height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+}
+
+/* Extra small devices */
+@media (max-width: 480px) {
+    .expense-quick-stats {
+        grid-template-columns: 1fr;
+    }
+    
+    .summary-value {
+        font-size: 1.1rem;
+    }
+    
+    .summary-card {
+        padding: 1rem;
+        gap: 1rem;
+    }
+    
+    .summary-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+    
+    .badge {
+        display: inline-block;
+        margin: 0.125rem 0;
+        font-size: 0.7rem;
+    }
+    
+    .table td, 
+    .table th {
+        padding: 0.5rem 0.375rem;
+        font-size: 0.75rem;
+    }
+    
+    .expense-category strong {
+        font-size: 0.75rem;
+    }
+    
+    .expense-btn-view,
+    .expense-btn-success {
+        width: 36px;
+        height: 36px;
+    }
+    
+    .progress-label {
+        font-size: 0.75rem;
     }
     
     .progress-bar {
         height: 20px;
     }
-    
-    .table {
-        font-size: 0.8rem;
-    }
-    
-    .expense-category strong {
-        font-size: 0.8rem;
-    }
 }
 
-/* =========================
-   ANIMATIONS
-   ========================= */
-@keyframes slideIn {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+/* Fix badge colors */
+.badge-success,
+.badge-danger,
+.badge-purple {
+    color: white !important;
 }
 
-.summary-card {
-    animation: slideIn 0.3s ease forwards;
+.badge-danger {
+    background: #dc3545 !important;
+    color: rgb(140, 191, 30) !important;
 }
 
-.summary-card:nth-child(1) { animation-delay: 0.1s; }
-.summary-card:nth-child(2) { animation-delay: 0.2s; }
-.summary-card:nth-child(3) { animation-delay: 0.3s; }
+.badge-warning {
+    background: #ffc107 !important;
+    color: #212529 !important;
+}
+
+.badge-primary {
+    background: var(--primary) !important;
+    color: white !important;
+}
+
+.badge-purple {
+    background: #6f42c1 !important;
+    color: rgb(192, 7, 7) !important;
+}
+
+/* Amount colors */
+.tsh-amount.expense {
+    color: #dc3545 !important;
+    font-weight: 600;
+}
+
+.tsh-amount.income {
+    color: #28a745 !important;
+    font-weight: 600;
+}

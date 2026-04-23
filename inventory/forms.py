@@ -126,10 +126,9 @@ class StockOutForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
-        self.fields['item'].queryset = Item.objects.filter(
-    is_active=True,
-    quantity__gt=0
-).order_by('name')
+        # Keep zero-stock items visible so users can still find them after
+        # adjustments. Validation still prevents issuing more than available.
+        self.fields['item'].queryset = Item.objects.filter(is_active=True).order_by('name')
         self.fields['quantity'].help_text = 'Enter quantity to issue'
         
         # Make sure we don't accidentally include category field

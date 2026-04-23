@@ -6,6 +6,7 @@
 .reports-container {
     max-width: 1400px;
     margin: 0 auto;
+    padding: 1.5rem;
 }
 
 /* Header Section */
@@ -31,51 +32,59 @@
     margin: 1rem 0;
 }
 
+/* -----------------------
+   FILTER SECTION CLEAN FIX
+------------------------*/
+
 .report-filter-form {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 1rem;
-    align-items: flex-end;
+    align-items: end;
 }
 
 .filter-group {
-    flex: 1;
-    min-width: 150px;
+    display: flex;
+    flex-direction: column;
 }
 
 .filter-group label {
-    display: block;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     font-weight: 600;
     color: var(--text-secondary);
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.35rem;
     text-transform: uppercase;
 }
 
 .filter-group input,
 .filter-group select {
-    width: 100%;
-    padding: 0.5rem;
+    height: 40px;
+    padding: 0 0.6rem;
     border: 1px solid var(--border);
     border-radius: var(--border-radius-sm);
+    font-size: 0.9rem;
+    background: #fff;
 }
 
 .filter-btn {
-    padding: 0.5rem 1.5rem;
+    height: 40px;
+    padding: 0 1.2rem;
     background: var(--primary);
     color: white;
     border: none;
     border-radius: var(--border-radius-sm);
     cursor: pointer;
-    display: inline-flex;
+    font-weight: 600;
+    display: flex;
     align-items: center;
-    gap: 0.5rem;
+    justify-content: center;
+    gap: 0.4rem;
+    white-space: nowrap;
 }
 
 .filter-btn:hover {
     background: var(--primary-light);
 }
-
 /* Report Meta */
 .report-meta {
     display: flex;
@@ -181,7 +190,7 @@
 /* Charts Grid */
 .reports-charts-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    grid-template-columns: 1fr;
     gap: 1.5rem;
     margin: 2rem 0;
 }
@@ -383,7 +392,9 @@
     .filter-group {
         width: 100%;
     }
-    
+    .report-filter-form {
+    grid-template-columns: 1fr;
+}
     .report-meta {
         flex-direction: column;
         text-align: center;

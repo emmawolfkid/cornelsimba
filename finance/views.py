@@ -19,6 +19,7 @@ from django.template.loader import get_template
 from django.contrib.humanize.templatetags.humanize import intcomma
 from .models import FinanceEditRequest
 import logging 
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
@@ -329,9 +330,19 @@ def income_edit(request, pk):
                 )
                 return redirect('finance:income_list')
             else:
-                # Create edit request for non-admins
+                # Get the edit reason from POST
+                edit_reason = request.POST.get('edit_reason', '').strip()
+                
+                if not edit_reason:
+                    messages.error(request, 'Please provide a reason for the edit request.')
+                    return render(request, 'finance/income_form.html', {
+                        'form': form, 
+                        'editing': True,
+                        'show_reason_field': True  # Add flag to show reason field
+                    })
+                
+                # Capture changes
                 changes = {}
-
                 for field, value in form.cleaned_data.items():
                     if isinstance(value, date):
                         changes[field] = value.strftime('%Y-%m-%d')
@@ -340,14 +351,13 @@ def income_edit(request, pk):
                     else:
                         changes[field] = str(value) if value is not None else None
                 
-                # Create edit request (assuming you have this model)
-                from .models import FinanceEditRequest
+                # Create edit request with reason
                 FinanceEditRequest.objects.create(
                     request_type='Income',
                     object_id=income.id,
                     requested_changes=changes,
                     requested_by=request.user,
-                    
+                    edit_reason=edit_reason  # Save the user's reason
                 )
                 
                 messages.info(request, "Edit request submitted for admin approval.")
@@ -355,7 +365,11 @@ def income_edit(request, pk):
     else:
         form = IncomeForm(instance=income)
     
-    return render(request, 'finance/income_form.html', {'form': form, 'editing': True})
+    return render(request, 'finance/income_form.html', {
+        'form': form, 
+        'editing': True,
+        'show_reason_field': True  # Show reason field for non-admin users
+    })
 
 # cornelsimba/finance/views.py - REPLACE income_delete WITH income_cancel
 @login_required
@@ -518,6 +532,7 @@ def expense_create(request):
         'expense_types': Expense.EXPENSE_TYPES,  # Add this line
     }
     return render(request, 'finance/expense_form.html', context)
+
 @login_required
 @group_required('Finance')
 def expense_edit(request, pk):
@@ -546,8 +561,19 @@ def expense_edit(request, pk):
                 return redirect('finance:expense_list')
 
             else:
+                # Get the edit reason from POST
+                edit_reason = request.POST.get('edit_reason', '').strip()
+                
+                if not edit_reason:
+                    messages.error(request, 'Please provide a reason for the edit request.')
+                    return render(request, 'finance/expense_form.html', {
+                        'form': form,
+                        'editing': True,
+                        'expense_types': Expense.EXPENSE_TYPES,
+                        'show_reason_field': True
+                    })
+                
                 changes = {}
-
                 for field, value in form.cleaned_data.items():
                     if isinstance(value, date):
                         changes[field] = value.strftime('%Y-%m-%d')
@@ -561,6 +587,7 @@ def expense_edit(request, pk):
                     object_id=expense.id,
                     requested_changes=changes,
                     requested_by=request.user,
+                    edit_reason=edit_reason  # Save the user's reason
                 )
 
                 messages.info(request,
@@ -571,10 +598,14 @@ def expense_edit(request, pk):
     else:
         form = ExpenseForm(instance=expense)
 
-    return render(request, 'finance/expense_form.html', {
+    context = {
         'form': form,
-        'editing': True
-    })
+        'editing': True,
+        'expense_types': Expense.EXPENSE_TYPES,
+        'show_reason_field': True  # Show reason field for non-admin users
+    }
+    return render(request, 'finance/expense_form.html', context)
+
 @login_required
 @group_required('Finance')
 def expense_mark_paid(request, pk):
@@ -645,6 +676,16 @@ def payroll_list(request):
         payrolls = payrolls.filter(month=month)
     if is_paid:
         payrolls = payrolls.filter(is_paid=(is_paid == 'true'))
+
+    page = request.GET.get('page', 1)
+    paginator = Paginator(payrolls, 25)
+
+    try:
+        payrolls_page = paginator.page(page)
+    except PageNotAnInteger:
+        payrolls_page = paginator.page(1)
+    except EmptyPage:
+        payrolls_page = paginator.page(paginator.num_pages)
     
     # Summary
     total_net = payrolls.aggregate(
@@ -659,7 +700,7 @@ def payroll_list(request):
     )['total'] or 0
     
     context = {
-        'payrolls': payrolls,
+        'payrolls': payrolls_page,
         'total_net': total_net,
         'total_gross': total_gross,
         'years': Payroll.objects.values_list('year', flat=True).distinct().order_by('-year'),
@@ -887,6 +928,8 @@ def create_expense_from_po(request, po_id):
 @login_required
 @group_required('Finance')
 def financial_reports(request):
+    from django.db.models.functions import TruncMonth
+    from django.db.models import Q
 
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
@@ -923,6 +966,81 @@ def financial_reports(request):
     profit_loss = total_income - total_expense
     profit_margin = (profit_loss / total_income * 100) if total_income > 0 else 0
 
+    # ======= MONTHLY INCOME =======
+    monthly_income = Income.objects.filter(
+        date__range=[start_date, end_date],
+        is_active=True
+    ).annotate(
+        month=TruncMonth('date')
+    ).values('month').annotate(
+        total=Sum('amount')
+    ).order_by('month')
+
+    # Format month names
+    for item in monthly_income:
+        item['month'] = item['month'].strftime('%B')
+
+    # ======= MONTHLY EXPENSE =======
+    monthly_expense = Expense.objects.filter(
+        date__range=[start_date, end_date]
+    ).annotate(
+        month=TruncMonth('date')
+    ).values('month').annotate(
+        total=Sum('amount')
+    ).order_by('month')
+
+    # Format month names
+    for item in monthly_expense:
+        item['month'] = item['month'].strftime('%B')
+
+    # ======= INCOME BY TYPE =======
+    income_by_type = Income.objects.filter(
+        date__range=[start_date, end_date],
+        is_active=True
+    ).values('income_type').annotate(
+        total=Sum('amount')
+    ).order_by('-total')
+
+    # Calculate percentages
+    for item in income_by_type:
+        item['percentage'] = (item['total'] / total_income * 100) if total_income > 0 else 0
+
+    # ======= EXPENSE BY CATEGORY =======
+    expense_by_category = Expense.objects.filter(
+        date__range=[start_date, end_date]
+    ).values('expense_type').annotate(
+        total=Sum('amount')
+    ).order_by('-total')
+
+    # Calculate percentages
+    for item in expense_by_category:
+        item['percentage'] = (item['total'] / total_expense * 100) if total_expense > 0 else 0
+
+    # ======= SALES VS OTHER INCOME =======
+    sales_income = Income.objects.filter(
+        date__range=[start_date, end_date],
+        is_active=True,
+        income_type='Sales'
+    ).aggregate(total=Sum('amount'))['total'] or 0
+
+    other_income = Income.objects.filter(
+        date__range=[start_date, end_date],
+        is_active=True
+    ).exclude(income_type='Sales').aggregate(total=Sum('amount'))['total'] or 0
+
+    # ======= MAX VALUES FOR CHARTS =======
+    # FIX: Get the maximum total from monthly data
+    max_income = max([item['total'] for item in monthly_income]) if monthly_income else 1
+    max_expense = max([item['total'] for item in monthly_expense]) if monthly_expense else 1
+
+    # ======= AVAILABLE YEARS FOR DROPDOWN =======
+    # Get distinct years from both Income and Expense
+    income_years = Income.objects.dates('date', 'year').values_list('date__year', flat=True).distinct()
+    expense_years = Expense.objects.dates('date', 'year').values_list('date__year', flat=True).distinct()
+    # Combine and get unique years
+    all_years = sorted(set(list(income_years) + list(expense_years)), reverse=True)
+    available_years = all_years if all_years else [date.today().year]
+
     context = {
         'start_date': start_date,
         'end_date': end_date,
@@ -931,6 +1049,15 @@ def financial_reports(request):
         'total_expense': total_expense,
         'profit_loss': profit_loss,
         'profit_margin': round(profit_margin, 1),
+        'monthly_income': monthly_income,
+        'monthly_expense': monthly_expense,
+        'income_by_type': income_by_type,
+        'expense_by_category': expense_by_category,
+        'sales_income': sales_income,
+        'other_income': other_income,
+        'max_income': max_income,
+        'max_expense': max_expense,
+        'available_years': available_years,
     }
 
     return render(request, 'finance/reports.html', context)
@@ -938,13 +1065,13 @@ def financial_reports(request):
 @login_required
 @group_required('Finance')
 def download_financial_report_pdf(request):
+    from django.db.models.functions import TruncMonth
 
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
     year = request.GET.get('year')
 
     if start_date and end_date:
-
         # Parse start_date safely
         if isinstance(start_date, str):
             try:
@@ -991,6 +1118,21 @@ def download_financial_report_pdf(request):
     profit_loss = total_income - total_expense
     profit_margin = (profit_loss / total_income * 100) if total_income > 0 else 0
 
+    # Get income by type
+    income_by_type = Income.objects.filter(
+        date__range=[start_date, end_date],
+        is_active=True
+    ).values('income_type').annotate(
+        total=Sum('amount')
+    ).order_by('-total')
+
+    # Get expense by category
+    expense_by_category = Expense.objects.filter(
+        date__range=[start_date, end_date]
+    ).values('expense_type').annotate(
+        total=Sum('amount')
+    ).order_by('-total')
+
     # ======== PDF =========
     response = HttpResponse(content_type='application/pdf')
     filename = f"financial_report_{start_date}_to_{end_date}.pdf"
@@ -1007,6 +1149,7 @@ def download_financial_report_pdf(request):
     elements.append(Paragraph(f"Period: {period_label}", styles['Normal']))
     elements.append(Spacer(1, 0.4 * inch))
 
+    # Summary table
     data = [
         ["Category", "Amount (Tsh)"],
         ["Total Income", f"{total_income:,.2f}"],
@@ -1024,6 +1167,53 @@ def download_financial_report_pdf(request):
     ]))
 
     elements.append(table)
+    elements.append(Spacer(1, 0.4 * inch))
+
+    # Income by Type table
+    if income_by_type:
+        elements.append(Paragraph("Income by Type", styles['Heading3']))
+        elements.append(Spacer(1, 0.2 * inch))
+        
+        income_data = [["Income Type", "Amount (Tsh)"]]
+        for item in income_by_type:
+            income_data.append([item['income_type'], f"{item['total']:,.2f}"])
+        
+        income_table = Table(income_data, colWidths=[3 * inch, 2 * inch])
+        income_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('ALIGN', (1, 1), (-1, -1), 'RIGHT'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+        ]))
+        
+        elements.append(income_table)
+        elements.append(Spacer(1, 0.4 * inch))
+
+    # Expense by Category table
+    if expense_by_category:
+        elements.append(Paragraph("Expenses by Category", styles['Heading3']))
+        elements.append(Spacer(1, 0.2 * inch))
+        
+        expense_data = [["Category", "Amount (Tsh)"]]
+        for item in expense_by_category:
+            expense_data.append([item['expense_type'], f"{item['total']:,.2f}"])
+        
+        expense_table = Table(expense_data, colWidths=[3 * inch, 2 * inch])
+        expense_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('ALIGN', (1, 1), (-1, -1), 'RIGHT'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+        ]))
+        
+        elements.append(expense_table)
+        elements.append(Spacer(1, 0.4 * inch))
+
+    elements.append(Paragraph(
+        f"Generated on: {datetime.now().strftime('%B %d, %Y %H:%M')}",
+        styles['Normal']
+    ))
+
     doc.build(elements)
 
     return response
@@ -2054,186 +2244,187 @@ def pending_finance_edits(request):
     return render(request, 'finance/pending_edits.html', {
         'pending_requests': pending_requests
     })
-
 @login_required
 @transaction.atomic
 def approve_finance_edit(request, pk):
-
     if not request.user.is_superuser:
         messages.error(request, "Admin access required.")
         return redirect('finance:dashboard')
 
     edit_request = get_object_or_404(FinanceEditRequest, pk=pk)
-
     if edit_request.status != 'Pending':
         messages.warning(request, "Request already processed.")
         return redirect('finance:pending_finance_edits')
 
-    # ==========================
-    # Get Target Object
-    # ==========================
-    if edit_request.request_type == 'Income':
-        obj = get_object_or_404(Income, pk=edit_request.object_id)
-
-    elif edit_request.request_type == 'Expense':
-        obj = get_object_or_404(Expense, pk=edit_request.object_id)
-
-    elif edit_request.request_type == 'Payroll':
-        obj = get_object_or_404(Payroll, pk=edit_request.object_id)
-
-    else:
+    # Get target object
+    model_map = {
+        'Income': Income,
+        'Expense': Expense,
+        'Payroll': Payroll
+    }
+    
+    model_class = model_map.get(edit_request.request_type)
+    if not model_class:
         messages.error(request, "Invalid request type.")
         return redirect('finance:pending_finance_edits')
+    
+    obj = get_object_or_404(model_class, pk=edit_request.object_id)
 
-    # ==========================
-    # Apply Requested Changes
-    # ==========================
+    # Apply requested changes with proper date conversion
     for field, value in edit_request.requested_changes.items():
-
-        if field == 'payment_date' and value:
-            value = datetime.strptime(value, "%Y-%m-%d").date()
-
+        # Convert date fields to proper date objects
+        if field in ['date', 'payment_date'] and value:
+            # Ensure date object
+            if isinstance(value, str):
+                try:
+                    value = datetime.strptime(value, "%Y-%m-%d").date()
+                except ValueError:
+                    messages.error(request, f"Invalid date format for {field}")
+                    return redirect('finance:pending_finance_edits')
         setattr(obj, field, value)
 
     obj.save()
-    # ADD THIS BLOCK
-    if edit_request.request_type in ['Expense', 'Payroll', 'Income']:
-        obj.approved_by = request.user
-        obj.save(update_fields=['approved_by'])
 
-    # ==========================
-    # CREATE ACCOUNTING TRANSACTION (IF PAYMENT APPROVAL)
-    # ==========================
-    if 'is_paid' in edit_request.requested_changes:
+    # Assign approved_by correctly based on model type
+    # Expense and Payroll use Employee, Income has no approved_by
+    if edit_request.request_type in ['Expense', 'Payroll']:
+        try:
+            # Get the Employee record linked to the current User
+            approver_employee = Employee.objects.get(user=request.user)
+            obj.approved_by = approver_employee
+            obj.save(update_fields=['approved_by'])
+        except Employee.DoesNotExist:
+            messages.warning(request, "You are not linked to an Employee. Approval not recorded.")
 
-        # -------- EXPENSE PAYMENT --------
-        if edit_request.request_type == 'Expense':
-
-            expense_account, _ = Account.objects.get_or_create(
-                code='5000',
-                defaults={'name': 'Operating Expenses', 'account_type': 'Expense'}
-            )
-
+    # Create accounting transaction if payment approved
+    if edit_request.requested_changes.get('is_paid') is True:
+        try:
+            # Get or create cash account
             cash_account, _ = Account.objects.get_or_create(
-                code='1000',
+                code='1000', 
                 defaults={'name': 'Cash', 'account_type': 'Asset'}
             )
 
-            Transaction.objects.create(
-                transaction_type='Expense',
-                amount=obj.amount,
-                currency=obj.currency,
-                description=f"Approved expense payment: {obj.category}",
-                expense=obj,
-                debit_account=expense_account,
-                credit_account=cash_account,
-                created_by=request.user.get_full_name() or request.user.username
-            )
+            if edit_request.request_type == 'Expense':
+                expense_account, _ = Account.objects.get_or_create(
+                    code='5000', 
+                    defaults={'name': 'Operating Expenses', 'account_type': 'Expense'}
+                )
+                Transaction.objects.create(
+                    transaction_type='Expense',
+                    amount=obj.amount,
+                    currency=obj.currency,
+                    description=f"Approved expense payment: {obj.category}",
+                    expense=obj,
+                    debit_account=expense_account,  # Expense increases
+                    credit_account=cash_account,     # Cash decreases
+                    created_by=request.user.get_full_name() or request.user.username
+                )
 
-        # -------- PAYROLL PAYMENT --------
-        elif edit_request.request_type == 'Payroll':
+            elif edit_request.request_type == 'Payroll':
+                salary_account, _ = Account.objects.get_or_create(
+                    code='5100', 
+                    defaults={'name': 'Salary Expense', 'account_type': 'Expense'}
+                )
+                Transaction.objects.create(
+                    transaction_type='Payroll',
+                    amount=obj.gross_salary,  # Use gross salary property
+                    currency=obj.currency,
+                    description=f"Approved payroll payment: {obj.employee.full_name}",
+                    payroll=obj,
+                    debit_account=salary_account,  # Salary expense increases
+                    credit_account=cash_account,     # Cash decreases
+                    created_by=request.user.get_full_name() or request.user.username
+                )
 
-            salary_account, _ = Account.objects.get_or_create(
-                code='5100',
-                defaults={'name': 'Salary Expense', 'account_type': 'Expense'}
-            )
+            elif edit_request.request_type == 'Income':
+                revenue_account, _ = Account.objects.get_or_create(
+                    code='4000', 
+                    defaults={'name': 'Sales Revenue', 'account_type': 'Revenue'}
+                )
+                Transaction.objects.create(
+                    transaction_type='Income',
+                    amount=obj.amount,
+                    currency=obj.currency,
+                    description=f"Approved income payment: {obj.source}",
+                    income=obj,
+                    debit_account=cash_account,      # Cash increases
+                    credit_account=revenue_account,  # Revenue increases
+                    created_by=request.user.get_full_name() or request.user.username
+                )
+        except Exception as e:
+            logger.error(f"Transaction creation failed for approved edit: {e}")
+            messages.warning(request, "Request approved but transaction creation failed. Check logs.")
 
-            cash_account, _ = Account.objects.get_or_create(
-                code='1000',
-                defaults={'name': 'Cash', 'account_type': 'Asset'}
-            )
-
-            Transaction.objects.create(
-                transaction_type='Payroll',
-                amount=obj.basic_salary + obj.allowances,
-                currency=obj.currency,
-                description=f"Approved payroll payment: {obj.employee.full_name}",
-                payroll=obj,
-                debit_account=salary_account,
-                credit_account=cash_account,
-                created_by=request.user.get_full_name() or request.user.username
-            )
-
-        # -------- INCOME PAYMENT --------
-        elif edit_request.request_type == 'Income':
-
-            cash_account, _ = Account.objects.get_or_create(
-                code='1000',
-                defaults={'name': 'Cash', 'account_type': 'Asset'}
-            )
-
-            revenue_account, _ = Account.objects.get_or_create(
-                code='4000',
-                defaults={'name': 'Sales Revenue', 'account_type': 'Revenue'}
-            )
-
-            Transaction.objects.create(
-                transaction_type='Income',
-                amount=obj.amount,
-                currency=obj.currency,
-                description=f"Approved income payment: {obj.source}",
-                income=obj,
-                debit_account=cash_account,
-                credit_account=revenue_account,
-                created_by=request.user.get_full_name() or request.user.username
-            )
-
-    # ==========================
-    # UPDATE REQUEST STATUS
-    # ==========================
+    # Update request status
     edit_request.status = 'Approved'
-    edit_request.approved_by = request.user
+    edit_request.approved_by = request.user  # This is User, correct
     edit_request.processed_at = timezone.now()
     edit_request.save()
 
-    # ==========================
-    # AUDIT LOG
-    # ==========================
-    audit_log(
-        user=request.user,
-        action='APPROVE',
-        module='FINANCE',
-        object_type='FinanceEditRequest',
-        object_id=edit_request.id,
-        description=f'Approved {edit_request.request_type} edit request',
-        request=request
-    )
+    # Audit log
+    try:
+        audit_log(
+            user=request.user,
+            action='APPROVE',
+            module='FINANCE',
+            object_type='FinanceEditRequest',
+            object_id=edit_request.id,
+            description=f'Approved {edit_request.request_type} edit request for {obj}',
+            request=request
+        )
+    except Exception as e:
+        logger.error(f"Audit log failed: {e}")
 
-    messages.success(request, "Request approved successfully.")
-
+    messages.success(request, f"{edit_request.request_type} request approved successfully.")
     return redirect('finance:pending_finance_edits')
 
 @login_required
 @transaction.atomic
 def reject_finance_edit(request, pk):
-
     if not request.user.is_superuser:
         messages.error(request, "Admin access required.")
         return redirect('finance:dashboard')
 
     edit_request = get_object_or_404(FinanceEditRequest, pk=pk)
-
     if edit_request.status != 'Pending':
         messages.warning(request, "Request already processed.")
         return redirect('finance:pending_finance_edits')
 
-    # Mark as Rejected
+    # REMOVED: Rejection reason requirement
+    # No longer need to check for rejection reason
+
+    # Get target object (optional, for reference)
+    if edit_request.request_type == 'Income':
+        obj = get_object_or_404(Income, pk=edit_request.object_id)
+    elif edit_request.request_type == 'Expense':
+        obj = get_object_or_404(Expense, pk=edit_request.object_id)
+    elif edit_request.request_type == 'Payroll':
+        obj = get_object_or_404(Payroll, pk=edit_request.object_id)
+    else:
+        messages.error(request, "Invalid request type.")
+        return redirect('finance:pending_finance_edits')
+
+    # Update request status - NO REJECTION REASON
     edit_request.status = 'Rejected'
+    edit_request.rejected_reason = None  # Clear any existing reason
     edit_request.approved_by = request.user
     edit_request.processed_at = timezone.now()
     edit_request.save()
 
-    # Audit log
-    audit_log(
-        user=request.user,
-        action='REJECT',
-        module='FINANCE',
-        object_type='FinanceEditRequest',
-        object_id=edit_request.id,
-        description=f'Rejected {edit_request.request_type} edit request',
-        request=request
-    )
+    # Audit log - No reason needed
+    try:
+        audit_log(
+            user=request.user,
+            action='REJECT',
+            module='FINANCE',
+            object_type='FinanceEditRequest',
+            object_id=edit_request.id,
+            description=f'Rejected {edit_request.request_type} edit request for {obj}',
+            request=request
+        )
+    except Exception as e:
+        logger.error(f"Audit log failed: {e}")
 
-    messages.warning(request, "Request rejected.")
-
+    messages.warning(request, f"{edit_request.request_type} edit request rejected.")
     return redirect('finance:pending_finance_edits')

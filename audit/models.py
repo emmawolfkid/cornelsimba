@@ -15,6 +15,7 @@ class AuditLog(models.Model):
         ('SAFETY', 'Safety'),
         ('DASHBOARD', 'Dashboard'),
         ('AUTH', 'Authentication'),
+        ('AUDIT', 'Audit'),
         ('OTHER', 'Other'),
     ]
 

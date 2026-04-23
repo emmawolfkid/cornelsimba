@@ -5,6 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Login - Cornel Simba</title>
+<link rel="icon" type="image/png" href="{% static 'images/logo.png' %}">
 <style>
     * { 
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
@@ -131,6 +132,29 @@
         margin-bottom: 20px;
         position: relative;
     }
+    .password-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-wrapper input {
+    padding-right: 45px; /* space for eye */
+}
+
+.toggle-password {
+    position: absolute;
+    right: 15px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    color: #999;
+    user-select: none;
+    transition: color 0.3s;
+}
+
+.toggle-password:hover {
+    color: #667eea;
+}
     
     label { 
         display: block; 
@@ -287,7 +311,7 @@
     <!-- Logo Section -->
     <div class="logo-section">
     <div class="login-logo-container">
-        <img src="{% static 'images/cornelsimba-logo.jpeg' %}" alt="Cornel Simba Logo" class="login-logo">
+        <img src="{% static 'images/cornelsimba 2.png' %}" alt="Cornel Simba Logo" class="login-logo">
     </div>
     <h1>Cornel Simba</h1>
     <p class="tagline">Mining Enterprise System</p>
@@ -310,9 +334,12 @@
         </div>
         
         <div class="form-group">
-            <label for="password">Password</label>
-            <input type="password" name="password" id="password" placeholder="Enter your password" required>
-        </div>
+    <label for="password">Password</label>
+    <div class="password-wrapper">
+        <input type="password" name="password" id="password" placeholder="Enter your password" required>
+        <span class="toggle-password" onclick="togglePassword()">👁</span>
+    </div>
+</div>
         
         <button type="submit" class="btn-login">Login</button>
         
@@ -326,5 +353,19 @@
         <a href="/">← Back to Home</a>
     </div>
 </div>
+<script>
+function togglePassword() {
+    const passwordField = document.getElementById("password");
+    const toggleIcon = document.querySelector(".toggle-password");
+
+    if (passwordField.type === "password") {
+        passwordField.type = "text";
+        toggleIcon.innerHTML = "🙈";
+    } else {
+        passwordField.type = "password";
+        toggleIcon.innerHTML = "👁";
+    }
+}
+</script>
 </body>
 </html>

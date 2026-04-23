@@ -5,6 +5,7 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'finance/css/pending_edits.css' %}">
 {% endblock %}
+
 {% block content %}
 <div class="page-wrapper">
 
@@ -27,6 +28,7 @@
                             <th>Type</th>
                             <th>Object</th>
                             <th>Requested By</th>
+                            <th>Reason</th>
                             <th>Changes</th>
                             <th>Status</th>
                             <th>Date</th>
@@ -47,9 +49,21 @@
                             <td>
                                 {{ req.requested_by.get_full_name|default:req.requested_by.username }}
                             </td>
-
+                            
+                            <!-- REASON COLUMN - NEW -->
+                            <td class="reason-cell">
+                                {% if req.edit_reason %}
+                                    <div class="edit-reason-box" style="background-color: #fff3cd; border-left: 3px solid #ffc107; padding: 8px 12px; border-radius: 4px; max-width: 250px;">
+                                        <i class="fas fa-comment" style="color: #856404;"></i>
+                                        <span style="color: #856404; font-size: 0.85rem;">{{ req.edit_reason }}</span>
+                                    </div>
+                                {% else %}
+                                    <span class="text-muted small">No reason provided</span>
+                                {% endif %}
+                            </td>
+                            
                             <td>
-                                <ul class="change-list">
+                                <ul class="change-list" style="margin: 0; padding-left: 15px;">
                                     {% for key, value in req.requested_changes.items %}
                                         <li>
                                             <strong>{{ key }}</strong>: {{ value }}
@@ -76,17 +90,19 @@
                                 {% if req.status == "Pending" %}
                                     <div class="action-buttons">
                                         <a href="{% url 'finance:approve_finance_edit' req.id %}"
-                                           class="btn btn-success btn-sm">
-                                            <i class="fas fa-check"></i>
+                                           class="btn btn-success btn-sm"
+                                           onclick="return confirm('Approve this edit request?');">
+                                            <i class="fas fa-check"></i> Approve
                                         </a>
 
                                         <form method="post"
                                               action="{% url 'finance:reject_finance_edit' req.id %}"
-                                              class="reject-form">
+                                              class="reject-form d-inline">
                                             {% csrf_token %}
                                             <button type="submit"
-                                                    class="btn btn-danger btn-sm">
-                                                <i class="fas fa-times"></i>
+                                                    class="btn btn-danger btn-sm"
+                                                    onclick="return confirm('Reject this edit request?');">
+                                                <i class="fas fa-times"></i> Reject
                                             </button>
                                         </form>
                                     </div>
@@ -98,7 +114,7 @@
 
                         {% empty %}
                         <tr>
-                            <td colspan="8" class="text-center text-muted py-4">
+                            <td colspan="9" class="text-center text-muted py-4">
                                 No pending finance requests 🎉
                             </td>
                         </tr>
@@ -112,4 +128,41 @@
     </div>
 
 </div>
+
+<style>
+/* Add these styles to make the reason column look nice */
+.reason-cell {
+    max-width: 280px;
+    min-width: 200px;
+}
+
+.edit-reason-box {
+    word-wrap: break-word;
+    white-space: normal;
+}
+
+.edit-reason-box i {
+    margin-right: 6px;
+}
+
+.change-list {
+    margin: 0;
+    padding-left: 15px;
+    font-size: 0.85rem;
+}
+
+.change-list li {
+    margin-bottom: 2px;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+.action-buttons form {
+    margin: 0;
+}
+</style>
 {% endblock %}

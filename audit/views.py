@@ -95,7 +95,8 @@ def audit_logs(request):
         return export_audit_logs_pdf_simple(request, logs)
     
     # Get summary statistics
-    today_logs = logs.filter(timestamp__date=timezone.localdate()).count()
+    today = timezone.localdate()
+    today_logs = logs.filter(timestamp__date=today).count()
     unique_users = logs.values('user').distinct().count()
     modules_count = logs.values('module').distinct().count()
     

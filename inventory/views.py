@@ -446,7 +446,7 @@ def stock_out_create(request):
     else:
         form = StockOutForm(user=request.user)
     
-    items = Item.objects.filter(is_active=True, quantity__gt=0).order_by('name')
+    items = Item.objects.filter(is_active=True).order_by('name')
     return render(request, 'inventory/stock_out_form.html', {
         'form': form,
         'items': items,

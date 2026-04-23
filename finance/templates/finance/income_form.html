@@ -196,6 +196,25 @@
                 </div>
             </div>
             
+            <!-- Edit Request Reason Section (Only show when editing and user is not admin) -->
+            {% if editing and not request.user.is_superuser %}
+            <div class="income-form-group edit-reason-section" style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
+                <label for="edit_reason" class="income-form-label required" style="color: #856404;">
+                    <i class="fas fa-edit"></i> Reason for Edit Request <span class="text-danger">*</span>
+                </label>
+                <textarea name="edit_reason" 
+                          id="edit_reason" 
+                          class="form-control" 
+                          rows="3" 
+                          placeholder="Please explain why you need to edit this income record. Your request will be submitted for admin approval before changes take effect."
+                          required></textarea>
+                <div class="help-text" style="color: #856404;">
+                    <i class="fas fa-info-circle"></i> 
+                    Your changes will not be applied immediately. An admin must approve this edit request first.
+                </div>
+            </div>
+            {% endif %}
+            
             <!-- Description -->
             <div class="income-form-group">
                 <label for="id_description" class="income-form-label">Description</label>
@@ -242,6 +261,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const referenceField = document.getElementById('id_reference');
     const amountDisplay = document.getElementById('amount-display');
     const amountPrefix = document.querySelector('.income-currency-prefix');
+    const editReasonField = document.getElementById('edit_reason');
     
     // Set today's date as default if empty
     if (dateField && !dateField.value) {
@@ -346,6 +366,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     amountField.focus();
                     return false;
                 }
+            }
+            
+            // Validate edit reason if it exists (only when editing and not admin)
+            if (editReasonField && editReasonField.value.trim() === '') {
+                e.preventDefault();
+                showNotification('Please provide a reason for your edit request.', 'error');
+                editReasonField.classList.add('error-input');
+                editReasonField.focus();
+                editReasonField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return false;
             }
             
             // Auto-generate reference if empty

@@ -15,30 +15,35 @@
 <link rel="stylesheet" href="{% static 'finance/css/trial_balance.css' %}">
 {% endblock %}
 
-{% block content %}
-<div style="margin: 30px;">
-    <h2>Trial Balance - {% now "F j, Y" %}</h2>
+{{% block content %}
+<div class="trial-balance-container">
 
-    <!-- SIMPLE VERSION - Use view calculations -->
+    <div class="trial-balance-header">
+        <h2>
+            <i class="fas fa-scale-balanced"></i>
+            Trial Balance - {% now "F j, Y" %}
+        </h2>
+    </div>
+
     {% if is_balanced %}
-    <div class="alert-success">
-        ✅ Trial balance is balanced.
-    </div>
+        <div class="alert-success">
+            ✅ Trial balance is balanced.
+        </div>
     {% else %}
-    <div class="alert-danger">
-        ⚠️ Trial balance is NOT balanced! Difference: 
-        <span id="diff">Tsh {{ abs_difference|floatformat:2|intcomma }}</span>
-    </div>
+        <div class="alert-danger">
+            ⚠️ Trial balance is NOT balanced! 
+            Difference: Tsh {{ abs_difference|floatformat:2|intcomma }}
+        </div>
     {% endif %}
 
-    <table>
+    <table class="trial-balance-table">
         <thead>
             <tr>
                 <th>Account Code</th>
                 <th>Account Name</th>
                 <th>Account Type</th>
-                <th>Debit (Tsh)</th>
-                <th>Credit (Tsh)</th>
+                <th class="amount-cell">Debit (Tsh)</th>
+                <th class="amount-cell">Credit (Tsh)</th>
             </tr>
         </thead>
         <tbody>
@@ -46,78 +51,71 @@
             <tr>
                 <td>{{ account.code }}</td>
                 <td>{{ account.name }}</td>
-                <td>{{ account.get_account_type_display }}</td>
                 <td>
+                    <span class="account-type {{ account.account_type|lower }}">
+                        {{ account.get_account_type_display }}
+                    </span>
+                </td>
+
+                <td class="amount-cell debit-cell">
                     {% if account.is_debit %}
                         {{ account.debit_balance|floatformat:2|intcomma }}
-                    {% else %}
-                        0.00
-                    {% endif %}
+                    {% else %} 0.00 {% endif %}
                 </td>
-                <td>
+
+                <td class="amount-cell credit-cell">
                     {% if not account.is_debit %}
                         {{ account.credit_balance|floatformat:2|intcomma }}
-                    {% else %}
-                        0.00
-                    {% endif %}
+                    {% else %} 0.00 {% endif %}
                 </td>
             </tr>
             {% empty %}
             <tr>
-                <td colspan="5" style="text-align: center; padding: 20px; color: #666;">
-                    No accounts found
+                <td colspan="5" class="empty-state">
+                    <i class="fas fa-folder-open"></i>
+                    <p>No accounts found</p>
                 </td>
             </tr>
             {% endfor %}
         </tbody>
+
         {% if accounts %}
         <tfoot>
             <tr>
                 <td colspan="3"><strong>Total</strong></td>
-                <td id="total-debits">
-                    <strong>{{ total_debits|floatformat:2|intcomma }}</strong>
-                </td>
-                <td id="total-credits">
-                    <strong>{{ total_credits|floatformat:2|intcomma }}</strong>
-                </td>
+                <td class="amount-cell"><strong>{{ total_debits|floatformat:2|intcomma }}</strong></td>
+                <td class="amount-cell"><strong>{{ total_credits|floatformat:2|intcomma }}</strong></td>
             </tr>
         </tfoot>
         {% endif %}
     </table>
 
-    <div class="difference">
-        <strong>Difference:</strong> 
-        <span id="difference">
+    <div class="difference-box">
+        <strong>Difference:</strong>
+        <span class="difference-value {% if difference == 0 %}balanced{% else %}not-balanced{% endif %}">
             Tsh {{ difference|floatformat:2|intcomma }}
         </span>
     </div>
-    <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 10px; text-align: center;">
-        <h4 style="margin-bottom: 15px;">
+
+    <div class="download-section">
+        <h4>
             <i class="fas fa-download"></i> Download Options
         </h4>
-        <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
-            <!-- PDF Download Button -->
-            <a href="{% url 'finance:download_trial_balance_pdf' %}" 
-               class="btn btn-danger" 
-               style="background: #dc3545; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+
+        <div class="download-buttons">
+            <a href="{% url 'finance:download_trial_balance_pdf' %}" class="btn-pdf">
                 <i class="fas fa-file-pdf"></i> Download PDF
             </a>
-            
-            <!-- Print Button -->
-            <button onclick="window.print()" 
-                    class="btn btn-secondary" 
-                    style="background: #6c757d; color: white; padding: 10px 20px; border-radius: 5px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
+
+            <button onclick="window.print()" class="btn-print">
                 <i class="fas fa-print"></i> Print
             </button>
-            
-            <!-- Back to Reports -->
-            <a href="{% url 'finance:reports' %}" 
-               class="btn btn-primary" 
-               style="background: #007bff; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+
+            <a href="{% url 'finance:reports' %}" class="btn-reports">
                 <i class="fas fa-chart-bar"></i> View Reports
             </a>
         </div>
     </div>
-    <!-- ========== END DOWNLOAD SECTION ========== -->
+
 </div>
 {% endblock %}

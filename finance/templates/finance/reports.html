@@ -12,6 +12,55 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'finance/css/reports.css' %}">
+<style>
+    .filter-actions {
+        display: flex;
+        gap: 10px;
+        align-items: flex-end;
+    }
+    .filter-actions button, .filter-actions a {
+        height: 38px;
+        padding: 0 20px;
+        border-radius: 6px;
+        font-size: 14px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+    .clear-btn {
+        background-color: #6c757d;
+        color: white;
+        border: none;
+    }
+    .clear-btn:hover {
+        background-color: #5a6268;
+        color: white;
+        text-decoration: none;
+    }
+    .active-filter {
+        background-color: #e3f2fd;
+        padding: 8px 12px;
+        border-radius: 6px;
+        margin-top: 10px;
+        font-size: 13px;
+        color: #0c5460;
+        display: inline-block;
+    }
+    .active-filter i {
+        margin-right: 5px;
+    }
+    .active-filter .remove-filter {
+        color: #dc3545;
+        margin-left: 8px;
+        cursor: pointer;
+        text-decoration: none;
+    }
+    .active-filter .remove-filter:hover {
+        text-decoration: underline;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -20,17 +69,17 @@
     <div class="reports-header">
         <h1><i class="fas fa-chart-bar"></i> Financial Reports</h1>
         
-        <!-- Filter Form - Properly structured -->
+        <!-- Filter Form - Improved with better functionality -->
         <div class="report-filter-section">
-            <form method="get" class="report-filter-form">
+            <form method="get" class="report-filter-form" id="reportFilterForm">
                 <div class="filter-group">
                     <label for="start_date">Start Date:</label>
-                    <input type="date" name="start_date" id="start_date" value="{{ request.GET.start_date }}">
+                    <input type="date" name="start_date" id="start_date" value="{{ start_date|date:'Y-m-d' }}">
                 </div>
                 
                 <div class="filter-group">
                     <label for="end_date">End Date:</label>
-                    <input type="date" name="end_date" id="end_date" value="{{ request.GET.end_date }}">
+                    <input type="date" name="end_date" id="end_date" value="{{ end_date|date:'Y-m-d' }}">
                 </div>
                 
                 <div class="filter-group">
@@ -38,15 +87,35 @@
                     <select name="year" id="year">
                         <option value="">-- Select Year --</option>
                         {% for y in available_years %}
-                            <option value="{{ y }}" {% if request.GET.year == y|stringformat:"s" %}selected{% endif %}>{{ y }}</option>
+                            <option value="{{ y }}" {% if request.GET.year|add:"0" == y %}selected{% endif %}>{{ y }}</option>
                         {% endfor %}
                     </select>
                 </div>
                 
-                <button type="submit" class="filter-btn">
-                    <i class="fas fa-filter"></i> Generate Report
-                </button>
+                <div class="filter-actions">
+                    <button type="submit" class="filter-btn">
+                        <i class="fas fa-search"></i> Generate Report
+                    </button>
+                    <a href="{% url 'finance:financial_reports' %}" class="clear-btn">
+                        <i class="fas fa-undo-alt"></i> Clear Filters
+                    </a>
+                </div>
             </form>
+            
+            <!-- Active Filters Display -->
+            {% if request.GET.start_date or request.GET.end_date or request.GET.year %}
+            <div class="active-filter">
+                <i class="fas fa-filter"></i> Active Filters:
+                {% if request.GET.start_date and request.GET.end_date %}
+                    <strong>{{ request.GET.start_date }}</strong> to <strong>{{ request.GET.end_date }}</strong>
+                {% elif request.GET.year %}
+                    <strong>Year: {{ request.GET.year }}</strong>
+                {% endif %}
+                <a href="{% url 'finance:financial_reports' %}" class="remove-filter">
+                    <i class="fas fa-times-circle"></i> Clear
+                </a>
+            </div>
+            {% endif %}
         </div>
         
         <div class="report-meta">
@@ -59,7 +128,7 @@
             
             <!-- Action Buttons -->
             <div class="report-actions">
-                <a href="{% url 'finance:download_financial_report_pdf' %}?start_date={{ start_date }}&end_date={{ end_date }}" 
+                <a href="{% url 'finance:download_financial_report_pdf' %}?start_date={{ start_date|date:'Y-m-d' }}&end_date={{ end_date|date:'Y-m-d' }}" 
                    class="reports-download-btn">
                     <i class="fas fa-file-pdf"></i> Download PDF
                 </a>
@@ -120,16 +189,17 @@
                     <div class="reports-bar-label">{{ item.month|slice:":3" }}</div>
                     <div class="reports-bar-container">
                         <div class="reports-bar-fill" 
-                             data-percentage="{% widthratio item.amount max_income 100 %}" 
-                             data-amount="{{ item.amount }}">
+                             data-percentage="{% widthratio item.total max_income 100 %}" 
+                             data-amount="{{ item.total }}">
                         </div>
                     </div>
-                    <div class="reports-bar-value">Tsh {{ item.amount|floatformat:0|default:"0"|intcomma }}</div>
+                    <div class="reports-bar-value">Tsh {{ item.total|floatformat:0|default:"0"|intcomma }}</div>
                 </div>
                 {% empty %}
                 <div style="text-align: center; padding: 30px; color: #666;">
                     <i class="fas fa-chart-line fa-2x mb-3"></i>
-                    <p>No income data available</p>
+                    <p>No income data available for this period</p>
+                    <small>Try selecting a different date range or year</small>
                 </div>
                 {% endfor %}
             </div>
@@ -144,16 +214,17 @@
                     <div class="reports-bar-label">{{ item.month|slice:":3" }}</div>
                     <div class="reports-bar-container">
                         <div class="reports-bar-fill" 
-                             data-percentage="{% widthratio item.amount max_expense 100 %}" 
-                             data-amount="{{ item.amount }}">
+                             data-percentage="{% widthratio item.total max_expense 100 %}" 
+                             data-amount="{{ item.total }}">
                         </div>
                     </div>
-                    <div class="reports-bar-value">Tsh {{ item.amount|floatformat:0|default:"0"|intcomma }}</div>
+                    <div class="reports-bar-value">Tsh {{ item.total|floatformat:0|default:"0"|intcomma }}</div>
                 </div>
                 {% empty %}
                 <div style="text-align: center; padding: 30px; color: #666;">
                     <i class="fas fa-chart-line fa-2x mb-3"></i>
-                    <p>No expense data available</p>
+                    <p>No expense data available for this period</p>
+                    <small>Try selecting a different date range or year</small>
                 </div>
                 {% endfor %}
             </div>
