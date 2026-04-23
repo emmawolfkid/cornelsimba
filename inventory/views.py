@@ -1,4 +1,4 @@
-# cornelsimba/inventory/views.py - FIXED VERSION
+# cornelsimba/inventory/views.py - COMPLETELY FIXED VERSION
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -47,9 +47,9 @@ def inventory_dashboard(request):
     unique_items = Item.objects.filter(is_active=True).order_by('name')
     total_items = unique_items.count()
     
-    # Calculate total quantity
+    # 🔧 FIX 1: Calculate total quantity with Decimal
     total_quantity_result = Item.objects.filter(is_active=True).aggregate(total_qty=Sum('quantity'))
-    total_quantity = total_quantity_result['total_qty'] or 0
+    total_quantity = total_quantity_result['total_qty'] or Decimal('0.000')
     
     # Stock alerts
     low_stock_items = Item.objects.filter(
@@ -76,15 +76,17 @@ def inventory_dashboard(request):
     recent_stock_outs = StockOut.objects.select_related('item').order_by('-date')[:10]
     pending_adjustments = StockAdjustment.objects.filter(status='pending').count()
     
-    # Monthly summary
+    # 🔧 FIX 2: Monthly summary with Decimal
     thirty_days_ago = datetime.now() - timedelta(days=30)
     stock_ins_month = StockIn.objects.filter(date__gte=thirty_days_ago).aggregate(
-        total_quantity=Sum('quantity'),
-    ) or {'total_quantity': 0}
+        total_quantity=Sum('quantity')
+    )
+    stock_ins_month['total_quantity'] = stock_ins_month['total_quantity'] or Decimal('0.000')
     
     stock_outs_month = StockOut.objects.filter(date__gte=thirty_days_ago).aggregate(
-        total_quantity=Sum('quantity'),
-    ) or {'total_quantity': 0}
+        total_quantity=Sum('quantity')
+    )
+    stock_outs_month['total_quantity'] = stock_outs_month['total_quantity'] or Decimal('0.000')
     
     context = {
         'total_items': total_items,
@@ -166,11 +168,12 @@ def item_detail(request, pk):
     stock_outs = item.stock_outs.all().order_by('-date')[:20]
     adjustments = item.stock_adjustments.all().order_by('-created_at')[:20]
     
-    total_in = item.stock_ins.aggregate(total=Sum('quantity'))['total'] or 0
-    total_out = item.stock_outs.aggregate(total=Sum('quantity'))['total'] or 0
+    # 🔧 FIX 3: Item detail totals with Decimal
+    total_in = item.stock_ins.aggregate(total=Sum('quantity'))['total'] or Decimal('0.000')
+    total_out = item.stock_outs.aggregate(total=Sum('quantity'))['total'] or Decimal('0.000')
     total_adjustment = item.stock_adjustments.filter(status='approved').aggregate(
         total=Sum('adjustment_quantity')
-    )['total'] or 0
+    )['total'] or Decimal('0.000')
     
     stock_history = item.stock_history.all().order_by('-created_at')[:50]
     
@@ -304,6 +307,10 @@ def stock_in_create(request):
         if form.is_valid():
             stock_in = form.save()
             
+            # 🔧 FIX 7: Prevent silent float input - normalize quantity
+            stock_in.quantity = Decimal(str(stock_in.quantity)).quantize(Decimal('0.001'))
+            stock_in.save(update_fields=['quantity'])
+            
             # Create stock history
             StockHistory.objects.create(
                 item=stock_in.item,
@@ -416,6 +423,10 @@ def stock_out_create(request):
         if form.is_valid():
             stock_out = form.save()
             
+            # 🔧 FIX 7: Prevent silent float input - normalize quantity
+            stock_out.quantity = Decimal(str(stock_out.quantity)).quantize(Decimal('0.001'))
+            stock_out.save(update_fields=['quantity'])
+            
             # Create stock history
             StockHistory.objects.create(
                 item=stock_out.item,
@@ -494,6 +505,10 @@ def stock_adjustment_create(request):
         if form.is_valid():
             adjustment = form.save()
             
+            # 🔧 FIX 7: Prevent silent float input - normalize quantity
+            adjustment.adjustment_quantity = Decimal(str(adjustment.adjustment_quantity)).quantize(Decimal('0.001'))
+            adjustment.save(update_fields=['adjustment_quantity'])
+            
             # Create stock history for pending adjustment
             StockHistory.objects.create(
                 item=adjustment.item,
@@ -548,10 +563,12 @@ def stock_adjustment_approve(request, pk):
                 adjustment.rejected_at = None
                 adjustment.rejection_reason = None
                 
-                # Update stock
+                # 🔧 FIX 4: Critical stock update - NO FLOAT DRIFT
                 old_quantity = adjustment.item.quantity
-                adjustment.item.quantity += adjustment.adjustment_quantity
-                adjustment.item.save()
+                adjustment.item.quantity = (
+                    Decimal(str(adjustment.item.quantity)) + Decimal(str(adjustment.adjustment_quantity))
+                ).quantize(Decimal('0.001'))
+                adjustment.item.save(update_fields=['quantity'])
                 
                 # Update stock history
                 StockHistory.objects.create(
@@ -729,8 +746,10 @@ def approve_stockout(request, pk):
         stock_out.approved_at = timezone.now()
         stock_out.save()
         
-        # Update item quantity (FIXED – NO FLOAT DRIFT)
-        stock_out.item.quantity = (stock_out.item.quantity - stock_out.quantity).quantize(Decimal('0.001'))
+        # 🔧 FIX 6: Harden stock out approval - NO FLOAT DRIFT
+        stock_out.item.quantity = (
+            Decimal(str(stock_out.item.quantity)) - Decimal(str(stock_out.quantity))
+        ).quantize(Decimal('0.001'))
         stock_out.item.save(update_fields=['quantity'])
         
         # Create stock history
@@ -993,13 +1012,14 @@ def get_item_details(request, pk):
     """API endpoint to get item details for stock in form"""
     try:
         item = Item.objects.get(pk=pk, is_active=True)
+        # 🔧 FIX 5: Prevent float leak - return strings for precision
         data = {
             'success': True,
             'name': item.name,
-            'quantity': float(item.quantity),
+            'quantity': str(item.quantity),  # Changed from float to string
             'unit_of_measure': item.unit_of_measure,
-            'reorder_level': float(item.reorder_level),
-            'minimum_stock': float(item.minimum_stock),
+            'reorder_level': str(item.reorder_level),  # Changed from float to string
+            'minimum_stock': str(item.minimum_stock),  # Changed from float to string
         }
         return JsonResponse(data)
     except Item.DoesNotExist:
@@ -1036,7 +1056,7 @@ def stock_report_pdf(request):
         data.append([
             item.name,
             item.get_category_display(),
-            str(item.quantity),
+            str(item.quantity),  # Changed to string for consistency
             item.unit_of_measure,
             status
         ])

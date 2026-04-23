@@ -1,4 +1,4 @@
-# cornelsimba/inventory/models.py - FIXED VERSION
+# cornelsimba/inventory/models.py - COMPLETELY FIXED VERSION
 from django.db import models
 from django.core.validators import MinValueValidator
 from django.core.exceptions import ValidationError
@@ -6,6 +6,11 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone 
 from decimal import Decimal
 User = get_user_model()
+
+# Helper function for decimal normalization
+def clean_decimal(value):
+    """Normalize decimal to 3 decimal places"""
+    return Decimal(str(value)).quantize(Decimal('0.001'))
 
 class Item(models.Model):
     CATEGORY_CHOICES = [
@@ -173,6 +178,9 @@ class StockIn(models.Model):
 
     def save(self, *args, **kwargs):
         is_new = self.pk is None
+        
+        # FIX 2: Normalize quantity BEFORE saving
+        self.quantity = clean_decimal(self.quantity)
 
         # AUTO-APPROVE STOCK IN
         self.status = 'approved'
@@ -183,12 +191,16 @@ class StockIn(models.Model):
 
         # Update item stock ONLY once
         if is_new:
-            self.item.quantity = (self.item.quantity + self.quantity).quantize(Decimal('0.001'))
+            self.item.quantity = clean_decimal(
+                Decimal(self.item.quantity) + Decimal(self.quantity)
+            )
             self.item.save(update_fields=['quantity'])
 
     def delete(self, *args, **kwargs):
         if self.status == 'approved':
-            self.item.quantity -= self.quantity
+            self.item.quantity = clean_decimal(
+                Decimal(self.item.quantity) - Decimal(self.quantity)
+            )
             self.item.save(update_fields=['quantity'])
         super().delete(*args, **kwargs)
 
@@ -236,7 +248,7 @@ class StockOut(models.Model):
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
-        default='pending'  # ✅ FIX 1 - Already implemented
+        default='pending'
     )
 
     approved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='approved_stock_outs')
@@ -263,7 +275,10 @@ class StockOut(models.Model):
                 })
     
     def save(self, *args, **kwargs):
-        # ✅ FIX 2 - Validate only — stock is updated during approval (in approve_stockout() view)
+        # FIX 2: Normalize quantity BEFORE saving
+        self.quantity = clean_decimal(self.quantity)
+        
+        # Validate only — stock is updated during approval (in approve_stockout() view)
         # Do NOT update stock here to prevent double deduction
         
         self.full_clean()
@@ -374,10 +389,15 @@ class StockAdjustment(models.Model):
                 })
     
     def save(self, *args, **kwargs):
-        # Only update stock if approved
+        # Normalize quantity
+        self.adjustment_quantity = clean_decimal(self.adjustment_quantity)
+        
+        # Only update stock if approved and not yet processed
         if self.status == 'approved' and not self.approved_at:
-            self.item.quantity += self.adjustment_quantity
-            self.item.save()
+            self.item.quantity = clean_decimal(
+                Decimal(self.item.quantity) + Decimal(self.adjustment_quantity)
+            )
+            self.item.save(update_fields=['quantity'])
             self.approved_at = timezone.now()
         elif self.status == 'approved' and self.approved_at:
             # Already approved, don't update stock again
