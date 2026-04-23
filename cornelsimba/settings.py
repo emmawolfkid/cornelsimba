@@ -86,7 +86,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
 
     # ✅ MUST be here for static files on Render
-   # 'whitenoise.middleware.WhiteNoiseMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 
     # ✅ MUST come before AuthenticationMiddleware
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -219,7 +219,7 @@ LOGIN_URL = '/accounts/login/'       # <-- URL for your login page
 LOGOUT_REDIRECT_URL = '/accounts/login/'  # Optional: redirect after logout
 
 
-#STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 
 # ======================
